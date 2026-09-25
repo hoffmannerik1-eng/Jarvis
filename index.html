@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JARVIS HOME</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  background:#030605;
+  color:#eafff2;
+  font-family:Arial,Helvetica,sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 20%,rgba(55,255,150,.08),transparent 35%),
+    linear-gradient(transparent 97%,rgba(80,255,160,.025) 98%);
+  background-size:auto,100% 5px;
+}
+
+button,input,select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+header{
+  height:74px;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:100;
+  display:flex;
+  align-items:center;
+  padding:0 25px;
+  background:rgba(3,6,5,.88);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(74,255,159,.15);
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+
+.logoOrb{
+  width:13px;
+  height:13px;
+  border-radius:50%;
+  background:#55ff9b;
+  box-shadow:
+    0 0 10px #55ff9b,
+    0 0 35px #55ff9b;
+}
+
+.logoText{
+  font-weight:800;
+  letter-spacing:7px;
+  font-size:19px;
+}
+
+.logoSub{
+  font-size:8px;
+  letter-spacing:3px;
+  color:#6f8c7d;
+  margin-top:3px;
+}
+
+.headerRight{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.connection{
+  font-size:10px;
+  letter-spacing:2px;
+  color:#55ff9b;
+}
+
+.loginBtn,
+.primary{
+  border:0;
+  border-radius:10px;
+  padding:11px 16px;
+  background:#55ff9b;
+  color:#021008;
+  font-weight:bold;
+}
+
+.logout{
+  background:#241113;
+  color:#ff929b;
+  border:1px solid #54242a;
+}
+
+.layout{
+  display:flex;
+  padding-top:74px;
+  min-height:100vh;
+}
+
+.sidebar{
+  width:235px;
+  position:fixed;
+  top:74px;
+  bottom:0;
+  left:0;
+  padding:20px 13px;
+  border-right:1px solid rgba(74,255,159,.12);
+  background:rgba(3,6,5,.8);
+}
+
+.nav{
+  width:100%;
+  padding:14px;
+  margin-bottom:6px;
+  border-radius:11px;
+  background:transparent;
+  color:#779184;
+  border:1px solid transparent;
+  text-align:left;
+}
+
+.nav:hover,
+.nav.active{
+  color:#55ff9b;
+  background:#0a1510;
+  border-color:#1d4a34;
+}
+
+.main{
+  margin-left:235px;
+  width:calc(100% - 235px);
+  padding:30px;
+  max-width:1500px;
+}
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+.hero{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:20px;
+}
+
+.panel{
+  background:linear-gradient(145deg,#09100d,#060a08);
+  border:1px solid #173629;
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+
+.heroTitle{
+  font-size:clamp(40px,6vw,75px);
+  margin:10px 0;
+}
+
+.muted{
+  color:#71877b;
+}
+
+.core{
+  min-height:370px;
+  display:grid;
+  place-items:center;
+}
+
+.coreOrb{
+  width:190px;
+  height:190px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at center,
+    #eafff3 0 2%,
+    #75ffb4 5%,
+    #1b9b5b 18%,
+    #0a3421 42%,
+    #04100a 68%);
+  box-shadow:
+    0 0 30px #55ff9b,
+    0 0 90px rgba(85,255,155,.35),
+    inset 0 0 50px rgba(255,255,255,.2);
+  animation:corePulse 3s infinite;
+}
+
+@keyframes corePulse{
+  50%{
+    transform:scale(1.08);
+    box-shadow:
+      0 0 45px #55ff9b,
+      0 0 140px rgba(85,255,155,.35);
+  }
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:15px;
+  margin-top:18px;
+}
+
+.card{
+  background:#080e0b;
+  border:1px solid #173629;
+  border-radius:17px;
+  padding:19px;
+}
+
+.card h3{
+  margin-bottom:8px;
+}
+
+.number{
+  font-size:31px;
+  font-weight:bold;
+  color:#55ff9b;
+  margin-top:8px;
+}
+
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:20px 0;
+}
+
+input,select{
+  background:#050a08;
+  color:white;
+  border:1px solid #254636;
+  border-radius:10px;
+  padding:12px;
+  outline:none;
+}
+
+input:focus,
+select:focus{
+  border-color:#55ff9b;
+}
+
+.form{
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+}
+
+.form input,
+.form select{
+  flex:1;
+  min-width:170px;
+}
+
+.deviceHeader,
+.sceneHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.switch{
+  width:52px;
+  height:29px;
+  border-radius:30px;
+  border:1px solid #315244;
+  background:#16201b;
+  position:relative;
+}
+
+.switch::after{
+  content:"";
+  position:absolute;
+  width:21px;
+  height:21px;
+  top:3px;
+  left:3px;
+  border-radius:50%;
+  background:#718178;
+  transition:.2s;
+}
+
+.switch.on{
+  background:#145d3a;
+}
+
+.switch.on::after{
+  left:26px;
+  background:#55ff9b;
+}
+
+.chat{
+  height:650px;
+  display:flex;
+  flex-direction:column;
+}
+
+.messages{
+  flex:1;
+  overflow:auto;
+  padding:10px;
+}
+
+.message{
+  max-width:80%;
+  padding:13px 16px;
+  margin:8px 0;
+  border-radius:15px;
+  line-height:1.45;
+  white-space:pre-wrap;
+}
+
+.message.jarvis{
+  background:#0d1a13;
+  border:1px solid #1c4a33;
+}
+
+.message.user{
+  margin-left:auto;
+  background:#16442e;
+}
+
+.chatbar{
+  display:flex;
+  gap:8px;
+}
+
+.chatbar input{
+  flex:1;
+}
+
+.settingsGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:18px;
+}
+
+.statusGood{
+  color:#55ff9b;
+}
+
+.statusBad{
+  color:#ff7f8b;
+}
+
+.empty{
+  color:#71877b;
+  padding:30px;
+  text-align:center;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#0d1913;
+  border:1px solid #2d6048;
+  padding:14px 18px;
+  border-radius:12px;
+  display:none;
+  z-index:500;
+}
+
+@media(max-width:850px){
+
+  .sidebar{
+    top:auto;
+    bottom:0;
+    width:100%;
+    height:70px;
+    display:flex;
+    overflow-x:auto;
+    padding:7px;
+    z-index:200;
+    background:#030605f5;
+  }
+
+  .nav{
+    min-width:100px;
+    text-align:center;
+    font-size:11px;
+  }
+
+  .main{
+    margin-left:0;
+    width:100%;
+    padding:20px 14px 90px;
+  }
+
+  .hero{
+    grid-template-columns:1fr;
+  }
+
+  .core{
+    min-height:250px;
+  }
+
+  header{
+    padding:0 14px;
+  }
+
+  .logoSub{
+    display:none;
+  }
+
+  .connection{
+    display:none;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+  <div class="logo">
+    <div class="logoOrb"></div>
+
+    <div>
+      <div class="logoText">JARVIS</div>
+      <div class="logoSub">HOME INTELLIGENCE</div>
+    </div>
+  </div>
+
+  <div class="headerRight">
+
+    <div id="connection" class="connection">
+      OFFLINE
+    </div>
+
+    <button id="loginBtn" class="loginBtn">
+      Mit Google anmelden
+    </button>
+
+    <button id="logoutBtn"
+            class="loginBtn logout hidden">
+      Abmelden
+    </button>
+
+  </div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<button class="nav active" data-page="home">
+⌂ Übersicht
+</button>
+
+<button class="nav" data-page="rooms">
+▦ Räume
+</button>
+
+<button class="nav" data-page="devices">
+◈ Geräte
+</button>
+
+<button class="nav" data-page="scenes">
+◆ Szenen
+</button>
+
+<button class="nav" data-page="automations">
+↻ Automationen
+</button>
+
+<button class="nav" data-page="ai">
+✦ JARVIS AI
+</button>
+
+<button class="nav" data-page="settings">
+⚙ Einstellungen
+</button>
+
+</aside>
+
+
+<main class="main">
+
+
+<!-- HOME -->
+
+<section id="home" class="page active">
+
+<div class="hero">
+
+<div class="panel">
+
+<div class="muted">
+SYSTEM STATUS
+</div>
+
+<h1 class="heroTitle">
+JARVIS
+</h1>
+
+<p class="muted">
+Deine persönliche Smart-Home-Zentrale.
+</p>
+
+<div class="grid">
+
+<div class="card">
+<div class="muted">GERÄTE</div>
+<div id="deviceCount" class="number">0</div>
+</div>
+
+<div class="card">
+<div class="muted">RÄUME</div>
+<div id="roomCount" class="number">0</div>
+</div>
+
+<div class="card">
+<div class="muted">SZENEN</div>
+<div id="sceneCount" class="number">0</div>
+</div>
+
+<div class="card">
+<div class="muted">KI ANFRAGEN</div>
+<div id="aiCount" class="number">0</div>
+</div>
+
+</div>
+
+</div>
+
+
+<div class="panel core">
+
+<div class="coreOrb"></div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- ROOMS -->
+
+<section id="rooms" class="page">
+
+<div class="panel">
+
+<h2>Räume</h2>
+
+<div class="toolbar form">
+
+<input
+id="roomName"
+placeholder="z.B. Wohnzimmer">
+
+<button
+id="addRoom"
+class="primary">
+Raum hinzufügen
+</button>
+
+</div>
+
+<div id="roomsGrid" class="grid"></div>
+
+</div>
+
+</section>
+
+
+<!-- DEVICES -->
+
+<section id="devices" class="page">
+
+<div class="panel">
+
+<h2>Geräte</h2>
+
+<div class="toolbar form">
+
+<input
+id="deviceName"
+placeholder="Gerätename">
+
+<select id="deviceType">
+
+<option value="light">
+Licht
+</option>
+
+<option value="switch">
+Schalter
+</option>
+
+<option value="sensor">
+Sensor
+</option>
+
+<option value="tv">
+TV
+</option>
+
+<option value="speaker">
+Lautsprecher
+</option>
+
+</select>
+
+<select id="deviceRoom">
+
+<option value="">
+Kein Raum
+</option>
+
+</select>
+
+<button
+id="addDevice"
+class="primary">
+Gerät speichern
+</button>
+
+</div>
+
+<div id="devicesGrid" class="grid"></div>
+
+</div>
+
+</section>
+
+
+<!-- SCENES -->
+
+<section id="scenes" class="page">
+
+<div class="panel">
+
+<h2>Szenen</h2>
+
+<div class="toolbar form">
+
+<input
+id="sceneName"
+placeholder="z.B. Filmabend">
+
+<button
+id="addScene"
+class="primary">
+Szene erstellen
+</button>
+
+</div>
+
+<div id="scenesGrid" class="grid"></div>
+
+</div>
+
+</section>
+
+
+<!-- AUTOMATIONS -->
+
+<section id="automations" class="page">
+
+<div class="panel">
+
+<h2>Automationen</h2>
+
+<p class="muted">
+Regeln für dein Smart Home.
+</p>
+
+<div class="toolbar form">
+
+<input
+id="automationName"
+placeholder="z.B. Licht bei Präsenz">
+
+<button
+id="addAutomation"
+class="primary">
+Automation speichern
+</button>
+
+</div>
+
+<div id="automationsGrid" class="grid"></div>
+
+</div>
+
+</section>
+
+
+<!-- AI -->
+
+<section id="ai" class="page">
+
+<div class="panel chat">
+
+<div class="deviceHeader">
+
+<h2>JARVIS AI</h2>
+
+<span id="aiStatus"
+class="statusGood">
+BEREIT
+</span>
+
+</div>
+
+
+<div id="messages"
+class="messages">
+
+<div class="message jarvis">
+JARVIS online.
+Was kann ich für dich tun?
+</div>
+
+</div>
+
+
+<div class="chatbar">
+
+<input
+id="chatInput"
+placeholder="Sag JARVIS etwas…">
+
+<button
+id="micBtn"
+class="primary">
+🎙
+</button>
+
+<button
+id="sendBtn"
+class="primary">
+Senden
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- SETTINGS -->
+
+<section id="settings" class="page">
+
+<div class="settingsGrid">
+
+<div class="panel">
+
+<h2>Firebase</h2>
+
+<p class="muted">
+Projekt
+</p>
+
+<p>
+jarvis-ae4ed
+</p>
+
+<br>
+
+<p id="firebaseStatus"
+class="statusGood">
+Firebase verbunden
+</p>
+
+</div>
+
+
+<div class="panel">
+
+<h2>Home Assistant</h2>
+
+<br>
+
+<div class="form">
+
+<input
+id="haUrl"
+placeholder="http://homeassistant.local:8123">
+
+<input
+id="haToken"
+type="password"
+placeholder="Long-Lived Access Token">
+
+</div>
+
+<br>
+
+<button
+id="saveHA"
+class="primary">
+Home Assistant speichern
+</button>
+
+<button
+id="testHA"
+class="loginBtn">
+Verbindung testen
+</button>
+
+<br><br>
+
+<p id="haStatus"
+class="muted">
+Noch nicht verbunden.
+</p>
+
+</div>
+
+
+<div class="panel">
+
+<h2>Sprache</h2>
+
+<br>
+
+<button
+id="testVoice"
+class="primary">
+JARVIS sprechen lassen
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script type="module">
+
+/* ==========================================
+   FIREBASE
+========================================== */
+
+import {
+  initializeApp
+}
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  signOut,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  setDoc,
+  serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+
+import {
+  getAI,
+  getGenerativeModel,
+  GoogleAIBackend
+}
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-ai.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+  "AIzaSyAo9N68MbT1zHQfPSoQsvOImzmaVjtyPnY",
+
+  authDomain:
+  "jarvis-ae4ed.firebaseapp.com",
+
+  projectId:
+  "jarvis-ae4ed",
+
+  storageBucket:
+  "jarvis-ae4ed.firebasestorage.app",
+
+  messagingSenderId:
+  "537076649397",
+
+  appId:
+  "1:537076649397:web:ce53d342c63b537c799dfc"
+
+};
+
+
+const firebaseApp =
+initializeApp(firebaseConfig);
+
+
+const auth =
+getAuth(firebaseApp);
+
+
+const db =
+getFirestore(firebaseApp);
+
+
+/* ==========================================
+   FIREBASE AI LOGIC
+========================================== */
+
+const ai =
+getAI(firebaseApp,{
+  backend:new GoogleAIBackend()
+});
+
+
+/*
+  WICHTIG:
+  Trage hier ein Modell ein,
+  das in deinem Firebase-AI-Logic-Projekt
+  tatsächlich verfügbar ist.
+*/
+
+const model =
+getGenerativeModel(ai,{
+  model:"gemini-2.5-flash"
+});
+
+
+/* ==========================================
+   STATE
+========================================== */
+
+let currentUser=null;
+
+let rooms=[];
+let devices=[];
+let scenes=[];
+let automations=[];
+
+let aiRequests=0;
+
+let currentPage="home";
+
+
+/* ==========================================
+   HELPERS
+========================================== */
+
+const $ =
+selector =>
+document.querySelector(selector);
+
+
+function toast(text){
+
+  const t=$("#toast");
+
+  t.textContent=text;
+
+  t.style.display="block";
+
+  setTimeout(()=>{
+    t.style.display="none";
+  },2500);
+
+}
+
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
+
+}
+
+
+/* ==========================================
+   VOICE
+========================================== */
+
+function speak(text){
+
+  if(!("speechSynthesis" in window))
+    return;
+
+  speechSynthesis.cancel();
+
+  const utterance =
+  new SpeechSynthesisUtterance(text);
+
+  utterance.lang="de-DE";
+  utterance.rate=.94;
+  utterance.pitch=.82;
+  utterance.volume=1;
+
+  speechSynthesis.speak(utterance);
+
+}
+
+
+$("#testVoice").onclick=()=>{
+
+  speak(
+    "JARVIS ist online. Alle Systeme sind bereit."
+  );
+
+};
+
+
+/* ==========================================
+   NAVIGATION
+========================================== */
+
+document
+.querySelectorAll(".nav")
+.forEach(button=>{
+
+  button.onclick=()=>{
+
+    currentPage=
+    button.dataset.page;
+
+    document
+    .querySelectorAll(".nav")
+    .forEach(x=>
+      x.classList.remove("active")
+    );
+
+    button.classList.add("active");
+
+    document
+    .querySelectorAll(".page")
+    .forEach(page=>
+      page.classList.remove("active")
+    );
+
+    $("#"+currentPage)
+    .classList.add("active");
+
+  };
+
+});
+
+
+/* ==========================================
+   LOGIN
+========================================== */
+
+$("#loginBtn").onclick=async()=>{
+
+  const provider=
+  new GoogleAuthProvider();
+
+  await signInWithRedirect(
+    auth,
+    provider
+  );
+
+};
+
+
+$("#logoutBtn").onclick=()=>{
+
+  signOut(auth);
+
+};
+
+
+onAuthStateChanged(
+auth,
+user=>{
+
+  currentUser=user;
+
+  if(user){
+
+    $("#loginBtn")
+    .classList.add("hidden");
+
+    $("#logoutBtn")
+    .classList.remove("hidden");
+
+    $("#connection")
+    .textContent="ONLINE";
+
+    loadUserData();
+
+  }else{
+
+    $("#loginBtn")
+    .classList.remove("hidden");
+
+    $("#logoutBtn")
+    .classList.add("hidden");
+
+    $("#connection")
+    .textContent="OFFLINE";
+
+  }
+
+});
+
+
+/* ==========================================
+   FIRESTORE
+========================================== */
+
+function userCollection(name){
+
+  return collection(
+    db,
+    "users",
+    currentUser.uid,
+    name
+  );
+
+}
+
+
+function loadUserData(){
+
+  onSnapshot(
+    userCollection("rooms"),
+    snapshot=>{
+
+      rooms=
+      snapshot.docs.map(
+        d=>({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+      renderRooms();
+      updateCounters();
+
+    }
+  );
+
+
+  onSnapshot(
+    userCollection("devices"),
+    snapshot=>{
+
+      devices=
+      snapshot.docs.map(
+        d=>({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+      renderDevices();
+      updateCounters();
+
+    }
+  );
+
+
+  onSnapshot(
+    userCollection("scenes"),
+    snapshot=>{
+
+      scenes=
+      snapshot.docs.map(
+        d=>({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+      renderScenes();
+      updateCounters();
+
+    }
+  );
+
+
+  onSnapshot(
+    userCollection("automations"),
+    snapshot=>{
+
+      automations=
+      snapshot.docs.map(
+        d=>({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+      renderAutomations();
+
+    }
+  );
+
+}
+
+
+/* ==========================================
+   COUNTERS
+========================================== */
+
+function updateCounters(){
+
+  $("#deviceCount").textContent=
+  devices.length;
+
+  $("#roomCount").textContent=
+  rooms.length;
+
+  $("#sceneCount").textContent=
+  scenes.length;
+
+  $("#aiCount").textContent=
+  aiRequests;
+
+}
+
+
+/* ==========================================
+   ROOMS
+========================================== */
+
+$("#addRoom").onclick=async()=>{
+
+  if(!currentUser)
+    return toast("Bitte zuerst anmelden.");
+
+  const name=
+  $("#roomName").value.trim();
+
+  if(!name)
+    return;
+
+  await addDoc(
+    userCollection("rooms"),
+    {
+      name,
+      createdAt:serverTimestamp()
+    }
+  );
+
+  $("#roomName").value="";
+
+  toast("Raum gespeichert.");
+
+};
+
+
+function renderRooms(){
+
+  const grid=
+  $("#roomsGrid");
+
+  grid.innerHTML="";
+
+  if(!rooms.length){
+
+    grid.innerHTML=
+    `<div class="empty">
+      Noch keine Räume vorhanden.
+    </div>`;
+
+    return;
+  }
+
+
+  rooms.forEach(room=>{
+
+    const amount=
+    devices.filter(
+      d=>d.roomId===room.id
+    ).length;
+
+    grid.innerHTML+=`
+
+      <div class="card">
+
+        <h3>
+          ${escapeHTML(room.name)}
+        </h3>
+
+        <p class="muted">
+          ${amount} Geräte
+        </p>
+
+      </div>
+
+    `;
+
+  });
+
+
+  updateRoomSelect();
+
+}
+
+
+/* ==========================================
+   DEVICE SELECT
+========================================== */
+
+function updateRoomSelect(){
+
+  const select=
+  $("#deviceRoom");
+
+  select.innerHTML=
+  `<option value="">
+    Kein Raum
+  </option>`;
+
+  rooms.forEach(room=>{
+
+    select.innerHTML+=`
+
+      <option value="${room.id}">
+        ${escapeHTML(room.name)}
+      </option>
+
+    `;
+
+  });
+
+}
+
+
+/* ==========================================
+   DEVICES
+========================================== */
+
+$("#addDevice").onclick=async()=>{
+
+  if(!currentUser)
+    return toast("Bitte zuerst anmelden.");
+
+  const name=
+  $("#deviceName").value.trim();
+
+  if(!name)
+    return;
+
+
+  await addDoc(
+    userCollection("devices"),
+    {
+
+      name,
+
+      type:
+      $("#deviceType").value,
+
+      roomId:
+      $("#deviceRoom").value,
+
+      state:false,
+
+      /*
+        entityId wird später mit
+        Home Assistant verbunden.
+      */
+
+      entityId:"",
+
+      createdAt:
+      serverTimestamp()
+
+    }
+  );
+
+
+  $("#deviceName").value="";
+
+  toast("Gerät gespeichert.");
+
+};
+
+
+function renderDevices(){
+
+  const grid=
+  $("#devicesGrid");
+
+  grid.innerHTML="";
+
+
+  if(!devices.length){
+
+    grid.innerHTML=
+    `<div class="empty">
+      Noch keine Geräte.
+    </div>`;
+
+    return;
+
+  }
+
+
+  devices.forEach(device=>{
+
+    const room=
+    rooms.find(
+      r=>r.id===device.roomId
+    );
+
+
+    grid.innerHTML+=`
+
+      <div class="card">
+
+        <div class="deviceHeader">
+
+          <div>
+
+            <h3>
+              ${escapeHTML(device.name)}
+            </h3>
+
+            <p class="muted">
+              ${escapeHTML(device.type)}
+              ·
+              ${escapeHTML(room?.name||"Kein Raum")}
+            </p>
+
+          </div>
+
+
+          <button
+
+            class="switch
+            ${device.state?"on":""}"
+
+            data-device="${device.id}">
+
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+
+  document
+  .querySelectorAll("[data-device]")
+  .forEach(button=>{
+
+    button.onclick=
+    ()=>toggleDevice(
+      button.dataset.device
+    );
+
+  });
+
+}
+
+
+async function toggleDevice(id){
+
+  const device=
+  devices.find(
+    d=>d.id===id
+  );
+
+  if(!device)
+    return;
+
+
+  const newState=
+  !device.state;
+
+
+  /*
+    Wenn entityId vorhanden ist,
+    versuchen wir zusätzlich Home Assistant.
+  */
+
+  if(
+    device.entityId &&
+    getHASettings()
+  ){
+
+    const success=
+    await callHomeAssistant(
+      device,
+      newState
+    );
+
+    if(!success)
+      return;
+
+  }
+
+
+  await setDoc(
+
+    doc(
+      db,
+      "users",
+      currentUser.uid,
+      "devices",
+      id
+    ),
+
+    {
+      state:newState
+    },
+
+    {
+      merge:true
+    }
+
+  );
+
+
+  toast(
+    `${device.name}: ${newState?"AN":"AUS"}`
+  );
+
+}
+
+
+/* ==========================================
+   SCENES
+========================================== */
+
+$("#addScene").onclick=async()=>{
+
+  const name=
+  $("#sceneName").value.trim();
+
+  if(!name)
+    return;
+
+
+  await addDoc(
+    userCollection("scenes"),
+    {
+      name,
+      createdAt:serverTimestamp()
+    }
+  );
+
+
+  $("#sceneName").value="";
+
+  toast("Szene gespeichert.");
+
+};
+
+
+function renderScenes(){
+
+  const grid=
+  $("#scenesGrid");
+
+  grid.innerHTML="";
+
+
+  if(!scenes.length){
+
+    grid.innerHTML=
+    `<div class="empty">
+      Noch keine Szenen.
+    </div>`;
+
+    return;
+
+  }
+
+
+  scenes.forEach(scene=>{
+
+    grid.innerHTML+=`
+
+      <div class="card">
+
+        <div class="sceneHeader">
+
+          <div>
+
+            <h3>
+              ${escapeHTML(scene.name)}
+            </h3>
+
+            <p class="muted">
+              Szene
+            </p>
+
+          </div>
+
+          <button
+            class="primary"
+            data-scene="${scene.id}">
+            Start
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+
+  document
+  .querySelectorAll("[data-scene]")
+  .forEach(button=>{
+
+    button.onclick=
+    ()=>runScene(
+      button.dataset.scene
+    );
+
+  });
+
+}
+
+
+async function runScene(id){
+
+  const scene=
+  scenes.find(
+    s=>s.id===id
+  );
+
+  if(!scene)
+    return;
+
+  /*
+    Hier können später mehrere
+    Home-Assistant-Aktionen
+    hinterlegt werden.
+  */
+
+  toast(
+    `Szene "${scene.name}" gestartet.`
+  );
+
+  speak(
+    `Szene ${scene.name} wurde gestartet.`
+  );
+
+}
+
+
+/* ==========================================
+   AUTOMATIONS
+========================================== */
+
+$("#addAutomation").onclick=
+async()=>{
+
+  const name=
+  $("#automationName")
+  .value
+  .trim();
+
+  if(!name)
+    return;
+
+
+  await addDoc(
+    userCollection("automations"),
+    {
+
+      name,
+
+      enabled:true,
+
+      description:
+      "JARVIS Automation",
+
+      createdAt:
+      serverTimestamp()
+
+    }
+  );
+
+
+  $("#automationName")
+  .value="";
+
+  toast("Automation gespeichert.");
+
+};
+
+
+function renderAutomations(){
+
+  const grid=
+  $("#automationsGrid");
+
+  grid.innerHTML="";
+
+
+  if(!automations.length){
+
+    grid.innerHTML=
+    `<div class="empty">
+      Noch keine Automationen.
+    </div>`;
+
+    return;
+
+  }
+
+
+  automations.forEach(auto=>{
+
+    grid.innerHTML+=`
+
+      <div class="card">
+
+        <h3>
+          ${escapeHTML(auto.name)}
+        </h3>
+
+        <p class="muted">
+          ${escapeHTML(
+            auto.description||"Automation"
+          )}
+        </p>
+
+      </div>
+
+    `;
+
+  });
+
+}
+
+
+/* ==========================================
+   HOME ASSISTANT
+========================================== */
+
+function getHASettings(){
+
+  const url=
+  localStorage.getItem(
+    "jarvis_ha_url"
+  );
+
+  const token=
+  localStorage.getItem(
+    "jarvis_ha_token"
+  );
+
+  if(!url || !token)
+    return null;
+
+  return {
+    url:url.replace(/\/$/,""),
+    token
+  };
+
+}
+
+
+$("#saveHA").onclick=()=>{
+
+  const url=
+  $("#haUrl").value.trim();
+
+  const token=
+  $("#haToken").value.trim();
+
+
+  if(!url || !token){
+
+    toast(
+      "URL und Token eingeben."
+    );
+
+    return;
+
+  }
+
+
+  localStorage.setItem(
+    "jarvis_ha_url",
+    url
+  );
+
+  localStorage.setItem(
+    "jarvis_ha_token",
+    token
+  );
+
+
+  $("#haStatus")
+  .textContent=
+  "Verbindung gespeichert.";
+
+  toast(
+    "Home Assistant gespeichert."
+  );
+
+};
+
+
+$("#testHA").onclick=
+async()=>{
+
+  const settings=
+  getHASettings();
+
+  if(!settings){
+
+    $("#haStatus")
+    .textContent=
+    "Keine Verbindung konfiguriert.";
+
+    return;
+
+  }
+
+
+  try{
+
+    const response=
+    await fetch(
+      `${settings.url}/api/`,
+      {
+        headers:{
+          Authorization:
+          `Bearer ${settings.token}`,
+          "Content-Type":
+          "application/json"
+        }
+      }
+    );
+
+
+    if(!response.ok)
+      throw new Error(
+        "HTTP "+response.status
+      );
+
+
+    const data=
+    await response.json();
+
+
+    $("#haStatus")
+    .textContent=
+    `${data.message||"Home Assistant"} verbunden.`;
+
+    $("#haStatus")
+    .className=
+    "statusGood";
+
+
+    toast(
+      "Home Assistant ist erreichbar."
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    $("#haStatus")
+    .textContent=
+    "Verbindung fehlgeschlagen. Prüfe URL, Token und CORS.";
+
+    $("#haStatus")
+    .className=
+    "statusBad";
+
+  }
+
+};
+
+
+async function callHomeAssistant(
+  device,
+  state
+){
+
+  const settings=
+  getHASettings();
+
+  if(!settings)
+    return false;
+
+
+  /*
+    Für light und switch:
+    Home Assistant REST Service.
+  */
+
+  let domain=
+  device.type==="light"
+  ?"light"
+  :"switch";
+
+
+  try{
+
+    const response=
+    await fetch(
+
+      `${settings.url}/api/services/${domain}/${state?"turn_on":"turn_off"}`,
+
+      {
+
+        method:"POST",
+
+        headers:{
+          Authorization:
+          `Bearer ${settings.token}`,
+
+          "Content-Type":
+          "application/json"
+        },
+
+        body:JSON.stringify({
+
+          entity_id:
+          device.entityId
+
+        })
+
+      }
+
+    );
+
+
+    if(!response.ok){
+
+      toast(
+        "Home Assistant konnte das Gerät nicht schalten."
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Home Assistant ist nicht erreichbar."
+    );
+
+    return false;
+
+  }
+
+}
+
+
+/* ==========================================
+   JARVIS AI
+========================================== */
+
+function localAnswer(text){
+
+  const t=
+  text
+  .toLowerCase()
+  .trim();
+
+
+  if(
+    t.includes("hallo") ||
+    t.includes("hey jarvis")
+  ){
+
+    return "Hallo. JARVIS ist bereit.";
+
+  }
+
+
+  if(
+    t.includes("wie spät") ||
+    t.includes("uhrzeit")
+  ){
+
+    return `
+      Es ist ${
+        new Date().toLocaleTimeString(
+          "de-DE",
+          {
+            hour:"2-digit",
+            minute:"2-digit"
+          }
+        )
+      } Uhr.
+    `;
+
+  }
+
+
+  if(
+    t.includes("welcher tag") ||
+    t.includes("datum")
+  ){
+
+    return `
+      Heute ist ${
+        new Date().toLocaleDateString(
+          "de-DE",
+          {
+            weekday:"long",
+            day:"numeric",
+            month:"long"
+          }
+        )
+      }.
+    `;
+
+  }
+
+
+  return null;
+
+}
+
+
+async function askGemini(text){
+
+  const local=
+  localAnswer(text);
+
+  if(local)
+    return local;
+
+
+  $("#aiStatus")
+  .textContent="DENKEN…";
+
+
+  try{
+
+    const result=
+    await model.generateContent(
+
+      `
+Du bist JARVIS, ein futuristischer
+deutscher Smart-Home-Assistent.
+
+Antworte natürlich, kurz und präzise.
+
+Du darfst niemals behaupten,
+dass ein Gerät geschaltet wurde,
+wenn keine erfolgreiche Home-Assistant-
+Antwort vorliegt.
+
+Verfügbare Geräte:
+${JSON.stringify(devices)}
+
+Verfügbare Räume:
+${JSON.stringify(rooms)}
+
+Benutzeranfrage:
+${text}
+      `
+
+    );
+
+
+    aiRequests++;
+
+    updateCounters();
+
+
+    $("#aiStatus")
+    .textContent="BEREIT";
+
+
+    return result.response.text();
+
+
+  }catch(error){
+
+    console.error(error);
+
+    $("#aiStatus")
+    .textContent="FEHLER";
+
+
+    return "Die KI ist momentan nicht erreichbar.";
+
+  }
+
+}
+
+
+function addMessage(
+  text,
+  type
+){
+
+  const messages=
+  $("#messages");
+
+  const div=
+  document.createElement("div");
+
+  div.className=
+  `message ${type}`;
+
+  div.textContent=text;
+
+  messages.appendChild(div);
+
+  messages.scrollTop=
+  messages.scrollHeight;
+
+}
+
+
+async function sendMessage(){
+
+  const input=
+  $("#chatInput");
+
+  const text=
+  input.value.trim();
+
+  if(!text)
+    return;
+
+
+  input.value="";
+
+  addMessage(
+    text,
+    "user"
+  );
+
+
+  const answer=
+  await askGemini(text);
+
+
+  addMessage(
+    answer,
+    "jarvis"
+  );
+
+
+  speak(answer);
+
+}
+
+
+$("#sendBtn").onclick=
+sendMessage;
+
+
+$("#chatInput")
+.addEventListener(
+  "keydown",
+  event=>{
+
+    if(event.key==="Enter")
+      sendMessage();
+
+  }
+);
+
+
+/* ==========================================
+   SPEECH RECOGNITION
+========================================== */
+
+$("#micBtn").onclick=()=>{
+
+  const SpeechRecognition=
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+
+  if(!SpeechRecognition){
+
+    toast(
+      "Spracherkennung wird in diesem Browser nicht unterstützt."
+    );
+
+    return;
+
+  }
+
+
+  const recognition=
+  new SpeechRecognition();
+
+
+  recognition.lang=
+  "de-DE";
+
+  recognition.interimResults=
+  false;
+
+  recognition.continuous=
+  false;
+
+
+  $("#aiStatus")
+  .textContent="ZUHÖREN…";
+
+
+  recognition.onresult=
+  event=>{
+
+    const text=
+    event.results[0][0]
+    .transcript;
+
+    $("#chatInput")
+    .value=text;
+
+    sendMessage();
+
+  };
+
+
+  recognition.onerror=
+  ()=>{
+
+    $("#aiStatus")
+    .textContent="BEREIT";
+
+    toast(
+      "Mikrofon konnte nicht verwendet werden."
+    );
+
+  };
+
+
+  recognition.onend=
+  ()=>{
+
+    $("#aiStatus")
+    .textContent="BEREIT";
+
+  };
+
+
+  recognition.start();
+
+};
+
+
+/* ==========================================
+   START
+========================================== */
+
+updateCounters();
+
+</script>
+
+</body>
+</html>
