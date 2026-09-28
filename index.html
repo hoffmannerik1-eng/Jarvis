@@ -3,9 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>JOVS CoWork</title>
+<title>JOVS AI</title>
 
 <style>
+:root{
+  --bg:#05070a;
+  --panel:#0a0f14;
+  --panel2:#0d141b;
+  --line:rgba(255,255,255,.08);
+  --text:#edf5f1;
+  --muted:#82918c;
+  --green:#45ff9a;
+  --green2:#1bd979;
+  --blue:#52a7ff;
+  --red:#ff526c;
+  --yellow:#ffd45a;
+  --shadow:0 20px 70px rgba(0,0,0,.45);
+}
+
 *{
   box-sizing:border-box;
 }
@@ -15,376 +30,525 @@ html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  font-family:Inter,Arial,sans-serif;
-  background:#05070a;
-  color:#fff;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
-body{
-  background:
-    radial-gradient(circle at 20% 10%,#123522 0,transparent 30%),
-    radial-gradient(circle at 90% 20%,#11253a 0,transparent 30%),
-    #05070a;
+button,input,textarea{
+  font:inherit;
 }
 
-/* APP */
+button{
+  cursor:pointer;
+}
 
 .app{
   height:100vh;
   display:grid;
-  grid-template-columns:260px 1fr 350px;
-  grid-template-rows:65px 1fr 42px;
-  grid-template-areas:
-    "header header header"
-    "sidebar workspace chat"
-    "footer footer footer";
+  grid-template-columns:270px 1fr 390px;
+  grid-template-rows:64px 1fr;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(69,255,154,.06),transparent 35%),
+    radial-gradient(circle at 100% 100%,rgba(82,167,255,.04),transparent 30%);
 }
 
 /* HEADER */
 
-header{
-  grid-area:header;
+.header{
+  grid-column:1/4;
   display:flex;
   align-items:center;
-  padding:0 20px;
-  border-bottom:1px solid #202833;
-  background:#080c12dd;
+  justify-content:space-between;
+  padding:0 18px;
+  border-bottom:1px solid var(--line);
+  background:rgba(5,7,10,.82);
   backdrop-filter:blur(20px);
+  z-index:20;
 }
 
 .logo{
-  font-size:22px;
-  font-weight:900;
-  letter-spacing:4px;
-  color:#45ff9a;
-  text-shadow:0 0 25px #45ff9a66;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  font-weight:800;
+  letter-spacing:3px;
+}
+
+.logoOrb{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 35% 30%,#fff,transparent 8%),
+    radial-gradient(circle,#45ff9a 0%,#0d7b4b 40%,#06130e 72%);
+  box-shadow:
+    0 0 15px rgba(69,255,154,.65),
+    0 0 45px rgba(69,255,154,.18);
+  animation:pulse 2.5s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.08)}
+}
+
+.headerCenter{
+  display:flex;
+  gap:8px;
+  align-items:center;
 }
 
 .status{
-  margin-left:18px;
-  color:#8b98a9;
+  padding:8px 12px;
+  border:1px solid rgba(69,255,154,.18);
+  border-radius:999px;
+  color:var(--green);
   font-size:12px;
+  background:rgba(69,255,154,.05);
 }
 
-.status-dot{
-  width:8px;
-  height:8px;
-  display:inline-block;
-  border-radius:50%;
-  background:#45ff9a;
-  box-shadow:0 0 14px #45ff9a;
-  margin-right:6px;
-}
-
-.header-right{
-  margin-left:auto;
+.headerButtons{
   display:flex;
-  gap:8px;
+  gap:7px;
 }
 
-button{
-  border:1px solid #27313e;
-  background:#101620;
-  color:#fff;
-  padding:9px 12px;
+.hbtn{
+  border:1px solid var(--line);
+  background:#0b1117;
+  color:#dce7e2;
   border-radius:9px;
-  cursor:pointer;
+  padding:8px 11px;
+  transition:.2s;
 }
 
-button:hover{
-  border-color:#45ff9a;
-  background:#122019;
-}
-
-.green{
-  color:#45ff9a;
-  border-color:#45ff9a55;
+.hbtn:hover{
+  border-color:rgba(69,255,154,.4);
+  color:var(--green);
+  transform:translateY(-1px);
 }
 
 /* SIDEBAR */
 
 .sidebar{
-  grid-area:sidebar;
-  border-right:1px solid #202833;
-  background:#080c11ee;
-  padding:14px;
+  border-right:1px solid var(--line);
+  background:rgba(7,11,15,.9);
   overflow:auto;
+  padding:16px;
 }
 
-.title{
-  font-size:11px;
-  color:#687789;
-  letter-spacing:1.5px;
-  margin:12px 4px 8px;
+.sectionTitle{
+  font-size:10px;
+  color:#5f6d68;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin:12px 5px 9px;
 }
 
-.search{
-  width:100%;
-  padding:10px;
-  border-radius:9px;
-  border:1px solid #27313e;
-  background:#0e141d;
-  color:white;
-  outline:none;
-}
-
-.repo{
+.project{
   padding:11px;
-  margin:5px 0;
-  border-radius:9px;
-  background:#0d131b;
   border:1px solid transparent;
-  cursor:pointer;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:5px;
+  color:#b9c6c1;
+  transition:.2s;
 }
 
-.repo:hover,
-.repo.active{
-  border-color:#45ff9a55;
-  background:#102019;
+.project:hover{
+  background:#0d141a;
 }
 
-.repo small{
-  display:block;
-  color:#6e7c8e;
-  margin-top:4px;
+.project.active{
+  background:rgba(69,255,154,.07);
+  border-color:rgba(69,255,154,.18);
+  color:var(--green);
+}
+
+.projectIcon{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border-radius:7px;
+  background:#111920;
 }
 
 .file{
-  padding:8px;
-  color:#aab5c3;
-  border-radius:7px;
-  cursor:pointer;
+  padding:8px 9px 8px 35px;
+  color:#82918c;
   font-size:13px;
+  cursor:pointer;
+  border-radius:7px;
 }
 
-.file:hover,
+.file:hover{
+  background:#0d141a;
+  color:white;
+}
+
 .file.active{
-  background:#141c26;
-  color:#45ff9a;
+  color:var(--green);
+  background:rgba(69,255,154,.05);
+}
+
+.newProject{
+  width:100%;
+  border:1px dashed rgba(69,255,154,.25);
+  background:transparent;
+  color:var(--green);
+  border-radius:9px;
+  padding:10px;
+  margin-top:8px;
 }
 
 /* WORKSPACE */
 
 .workspace{
-  grid-area:workspace;
-  display:grid;
-  grid-template-rows:48px 1fr 38%;
   min-width:0;
+  display:flex;
+  flex-direction:column;
+  background:#070b0f;
 }
 
-.editor-bar{
+.workspaceTop{
+  height:48px;
   display:flex;
   align-items:center;
-  padding:0 12px;
-  border-bottom:1px solid #202833;
+  justify-content:space-between;
+  padding:0 14px;
+  border-bottom:1px solid var(--line);
 }
 
-.filename{
-  color:#dbe4ed;
-  font-size:13px;
+.path{
+  font-size:12px;
+  color:#77847f;
 }
 
-.editor-buttons{
-  margin-left:auto;
+.workspaceActions{
   display:flex;
-  gap:6px;
+  gap:7px;
+}
+
+.smallBtn{
+  border:1px solid var(--line);
+  background:#0c1319;
+  color:#aab7b2;
+  padding:7px 10px;
+  border-radius:7px;
+}
+
+.smallBtn:hover{
+  color:var(--green);
+  border-color:rgba(69,255,154,.35);
+}
+
+.editorWrap{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
 }
 
 .editor{
+  min-width:0;
+  position:relative;
+  border-right:1px solid var(--line);
+}
+
+.editorLabel{
+  height:36px;
+  padding:10px 13px;
+  font-size:11px;
+  color:#6e7c77;
+  border-bottom:1px solid var(--line);
+}
+
+textarea{
   width:100%;
-  height:100%;
+  height:calc(100% - 36px);
   resize:none;
   border:0;
   outline:0;
-  background:#06090d;
-  color:#d9e5f1;
-  padding:18px;
-  font-family:monospace;
-  font-size:14px;
-  line-height:1.6;
+  background:#060a0e;
+  color:#dce9e3;
+  padding:16px;
+  font-family:"SFMono-Regular",Consolas,monospace;
+  font-size:13px;
+  line-height:1.65;
 }
 
 .preview{
-  position:relative;
-  border-top:1px solid #202833;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
   background:white;
 }
 
-.preview iframe{
+.previewHeader{
+  height:36px;
+  flex-shrink:0;
+  background:#0b1015;
+  color:#718079;
+  border-bottom:1px solid var(--line);
+  padding:10px 13px;
+  font-size:11px;
+}
+
+#previewFrame{
+  flex:1;
   width:100%;
-  height:100%;
   border:0;
   background:white;
-}
-
-.preview-label{
-  position:absolute;
-  right:10px;
-  top:8px;
-  z-index:5;
-  background:#070b11dd;
-  color:#45ff9a;
-  padding:5px 8px;
-  border-radius:6px;
-  font-size:10px;
 }
 
 /* CHAT */
 
 .chat{
-  grid-area:chat;
-  border-left:1px solid #202833;
-  background:#080c11ee;
+  border-left:1px solid var(--line);
+  background:#080d12;
   display:flex;
   flex-direction:column;
+  min-width:0;
 }
 
-.chat-header{
+.chatTop{
   height:48px;
   display:flex;
   align-items:center;
+  justify-content:space-between;
   padding:0 14px;
-  border-bottom:1px solid #202833;
-  font-weight:bold;
+  border-bottom:1px solid var(--line);
+}
+
+.agentBadge{
+  color:var(--green);
+  font-size:11px;
+  border:1px solid rgba(69,255,154,.2);
+  background:rgba(69,255,154,.05);
+  border-radius:999px;
+  padding:5px 8px;
 }
 
 .messages{
   flex:1;
   overflow:auto;
-  padding:13px;
+  padding:15px;
 }
 
-.message{
-  max-width:94%;
-  padding:10px 12px;
-  border-radius:11px;
-  margin-bottom:8px;
+.msg{
+  margin-bottom:13px;
+  animation:messageIn .25s ease;
+}
+
+@keyframes messageIn{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:none}
+}
+
+.msg.user{
+  display:flex;
+  justify-content:flex-end;
+}
+
+.bubble{
+  max-width:90%;
+  padding:11px 13px;
+  border-radius:13px;
   font-size:13px;
-  line-height:1.5;
+  line-height:1.55;
   white-space:pre-wrap;
 }
 
-.ai{
-  background:#101722;
-  border:1px solid #202a36;
+.msg.ai .bubble{
+  background:#0d151b;
+  border:1px solid var(--line);
 }
 
-.user{
-  margin-left:auto;
-  background:#123622;
-  border:1px solid #246d49;
+.msg.user .bubble{
+  background:rgba(69,255,154,.12);
+  border:1px solid rgba(69,255,154,.16);
+  color:#eafff3;
 }
 
 .action{
-  border-left:2px solid #45ff9a;
-  padding-left:10px;
-}
-
-.chat-input{
-  display:flex;
-  gap:6px;
-  padding:10px;
-  border-top:1px solid #202833;
-}
-
-.chat-input input{
-  flex:1;
-  min-width:0;
-  padding:10px;
-  background:#101620;
-  border:1px solid #27313e;
-  color:white;
-  border-radius:9px;
-  outline:none;
-}
-
-/* FOOTER */
-
-footer{
-  grid-area:footer;
-  display:flex;
-  align-items:center;
-  padding:0 14px;
-  border-top:1px solid #202833;
-  color:#69788a;
+  margin-top:7px;
+  padding:8px 10px;
+  border-left:2px solid var(--green);
+  background:#091017;
+  color:#82918c;
+  font-family:monospace;
   font-size:11px;
 }
 
-/* SETTINGS */
+.chatInput{
+  padding:12px;
+  border-top:1px solid var(--line);
+}
 
-.settings{
+.inputRow{
+  display:flex;
+  gap:7px;
+}
+
+.chatInput input{
+  flex:1;
+  min-width:0;
+  background:#0c1319;
+  border:1px solid var(--line);
+  color:white;
+  outline:none;
+  border-radius:10px;
+  padding:11px 12px;
+}
+
+.chatInput input:focus{
+  border-color:rgba(69,255,154,.4);
+  box-shadow:0 0 0 3px rgba(69,255,154,.04);
+}
+
+.send{
+  width:43px;
+  border:0;
+  border-radius:10px;
+  background:var(--green);
+  color:#03120a;
+  font-weight:900;
+}
+
+.mic{
+  width:43px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#0c1319;
+  color:#b9c6c1;
+}
+
+.mic.active{
+  color:#fff;
+  background:#531c25;
+  border-color:#a83748;
+}
+
+.quick{
+  display:flex;
+  gap:6px;
+  overflow:auto;
+  margin-top:8px;
+}
+
+.quick button{
+  white-space:nowrap;
+  border:1px solid var(--line);
+  background:#0c1319;
+  color:#75837e;
+  border-radius:999px;
+  padding:6px 9px;
+  font-size:10px;
+}
+
+/* API */
+
+.apiPanel{
   position:fixed;
   inset:0;
-  background:#0009;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(12px);
   display:none;
-  align-items:center;
-  justify-content:center;
+  place-items:center;
   z-index:100;
 }
 
-.settings-box{
-  width:min(550px,92vw);
-  background:#0c121a;
-  border:1px solid #2a3542;
-  border-radius:16px;
-  padding:20px;
-  box-shadow:0 20px 80px #000;
+.apiCard{
+  width:min(500px,92vw);
+  background:#0b1117;
+  border:1px solid rgba(69,255,154,.2);
+  border-radius:18px;
+  padding:22px;
+  box-shadow:var(--shadow);
 }
 
-.settings-box h2{
-  margin-top:0;
+.apiCard h2{
+  margin:0 0 7px;
 }
 
-.settings-box input{
+.apiCard p{
+  color:#77847f;
+  font-size:13px;
+}
+
+.apiCard input{
   width:100%;
-  padding:11px;
-  background:#070b10;
-  border:1px solid #27313e;
+  padding:12px;
+  border-radius:9px;
+  border:1px solid var(--line);
+  background:#060a0e;
   color:white;
-  border-radius:8px;
+  outline:0;
 }
 
-.info{
-  color:#8391a2;
-  font-size:12px;
-  line-height:1.5;
-}
-
-.settings-buttons{
+.apiButtons{
   display:flex;
-  justify-content:flex-end;
-  gap:7px;
+  gap:8px;
   margin-top:12px;
+}
+
+.apiButtons button{
+  flex:1;
+  padding:10px;
+  border-radius:9px;
+  border:1px solid var(--line);
+  background:#111820;
+  color:white;
+}
+
+.apiButtons .save{
+  background:var(--green);
+  color:#03120a;
+  border:0;
 }
 
 /* MOBILE */
 
-@media(max-width:1050px){
-
+@media(max-width:1100px){
   .app{
     grid-template-columns:220px 1fr;
-    grid-template-areas:
-      "header header"
-      "sidebar workspace"
-      "footer footer";
   }
 
   .chat{
     display:none;
   }
+
+  .header{
+    grid-column:1/3;
+  }
 }
 
-@media(max-width:700px){
-
+@media(max-width:750px){
   .app{
     grid-template-columns:1fr;
-    grid-template-areas:
-      "header"
-      "workspace"
-      "footer";
+    grid-template-rows:60px 1fr;
   }
 
   .sidebar{
+    display:none;
+  }
+
+  .header{
+    grid-column:1;
+  }
+
+  .editorWrap{
+    grid-template-columns:1fr;
+  }
+
+  .preview{
+    display:none;
+  }
+
+  .headerCenter{
     display:none;
   }
 }
@@ -395,225 +559,149 @@ footer{
 
 <div class="app">
 
-<!-- HEADER -->
-
-<header>
+<header class="header">
 
   <div class="logo">
+    <div class="logoOrb"></div>
     JOVS
   </div>
 
-  <div class="status">
-    <span class="status-dot"></span>
-    <span id="status">BEREIT</span>
+  <div class="headerCenter">
+    <div class="status" id="status">● BEREIT</div>
   </div>
 
-  <div class="header-right">
-
-    <button onclick="openSettings()">
-      ⚙ API
-    </button>
-
-    <button onclick="openGoogle()">
-      🔎 Google
-    </button>
-
-    <button onclick="openYouTube()">
-      ▶ YouTube
-    </button>
-
-    <button onclick="openMaps()">
-      🗺 Maps
-    </button>
-
+  <div class="headerButtons">
+    <button class="hbtn" onclick="openGoogle()">Google</button>
+    <button class="hbtn" onclick="openYouTube()">YouTube</button>
+    <button class="hbtn" onclick="openMaps()">Maps</button>
+    <button class="hbtn" onclick="openApi()">API</button>
   </div>
 
 </header>
 
 
-<!-- SIDEBAR -->
-
 <aside class="sidebar">
 
-  <input
-    id="repoSearch"
-    class="search"
-    placeholder="🔎 Projekt suchen..."
-  >
+  <div class="sectionTitle">Projekte</div>
 
-  <div class="title">
-    PROJEKTE
-  </div>
+  <div id="projects"></div>
 
-  <div id="repositories"></div>
+  <button class="newProject" onclick="createProject()">
+    + Neues Projekt
+  </button>
 
-  <div class="title">
-    DATEIEN
-  </div>
+  <div class="sectionTitle">Dateien</div>
 
   <div id="files"></div>
 
 </aside>
 
 
-<!-- WORKSPACE -->
-
 <main class="workspace">
 
-  <div class="editor-bar">
+  <div class="workspaceTop">
 
-    <div class="filename" id="filename">
-      index.html
+    <div class="path" id="path">
+      JOVS / index.html
     </div>
 
-    <div class="editor-buttons">
-
-      <button onclick="saveFile()">
-        💾 Speichern
-      </button>
-
-      <button
-        class="green"
-        onclick="runPreview()">
-        ▶ Vorschau
-      </button>
-
-      <button onclick="openCurrentWebsite()">
-        ↗ Öffnen
-      </button>
-
+    <div class="workspaceActions">
+      <button class="smallBtn" onclick="runPreview()">▶ Preview</button>
+      <button class="smallBtn" onclick="saveProject()">Speichern</button>
+      <button class="smallBtn" onclick="downloadCurrent()">Export</button>
     </div>
 
   </div>
 
+  <div class="editorWrap">
 
-  <textarea
-    id="editor"
-    class="editor"
-    spellcheck="false">
-  </textarea>
+    <div class="editor">
 
+      <div class="editorLabel">
+        CODE EDITOR
+      </div>
 
-  <div class="preview">
+      <textarea id="editor" spellcheck="false"></textarea>
 
-    <div class="preview-label">
-      JOVS LIVE
     </div>
 
-    <iframe
-      id="previewFrame"
-      sandbox="allow-scripts allow-forms allow-modals">
-    </iframe>
+    <div class="preview">
+
+      <div class="previewHeader">
+        LIVE PREVIEW
+      </div>
+
+      <iframe id="previewFrame"></iframe>
+
+    </div>
 
   </div>
 
 </main>
 
 
-<!-- CHAT -->
-
 <section class="chat">
 
-  <div class="chat-header">
-    JOVS
-    <span
-      style="margin-left:7px;color:#69788a;font-size:11px">
-      COWORK
-    </span>
+  <div class="chatTop">
+    <strong>JOVS Agent</strong>
+    <span class="agentBadge">AUTONOM</span>
   </div>
 
+  <div class="messages" id="messages"></div>
 
-  <div id="messages" class="messages">
+  <div class="chatInput">
 
-    <div class="message ai">
+    <div class="inputRow">
 
-Hallo. Ich bin JOVS.
+      <button class="mic" id="micBtn" onclick="toggleMic()">🎙</button>
 
-Du kannst mir zum Beispiel sagen:
+      <input
+        id="chatInput"
+        autocomplete="off"
+        placeholder="Sag JOVS, was er tun soll..."
+        onkeydown="if(event.key==='Enter') sendMessage()"
+      >
 
-„Öffne Google“
-
-„Suche auf YouTube nach Formel 1“
-
-„Öffne Maps“
-
-„Öffne index.html“
-
-„Ändere den Titel auf JOVS“
-
-„Zeig die Vorschau“
+      <button class="send" onclick="sendMessage()">➤</button>
 
     </div>
 
-  </div>
-
-
-  <div class="chat-input">
-
-    <input
-      id="command"
-      placeholder="Was soll ich machen?">
-
-    <button onclick="voiceInput()">
-      🎙
-    </button>
-
-    <button
-      class="green"
-      onclick="sendCommand()">
-      ➤
-    </button>
+    <div class="quick">
+      <button onclick="quick('Erstelle ein neues 3D-Modell')">3D Modell</button>
+      <button onclick="quick('Baue ein cooles Browser-Spiel')">Spiel bauen</button>
+      <button onclick="quick('Verbessere das Design')">Design</button>
+      <button onclick="quick('Öffne Google')">Google</button>
+    </div>
 
   </div>
 
 </section>
 
-
-<footer>
-
-  <span id="path">
-    JOVS › Demo › index.html
-  </span>
-
-  <span style="margin-left:auto">
-    JOVS CoWork • Browser Mode
-  </span>
-
-</footer>
-
 </div>
 
 
-<!-- SETTINGS -->
+<!-- API PANEL -->
 
-<div id="settings" class="settings">
+<div class="apiPanel" id="apiPanel">
 
-  <div class="settings-box">
+  <div class="apiCard">
 
-    <h2>JOVS API</h2>
+    <h2>Gemini API</h2>
 
-    <p class="info">
-      Dein API-Key wird ausschließlich lokal in diesem Browser
-      gespeichert. Er wird nicht automatisch in GitHub geschrieben.
+    <p>
+      Der Schlüssel wird nur lokal in diesem Browser gespeichert.
+      Für eine echte öffentliche Website solltest du später einen Backend-Proxy verwenden.
     </p>
 
     <input
       id="apiKey"
       type="password"
-      placeholder="Gemini API Key">
+      placeholder="Gemini API Key"
+    >
 
-    <div class="settings-buttons">
-
-      <button onclick="closeSettings()">
-        Abbrechen
-      </button>
-
-      <button
-        class="green"
-        onclick="saveApiKey()">
-        Speichern
-      </button>
-
+    <div class="apiButtons">
+      <button onclick="closeApi()">Abbrechen</button>
+      <button class="save" onclick="saveApi()">Speichern</button>
     </div>
 
   </div>
@@ -623,956 +711,1750 @@ Du kannst mir zum Beispiel sagen:
 
 <script>
 
-/* =========================================
-   DEMO PROJEKTE
-========================================= */
+/* =========================================================
+   JOVS CORE
+========================================================= */
 
-const projects = [
+const MODEL = "gemini-3.8-flash";
 
-  {
-    name:"JOVS",
-    files:{
-      "index.html":`
-<!DOCTYPE html>
+const API_STORAGE = "jovs_gemini_key";
+
+let apiKey = localStorage.getItem(API_STORAGE) || "";
+
+let currentProject = "JOVS";
+let currentFile = "index.html";
+
+let micListening = false;
+let recognition = null;
+
+let agentHistory = [];
+
+let projects = JSON.parse(
+  localStorage.getItem("jovs_projects") || "null"
+);
+
+
+/* =========================================================
+   DEFAULT PROJECTS
+========================================================= */
+
+if(!projects){
+
+  projects = {
+
+    JOVS:{
+      name:"JOVS",
+      files:{
+        "index.html":`<!DOCTYPE html>
 <html>
 <head>
-<title>JOVS</title>
-
+<title>JOVS Project</title>
 <style>
-
 body{
   margin:0;
-  height:100vh;
+  min-height:100vh;
   display:grid;
   place-items:center;
-  background:#050b08;
+  background:#05070a;
   color:#45ff9a;
   font-family:Arial;
 }
-
 h1{
-  font-size:70px;
-  text-shadow:0 0 30px #45ff9a;
+  font-size:60px;
+}
+</style>
+</head>
+<body>
+<h1>JOVS</h1>
+</body>
+</html>`
+      }
+    },
+
+    GameZone:{
+      name:"GameZone",
+      files:{
+        "index.html":`<!DOCTYPE html>
+<html>
+<body style="background:#090909;color:white;font-family:Arial;text-align:center">
+<h1>GameZone</h1>
+<p>Dein neues Spielprojekt.</p>
+</body>
+</html>`
+      }
+    },
+
+    Axolotl:{
+      name:"Axolotl",
+      files:{
+        "index.html":`<!DOCTYPE html>
+<html>
+<body style="background:#07141a;color:#fff;font-family:Arial;text-align:center">
+<h1>Axolotl World</h1>
+</body>
+</html>`
+      }
+    }
+
+  };
+
+  persist();
+
 }
 
-</style>
 
+/* =========================================================
+   STORAGE
+========================================================= */
+
+function persist(){
+
+  localStorage.setItem(
+    "jovs_projects",
+    JSON.stringify(projects)
+  );
+
+}
+
+
+/* =========================================================
+   UI
+========================================================= */
+
+function renderProjects(){
+
+  const box = document.getElementById("projects");
+
+  box.innerHTML = "";
+
+  Object.keys(projects).forEach(name=>{
+
+    const p = document.createElement("div");
+
+    p.className =
+      "project " +
+      (name===currentProject ? "active":"");
+
+    p.innerHTML = `
+      <div class="projectIcon">▣</div>
+      <span>${escapeHtml(name)}</span>
+    `;
+
+    p.onclick = ()=>{
+
+      currentProject = name;
+
+      const files =
+        Object.keys(projects[name].files);
+
+      currentFile =
+        files.includes("index.html")
+        ? "index.html"
+        : files[0];
+
+      renderAll();
+
+    };
+
+    box.appendChild(p);
+
+  });
+
+}
+
+
+function renderFiles(){
+
+  const box = document.getElementById("files");
+
+  box.innerHTML = "";
+
+  const files =
+    projects[currentProject].files;
+
+  Object.keys(files).forEach(path=>{
+
+    const f = document.createElement("div");
+
+    f.className =
+      "file " +
+      (path===currentFile ? "active":"");
+
+    f.textContent = "📄 " + path;
+
+    f.onclick = ()=>{
+
+      currentFile = path;
+
+      loadCurrentFile();
+
+      renderFiles();
+
+    };
+
+    box.appendChild(f);
+
+  });
+
+}
+
+
+function renderAll(){
+
+  renderProjects();
+  renderFiles();
+  loadCurrentFile();
+
+}
+
+
+function loadCurrentFile(){
+
+  const content =
+    projects[currentProject].files[currentFile] || "";
+
+  document.getElementById("editor").value =
+    content;
+
+  document.getElementById("path").textContent =
+    currentProject + " / " + currentFile;
+
+  runPreview();
+
+}
+
+
+/* =========================================================
+   EDITOR
+========================================================= */
+
+document
+.getElementById("editor")
+.addEventListener("input",()=>{
+
+  projects[currentProject].files[currentFile] =
+    document.getElementById("editor").value;
+
+  persist();
+
+});
+
+
+function saveProject(){
+
+  projects[currentProject].files[currentFile] =
+    document.getElementById("editor").value;
+
+  persist();
+
+  actionLog(
+    "Projekt gespeichert",
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+function runPreview(){
+
+  const code =
+    document.getElementById("editor").value;
+
+  if(!code) return;
+
+  document
+    .getElementById("previewFrame")
+    .srcdoc = code;
+
+}
+
+
+function downloadCurrent(){
+
+  const code =
+    projects[currentProject].files[currentFile];
+
+  const blob =
+    new Blob([code],{type:"text/html"});
+
+  const a =
+    document.createElement("a");
+
+  a.href =
+    URL.createObjectURL(blob);
+
+  a.download =
+    currentFile.split("/").pop();
+
+  a.click();
+
+  setTimeout(()=>{
+    URL.revokeObjectURL(a.href);
+  },1000);
+
+}
+
+
+/* =========================================================
+   PROJECT CREATION
+========================================================= */
+
+function createProject(){
+
+  const name =
+    prompt("Name des neuen Projekts:");
+
+  if(!name) return;
+
+  if(projects[name]){
+    alert("Dieses Projekt existiert bereits.");
+    return;
+  }
+
+  projects[name]={
+    name,
+    files:{
+      "index.html":`<!DOCTYPE html>
+<html>
+<head>
+<title>${escapeHtml(name)}</title>
+</head>
+<body>
+<h1>${escapeHtml(name)}</h1>
+</body>
+</html>`
+    }
+  };
+
+  currentProject=name;
+  currentFile="index.html";
+
+  persist();
+  renderAll();
+
+}
+
+
+/* =========================================================
+   CHAT
+========================================================= */
+
+function addMessage(text,type="ai"){
+
+  const wrapper =
+    document.createElement("div");
+
+  wrapper.className =
+    "msg " + type;
+
+  const bubble =
+    document.createElement("div");
+
+  bubble.className="bubble";
+
+  bubble.textContent=text;
+
+  wrapper.appendChild(bubble);
+
+  document
+    .getElementById("messages")
+    .appendChild(wrapper);
+
+  const messages =
+    document.getElementById("messages");
+
+  messages.scrollTop =
+    messages.scrollHeight;
+
+  return wrapper;
+
+}
+
+
+function actionLog(text,status=""){
+
+  const wrapper =
+    document.createElement("div");
+
+  wrapper.className="msg ai";
+
+  const action =
+    document.createElement("div");
+
+  action.className="action";
+
+  action.textContent =
+    "› " + text;
+
+  if(status==="error"){
+    action.style.borderColor="var(--red)";
+  }
+
+  wrapper.appendChild(action);
+
+  document
+    .getElementById("messages")
+    .appendChild(wrapper);
+
+  const messages =
+    document.getElementById("messages");
+
+  messages.scrollTop =
+    messages.scrollHeight;
+
+}
+
+
+function quick(text){
+
+  document.getElementById("chatInput").value=text;
+
+  sendMessage();
+
+}
+
+
+/* =========================================================
+   GEMINI AGENT SCHEMA
+========================================================= */
+
+const agentSchema = {
+
+  type:"object",
+
+  properties:{
+
+    reply:{
+      type:"string",
+      description:"Kurze Antwort an den Benutzer."
+    },
+
+    actions:{
+      type:"array",
+      description:"Aktionen, die JOVS im Browser ausführen soll.",
+      items:{
+        type:"object",
+
+        properties:{
+
+          type:{
+            type:"string",
+            enum:[
+              "edit_file",
+              "create_file",
+              "delete_file",
+              "create_3d",
+              "build_project",
+              "preview",
+              "open_google",
+              "open_youtube",
+              "open_maps",
+              "open_website",
+              "save_project",
+              "change_ui"
+            ]
+          },
+
+          path:{
+            type:["string","null"]
+          },
+
+          content:{
+            type:["string","null"]
+          },
+
+          query:{
+            type:["string","null"]
+          },
+
+          url:{
+            type:["string","null"]
+          },
+
+          name:{
+            type:["string","null"]
+          },
+
+          instruction:{
+            type:["string","null"]
+          },
+
+          files:{
+            type:["array","null"],
+            items:{
+              type:"object",
+              properties:{
+                path:{type:"string"},
+                content:{type:"string"}
+              },
+              required:["path","content"]
+            }
+          }
+
+        },
+
+        required:["type"]
+      }
+    }
+
+  },
+
+  required:["reply","actions"]
+
+};
+
+
+/* =========================================================
+   SYSTEM PROMPT
+========================================================= */
+
+function buildSystemPrompt(){
+
+  const fileList =
+    Object.keys(
+      projects[currentProject].files
+    );
+
+  const currentContent =
+    projects[currentProject]
+      .files[currentFile] || "";
+
+  return `
+
+DU BIST JOVS.
+
+Du bist ein autonomer Browser-, Coding-, Design- und
+Projekt-Agent.
+
+SPRACHE:
+Antworte auf Deutsch.
+
+DEINE AUFGABE:
+Verstehe natürliche Sprache und führe die gewünschten
+Aktionen über die bereitgestellten Aktionen aus.
+
+JOVS KANN:
+
+- HTML schreiben
+- CSS schreiben
+- JavaScript schreiben
+- Dateien erstellen
+- Dateien bearbeiten
+- Dateien löschen
+- komplette Projekte bauen
+- bestehende Projekte verändern
+- das eigene JOVS-Projekt verändern
+- UI-Strukturen verändern
+- Browser-Projekte erstellen
+- Spiele erstellen
+- Apps als Webapps erstellen
+- 3D-Szenen erstellen
+- 3D-Modelle mit Three.js erstellen
+- beliebig viele neue 3D-Projekte/Szenen erzeugen
+- Webseiten öffnen
+- Google öffnen
+- YouTube öffnen
+- Google Maps öffnen
+- Projekte speichern
+- Live Preview aktualisieren
+
+WICHTIG:
+
+Wenn der Benutzer sagt:
+
+"ändere dich"
+
+"ändere JOVS"
+
+"mach dein Design anders"
+
+"füge dir eine Funktion hinzu"
+
+dann darfst du die Dateien des JOVS-Projekts bearbeiten.
+
+Wenn der Benutzer sagt:
+
+"baue mir ein Spiel"
+
+"baue mir eine Website"
+
+"erstelle eine App"
+
+"daraus soll ein komplettes Projekt werden"
+
+verwende build_project.
+
+Wenn ein Projekt mehrere Dateien benötigt,
+erstelle mehrere Dateien.
+
+Wenn möglich, verwende für kleine Projekte
+eine vollständige index.html.
+
+3D:
+
+Für 3D-Projekte darfst du Three.js über CDN verwenden.
+
+Erzeuge vollständigen funktionierenden Code.
+
+Ein 3D-Modell kann aus beliebig vielen
+Boxen, Kugeln, Zylindern, Torusformen,
+Texturen, Lichtquellen, Materialien usw.
+zusammengesetzt werden.
+
+Du kannst auch komplette 3D-Szenen erzeugen.
+
+Wenn der Benutzer ausdrücklich ein 3D-Modell
+möchte, verwende create_3d oder build_project.
+
+ÄNDERN:
+
+Wenn der Benutzer eine bestehende Datei ändern möchte,
+lies den vorhandenen Code im Kontext und gib den
+vollständigen neuen Dateiinhalt zurück.
+
+NICHT:
+Keine erfundenen Aktionen.
+Keine nicht vorhandenen Tools.
+Keine API-Schlüssel in erzeugten Dateien.
+
+AKTUELLES PROJEKT:
+${currentProject}
+
+AKTUELLE DATEI:
+${currentFile}
+
+DATEIEN:
+${fileList.join(", ")}
+
+AKTUELLER DATEIINHALT:
+----- START -----
+${currentContent}
+----- ENDE -----
+
+`;
+
+}
+
+
+/* =========================================================
+   SEND MESSAGE
+========================================================= */
+
+async function sendMessage(){
+
+  const input =
+    document.getElementById("chatInput");
+
+  const text =
+    input.value.trim();
+
+  if(!text) return;
+
+  input.value="";
+
+  addMessage(text,"user");
+
+  if(!apiKey){
+
+    addMessage(
+      "Bitte zuerst deinen Gemini API-Key über „API“ eintragen.",
+      "ai"
+    );
+
+    openApi();
+
+    return;
+  }
+
+  setStatus("DENKEN");
+
+  actionLog("JOVS analysiert die Aufgabe...");
+
+  try{
+
+    const result =
+      await askGeminiAgent(text);
+
+    if(result.reply){
+
+      addMessage(
+        result.reply,
+        "ai"
+      );
+
+    }
+
+    if(Array.isArray(result.actions)){
+
+      for(const action of result.actions){
+
+        await executeAction(action);
+
+      }
+
+    }
+
+    agentHistory.push({
+      role:"user",
+      text
+    });
+
+    agentHistory.push({
+      role:"assistant",
+      text:result.reply || ""
+    });
+
+    if(agentHistory.length>12){
+
+      agentHistory =
+        agentHistory.slice(-12);
+
+    }
+
+    setStatus("BEREIT");
+
+  }catch(error){
+
+    console.error(error);
+
+    actionLog(
+      "Fehler: " + error.message,
+      "error"
+    );
+
+    addMessage(
+      "Ich konnte die Aufgabe nicht ausführen: " +
+      error.message,
+      "ai"
+    );
+
+    setStatus("FEHLER");
+
+  }
+
+}
+
+
+/* =========================================================
+   GEMINI REQUEST
+========================================================= */
+
+async function askGeminiAgent(userText){
+
+  const historyText =
+    agentHistory
+      .map(x=>`${x.role}: ${x.text}`)
+      .join("\n");
+
+  const prompt =
+
+    buildSystemPrompt() +
+
+    `
+
+BISHERIGE UNTERHALTUNG:
+${historyText}
+
+NEUE BENUTZERANWEISUNG:
+${userText}
+
+Plane die notwendigen Aktionen.
+
+Wenn mehrere Aktionen nötig sind,
+gib alle Aktionen in der richtigen Reihenfolge zurück.
+
+Wenn eine Datei erstellt oder geändert wird,
+liefere den vollständigen Inhalt.
+
+Wenn ein Projekt gebaut werden soll,
+liefere alle benötigten Dateien.
+
+Gib ausschließlich gültiges JSON gemäß Schema zurück.
+`;
+
+
+  const endpoint =
+    "https://generativelanguage.googleapis.com/v1beta/models/" +
+    encodeURIComponent(MODEL) +
+    ":generateContent";
+
+
+  const response =
+    await fetch(endpoint,{
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json",
+        "x-goog-api-key":apiKey
+      },
+
+      body:JSON.stringify({
+
+        contents:[
+
+          {
+            role:"user",
+            parts:[
+              {
+                text:prompt
+              }
+            ]
+          }
+
+        ],
+
+        generationConfig:{
+
+          temperature:.2,
+
+          responseMimeType:
+            "application/json",
+
+          responseSchema:
+            agentSchema
+
+        }
+
+      })
+
+    });
+
+
+  const data =
+    await response.json();
+
+
+  if(!response.ok){
+
+    const message =
+      data?.error?.message ||
+      "Gemini API Fehler";
+
+    throw new Error(message);
+
+  }
+
+
+  const raw =
+    data?.candidates?.[0]
+      ?.content?.parts?.[0]?.text;
+
+
+  if(!raw){
+
+    throw new Error(
+      "Gemini hat keine Antwort geliefert."
+    );
+
+  }
+
+
+  try{
+
+    return JSON.parse(raw);
+
+  }catch{
+
+    throw new Error(
+      "Gemini-Antwort war kein gültiges JSON."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ACTION EXECUTOR
+========================================================= */
+
+async function executeAction(action){
+
+  if(!action || !action.type) return;
+
+  actionLog(
+    "Aktion: " + action.type
+  );
+
+
+  switch(action.type){
+
+    case "edit_file":
+
+      await editFile(action);
+
+      break;
+
+
+    case "create_file":
+
+      await createFile(action);
+
+      break;
+
+
+    case "delete_file":
+
+      await deleteFile(action);
+
+      break;
+
+
+    case "create_3d":
+
+      await create3D(action);
+
+      break;
+
+
+    case "build_project":
+
+      await buildProject(action);
+
+      break;
+
+
+    case "preview":
+
+      runPreview();
+
+      break;
+
+
+    case "open_google":
+
+      openGoogle(action.query || "");
+
+      break;
+
+
+    case "open_youtube":
+
+      openYouTube(action.query || "");
+
+      break;
+
+
+    case "open_maps":
+
+      openMaps(action.query || "");
+
+      break;
+
+
+    case "open_website":
+
+      openWebsite(action.url);
+
+      break;
+
+
+    case "save_project":
+
+      saveProject();
+
+      break;
+
+
+    case "change_ui":
+
+      changeUI(action);
+
+      break;
+
+  }
+
+}
+
+
+/* =========================================================
+   EDIT FILE
+========================================================= */
+
+async function editFile(action){
+
+  if(!action.path){
+    throw new Error("edit_file benötigt path.");
+  }
+
+  if(typeof action.content!=="string"){
+    throw new Error(
+      "edit_file benötigt content."
+    );
+  }
+
+  projects[currentProject]
+    .files[action.path] =
+      action.content;
+
+  currentFile =
+    action.path;
+
+  persist();
+  renderAll();
+
+  actionLog(
+    "Datei geändert: " + action.path,
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   CREATE FILE
+========================================================= */
+
+async function createFile(action){
+
+  if(!action.path){
+    throw new Error(
+      "create_file benötigt path."
+    );
+  }
+
+  projects[currentProject]
+    .files[action.path] =
+      action.content || "";
+
+  currentFile =
+    action.path;
+
+  persist();
+  renderAll();
+
+  actionLog(
+    "Datei erstellt: " + action.path,
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   DELETE FILE
+========================================================= */
+
+async function deleteFile(action){
+
+  if(!action.path) return;
+
+  if(
+    !projects[currentProject]
+      .files[action.path]
+  ){
+    return;
+  }
+
+  delete projects[currentProject]
+    .files[action.path];
+
+  const files =
+    Object.keys(
+      projects[currentProject].files
+    );
+
+  currentFile =
+    files[0] || "";
+
+  persist();
+  renderAll();
+
+  actionLog(
+    "Datei gelöscht: " + action.path,
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   BUILD PROJECT
+========================================================= */
+
+async function buildProject(action){
+
+  if(!Array.isArray(action.files)){
+
+    throw new Error(
+      "build_project benötigt files."
+    );
+
+  }
+
+
+  for(const file of action.files){
+
+    if(
+      !file.path ||
+      typeof file.content!=="string"
+    ){
+      continue;
+    }
+
+    projects[currentProject]
+      .files[file.path] =
+        file.content;
+
+    actionLog(
+      "Baue Datei: " + file.path
+    );
+
+  }
+
+
+  if(action.files.length){
+
+    currentFile =
+      action.files[0].path;
+
+  }
+
+
+  persist();
+  renderAll();
+
+  actionLog(
+    "Projekt vollständig gebaut.",
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   3D GENERATOR
+========================================================= */
+
+async function create3D(action){
+
+  const name =
+    action.name ||
+    "3D-Scene";
+
+  const instruction =
+    action.instruction ||
+    "Erstelle eine beeindruckende 3D-Szene.";
+
+
+  actionLog(
+    "Erzeuge 3D-Szene: " + name
+  );
+
+
+  const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${escapeHtml(name)}</title>
+
+<style>
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#020406;
+}
+
+canvas{
+  display:block;
+}
+
+.ui{
+  position:fixed;
+  left:20px;
+  top:20px;
+  color:#45ff9a;
+  font-family:Arial,sans-serif;
+  background:rgba(0,0,0,.35);
+  border:1px solid rgba(69,255,154,.2);
+  padding:12px 15px;
+  border-radius:12px;
+  backdrop-filter:blur(10px);
+}
+</style>
 </head>
 
 <body>
 
-<h1>JOVS</h1>
+<div class="ui">
+  <b>${escapeHtml(name)}</b><br>
+  <small>${escapeHtml(instruction)}</small>
+</div>
 
-</body>
-</html>
-      `,
+<script src="https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.min.js"><\/script>
 
-      "README.md":
-"# JOVS\n\nJOVS CoWork Browser AI.",
+<script>
 
-      "style.css":
-"body{background:#050505;color:#45ff9a}",
+const scene =
+  new THREE.Scene();
 
-      "app.js":
-"console.log('JOVS online');"
-    }
-  },
-
-  {
-    name:"GameZone",
-    files:{
-      "index.html":`
-<!DOCTYPE html>
-<html>
-<body>
-
-<h1>GameZone</h1>
-
-<p>Dein Spielprojekt.</p>
-
-</body>
-</html>
-      `,
-
-      "README.md":
-"# GameZone"
-    }
-  },
-
-  {
-    name:"Axolotl",
-    files:{
-      "index.html":`
-<!DOCTYPE html>
-<html>
-<body>
-
-<h1>Axolotl</h1>
-
-<p>Axolotl Website.</p>
-
-</body>
-</html>
-      `,
-
-      "README.md":
-"# Axolotl"
-    }
-  }
-
-];
+scene.background =
+  new THREE.Color(0x020406);
 
 
-/* =========================================
-   STATE
-========================================= */
+const camera =
+  new THREE.PerspectiveCamera(
+    60,
+    innerWidth/innerHeight,
+    .1,
+    1000
+  );
 
-let currentProject = projects[0];
-
-let currentFile = "index.html";
-
-let files = {...currentProject.files};
-
-
-/* =========================================
-   ELEMENTS
-========================================= */
-
-const editor =
-document.getElementById("editor");
-
-const previewFrame =
-document.getElementById("previewFrame");
-
-const messages =
-document.getElementById("messages");
+camera.position.set(
+  5,
+  3,
+  7
+);
 
 
-/* =========================================
-   PROJECTS
-========================================= */
+const renderer =
+  new THREE.WebGLRenderer({
+    antialias:true
+  });
 
-function renderProjects(){
+renderer.setPixelRatio(
+  Math.min(devicePixelRatio,2)
+);
 
-  const container =
-  document.getElementById("repositories");
+renderer.setSize(
+  innerWidth,
+  innerHeight
+);
 
-  container.innerHTML="";
+document.body.appendChild(
+  renderer.domElement
+);
 
-  const search =
-  document
-  .getElementById("repoSearch")
-  .value
-  .toLowerCase();
 
-  projects
-  .filter(p =>
-    p.name.toLowerCase().includes(search)
-  )
-  .forEach(project=>{
+/* LIGHT */
 
-    const div =
-    document.createElement("div");
+const ambient =
+  new THREE.AmbientLight(
+    0xffffff,
+    1.4
+  );
 
-    div.className =
-    "repo " +
-    (project===currentProject
-      ? "active"
-      : "");
+scene.add(ambient);
 
-    div.innerHTML =
-    `
-    <b>📦 ${project.name}</b>
-    <small>${Object.keys(project.files).length} Dateien</small>
-    `;
 
-    div.onclick=()=>{
+const light =
+  new THREE.DirectionalLight(
+    0xffffff,
+    3
+  );
 
-      currentProject=project;
+light.position.set(
+  5,
+  10,
+  5
+);
 
-      files={...project.files};
+scene.add(light);
 
-      currentFile=
-      Object.keys(files)[0];
 
-      renderProjects();
+/* FLOOR */
 
-      renderFiles();
+const floor =
+  new THREE.Mesh(
 
-      loadFile();
+    new THREE.PlaneGeometry(
+      50,
+      50
+    ),
 
-      addAI(
-        "Projekt geöffnet: "+
-        project.name
+    new THREE.MeshStandardMaterial({
+      color:0x07100c,
+      roughness:.75,
+      metalness:.15
+    })
+
+  );
+
+floor.rotation.x =
+  -Math.PI/2;
+
+scene.add(floor);
+
+
+/* DEMO OBJECT */
+
+const body =
+  new THREE.Mesh(
+
+    new THREE.BoxGeometry(
+      2.8,
+      .8,
+      1.5
+    ),
+
+    new THREE.MeshStandardMaterial({
+      color:0x45ff9a,
+      metalness:.65,
+      roughness:.25
+    })
+
+  );
+
+body.position.y=.9;
+
+scene.add(body);
+
+
+/* WHEELS */
+
+for(
+  let x of [-1.05,1.05]
+){
+
+  for(
+    let z of [-.8,.8]
+  ){
+
+    const wheel =
+      new THREE.Mesh(
+
+        new THREE.CylinderGeometry(
+          .38,
+          .38,
+          .3,
+          32
+        ),
+
+        new THREE.MeshStandardMaterial({
+          color:0x101010,
+          metalness:.7
+        })
+
       );
 
-    };
+    wheel.rotation.z =
+      Math.PI/2;
 
-    container.appendChild(div);
-
-  });
-
-}
-
-
-/* =========================================
-   FILES
-========================================= */
-
-function renderFiles(){
-
-  const container =
-  document.getElementById("files");
-
-  container.innerHTML="";
-
-  Object.keys(files).forEach(file=>{
-
-    const div =
-    document.createElement("div");
-
-    div.className =
-    "file " +
-    (file===currentFile
-      ? "active"
-      : "");
-
-    div.textContent =
-    "📄 "+file;
-
-    div.onclick=()=>{
-
-      currentFile=file;
-
-      loadFile();
-
-      renderFiles();
-
-    };
-
-    container.appendChild(div);
-
-  });
-
-}
-
-
-/* =========================================
-   LOAD FILE
-========================================= */
-
-function loadFile(){
-
-  document
-  .getElementById("filename")
-  .textContent=currentFile;
-
-  document
-  .getElementById("path")
-  .textContent=
-  "JOVS › "+
-  currentProject.name+
-  " › "+
-  currentFile;
-
-  editor.value=
-  files[currentFile] || "";
-
-  if(currentFile.endsWith(".html")){
-
-    runPreview();
-
-  }
-
-}
-
-
-/* =========================================
-   SAVE
-========================================= */
-
-function saveFile(){
-
-  files[currentFile]=editor.value;
-
-  localStorage.setItem(
-    "jovs_"+currentProject.name,
-    JSON.stringify(files)
-  );
-
-  addAI(
-    "💾 "+currentFile+
-    " lokal im Browser gespeichert."
-  );
-
-}
-
-
-/* =========================================
-   PREVIEW
-========================================= */
-
-function runPreview(){
-
-  files[currentFile]=editor.value;
-
-  if(!currentFile.endsWith(".html")){
-
-    addAI(
-      "Die Live-Vorschau funktioniert direkt für HTML-Dateien."
+    wheel.position.set(
+      x,
+      .45,
+      z
     );
 
-    return;
+    scene.add(wheel);
 
   }
-
-  previewFrame.srcdoc=
-  files[currentFile];
-
-  setStatus("LIVE");
 
 }
 
 
-/* =========================================
-   OPEN CURRENT WEBSITE
-========================================= */
+/* ANIMATION */
 
-function openCurrentWebsite(){
+function animate(){
 
-  runPreview();
-
-  /*
-    Kein Popup:
-    Wir navigieren direkt zum Inhalt.
-  */
-
-  const html=
-  files[currentFile];
-
-  const blob=
-  new Blob(
-    [html],
-    {type:"text/html"}
+  requestAnimationFrame(
+    animate
   );
 
-  const url=
-  URL.createObjectURL(blob);
+  body.rotation.y += .003;
+
+  camera.lookAt(
+    0,
+    .7,
+    0
+  );
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+animate();
+
+
+addEventListener(
+  "resize",
+  ()=>{
+
+    camera.aspect =
+      innerWidth/innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+      innerWidth,
+      innerHeight
+    );
+
+  }
+);
+
+<\/script>
+
+</body>
+</html>`;
+
+
+  const path =
+    "3d/" +
+    name
+      .replace(/[^a-z0-9_-]/gi,"_") +
+    ".html";
+
+
+  projects[currentProject]
+    .files[path] =
+      html;
+
+  currentFile =
+    path;
+
+  persist();
+  renderAll();
+
+  actionLog(
+    "3D-Modell erstellt: " + path,
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   UI CHANGES
+========================================================= */
+
+function changeUI(action){
+
+  const instruction =
+    (action.instruction || "")
+      .toLowerCase();
+
+
+  if(
+    instruction.includes("grün") ||
+    instruction.includes("green")
+  ){
+
+    document.documentElement
+      .style.setProperty(
+        "--green",
+        "#45ff9a"
+      );
+
+  }
+
+
+  if(
+    instruction.includes("blau") ||
+    instruction.includes("blue")
+  ){
+
+    document.documentElement
+      .style.setProperty(
+        "--green",
+        "#52a7ff"
+      );
+
+  }
+
+
+  if(
+    instruction.includes("rot") ||
+    instruction.includes("red")
+  ){
+
+    document.documentElement
+      .style.setProperty(
+        "--green",
+        "#ff526c"
+      );
+
+  }
+
+
+  actionLog(
+    "JOVS-Oberfläche geändert.",
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   EXTERNAL WEB
+========================================================= */
+
+function openGoogle(query=""){
+
+  const q =
+    query
+      ? "?q="+encodeURIComponent(query)
+      : "";
+
+  window.location.href =
+    "https://www.google.com/" + q;
+
+}
+
+
+function openYouTube(query=""){
+
+  const q =
+    query
+      ? "?search_query="+
+        encodeURIComponent(query)
+      : "";
+
+  window.location.href =
+    "https://www.youtube.com/" + q;
+
+}
+
+
+function openMaps(query=""){
+
+  const q =
+    query
+      ? "/search/"+encodeURIComponent(query)
+      : "";
+
+  window.location.href =
+    "https://www.google.com/maps" + q;
+
+}
+
+
+function openWebsite(url){
+
+  if(!url) return;
+
+  if(
+    !/^https?:\/\//i.test(url)
+  ){
+    url="https://"+url;
+  }
 
   window.location.href=url;
 
 }
 
 
-/* =========================================
-   GOOGLE
-========================================= */
+/* =========================================================
+   API PANEL
+========================================================= */
 
-function openGoogle(){
+function openApi(){
 
-  window.location.href=
-  "https://www.google.com/";
+  document
+    .getElementById("apiPanel")
+    .style.display="grid";
 
-}
-
-
-/* =========================================
-   YOUTUBE
-========================================= */
-
-function openYouTube(){
-
-  window.location.href=
-  "https://www.youtube.com/";
+  document
+    .getElementById("apiKey")
+    .value=apiKey;
 
 }
 
 
-/* =========================================
-   MAPS
-========================================= */
+function closeApi(){
 
-function openMaps(){
-
-  window.location.href=
-  "https://www.google.com/maps/";
+  document
+    .getElementById("apiPanel")
+    .style.display="none";
 
 }
 
 
-/* =========================================
-   GOOGLE SEARCH
-========================================= */
+function saveApi(){
 
-function searchGoogle(query){
-
-  window.location.href=
-  "https://www.google.com/search?q="+
-  encodeURIComponent(query);
-
-}
-
-
-/* =========================================
-   YOUTUBE SEARCH
-========================================= */
-
-function searchYouTube(query){
-
-  window.location.href=
-  "https://www.youtube.com/results?search_query="+
-  encodeURIComponent(query);
-
-}
-
-
-/* =========================================
-   MAP SEARCH
-========================================= */
-
-function searchMaps(query){
-
-  window.location.href=
-  "https://www.google.com/maps/search/"+
-  encodeURIComponent(query);
-
-}
-
-
-/* =========================================
-   CHAT
-========================================= */
-
-function addUser(text){
-
-  const div=
-  document.createElement("div");
-
-  div.className=
-  "message user";
-
-  div.textContent=text;
-
-  messages.appendChild(div);
-
-  messages.scrollTop=
-  messages.scrollHeight;
-
-}
-
-
-function addAI(text){
-
-  const div=
-  document.createElement("div");
-
-  div.className=
-  "message ai";
-
-  div.textContent=text;
-
-  messages.appendChild(div);
-
-  messages.scrollTop=
-  messages.scrollHeight;
-
-}
-
-
-function action(text){
-
-  const div=
-  document.createElement("div");
-
-  div.className=
-  "message ai action";
-
-  div.textContent=
-  "AKTION\n"+text;
-
-  messages.appendChild(div);
-
-  messages.scrollTop=
-  messages.scrollHeight;
-
-}
-
-
-/* =========================================
-   COMMAND SYSTEM
-========================================= */
-
-function sendCommand(){
-
-  const input=
-  document.getElementById("command");
-
-  const text=
-  input.value.trim();
-
-  if(!text)return;
-
-  addUser(text);
-
-  input.value="";
-
-  executeCommand(text);
-
-}
-
-
-/* =========================================
-   COMMANDS
-========================================= */
-
-function executeCommand(text){
-
-  const lower=
-  text.toLowerCase();
-
-
-  /* GOOGLE */
-
-  if(
-    lower.includes("google")
-  ){
-
-    let query=
-    text
-    .replace(/google/gi,"")
-    .replace(/suche/gi,"")
-    .trim();
-
-    if(query){
-
-      action(
-        "🔎 Google-Suche: "+
-        query
-      );
-
-      searchGoogle(query);
-
-    }else{
-
-      action(
-        "🔎 Google wird geöffnet."
-      );
-
-      openGoogle();
-
-    }
-
-    return;
-
-  }
-
-
-  /* YOUTUBE */
-
-  if(
-    lower.includes("youtube")
-  ){
-
-    let query=
-    text
-    .replace(/youtube/gi,"")
-    .replace(/suche/gi,"")
-    .trim();
-
-    if(query){
-
-      action(
-        "▶ YouTube-Suche: "+
-        query
-      );
-
-      searchYouTube(query);
-
-    }else{
-
-      action(
-        "▶ YouTube wird geöffnet."
-      );
-
-      openYouTube();
-
-    }
-
-    return;
-
-  }
-
-
-  /* MAPS */
-
-  if(
-    lower.includes("maps") ||
-    lower.includes("karte")
-  ){
-
-    let query=
-    text
-    .replace(/maps/gi,"")
-    .replace(/karte/gi,"")
-    .replace(/öffne/gi,"")
-    .trim();
-
-    if(query){
-
-      action(
-        "🗺 Maps-Suche: "+
-        query
-      );
-
-      searchMaps(query);
-
-    }else{
-
-      action(
-        "🗺 Google Maps wird geöffnet."
-      );
-
-      openMaps();
-
-    }
-
-    return;
-
-  }
-
-
-  /* VORSCHAU */
-
-  if(
-    lower.includes("vorschau") ||
-    lower.includes("preview")
-  ){
-
-    action(
-      "▶ Live-Vorschau wird aktualisiert."
-    );
-
-    runPreview();
-
-    return;
-
-  }
-
-
-  /* SPEICHERN */
-
-  if(
-    lower.includes("speicher")
-  ){
-
-    saveFile();
-
-    return;
-
-  }
-
-
-  /* DATEI ÖFFNEN */
-
-  const fileMatch=
-  text.match(
-    /(?:öffne|open)\s+(?:die\s+)?([a-zA-Z0-9_.\/-]+)/i
-  );
-
-  if(fileMatch){
-
-    const requested=
-    fileMatch[1];
-
-    const found=
-    Object.keys(files)
-    .find(f =>
-      f.toLowerCase()===
-      requested.toLowerCase()
-    );
-
-    if(found){
-
-      currentFile=found;
-
-      loadFile();
-
-      renderFiles();
-
-      action(
-        "📄 Datei geöffnet: "+
-        found
-      );
-
-      return;
-
-    }
-
-  }
-
-
-  /* TITEL ÄNDERN */
-
-  const titleMatch=
-  text.match(
-    /titel\s+(?:auf|zu)\s+(.+)/i
-  );
-
-  if(titleMatch){
-
-    const newTitle=
-    titleMatch[1];
-
-    let code=
-    editor.value;
-
-    if(
-      /<title>[\s\S]*?<\/title>/i
-      .test(code)
-    ){
-
-      code=
-      code.replace(
-        /<title>[\s\S]*?<\/title>/i,
-        "<title>"+
-        newTitle+
-        "</title>"
-      );
-
-    }else{
-
-      code=
-      code.replace(
-        /<head>/i,
-        "<head><title>"+
-        newTitle+
-        "</title>"
-      );
-
-    }
-
-    editor.value=code;
-
-    files[currentFile]=code;
-
-    runPreview();
-
-    action(
-      "✏️ Titel geändert auf: "+
-      newTitle
-    );
-
-    return;
-
-  }
-
-
-  /* URL */
-
-  const urlMatch=
-  text.match(
-    /https?:\/\/[^\s]+/i
-  );
-
-  if(urlMatch){
-
-    action(
-      "🌐 Webseite wird geöffnet."
-    );
-
-    window.location.href=
-    urlMatch[0];
-
-    return;
-
-  }
-
-
-  addAI(
-    "Ich habe den Befehl noch nicht erkannt.\n\n"+
-    "Beispiele:\n"+
-    "• Öffne Google\n"+
-    "• Suche auf YouTube nach F1\n"+
-    "• Öffne Maps Paris\n"+
-    "• Öffne index.html\n"+
-    "• Ändere den Titel auf JOVS\n"+
-    "• Zeig die Vorschau\n"+
-    "• Speichere"
-  );
-
-}
-
-
-/* =========================================
-   VOICE
-========================================= */
-
-function voiceInput(){
-
-  const Recognition=
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
-
-  if(!Recognition){
-
-    addAI(
-      "Spracherkennung wird in diesem Browser nicht unterstützt."
-    );
-
-    return;
-
-  }
-
-  const recognition=
-  new Recognition();
-
-  recognition.lang=
-  "de-DE";
-
-  recognition.interimResults=false;
-
-  recognition.onstart=()=>{
-
-    setStatus("ZUHÖREN");
-
-  };
-
-  recognition.onresult=e=>{
-
+  apiKey =
     document
-    .getElementById("command")
-    .value=
-    e.results[0][0].transcript;
+      .getElementById("apiKey")
+      .value.trim();
 
-  };
-
-  recognition.onend=()=>{
-
-    setStatus("BEREIT");
-
-  };
-
-  recognition.start();
-
-}
-
-
-/* =========================================
-   API KEY
-========================================= */
-
-function openSettings(){
-
-  document
-  .getElementById("settings")
-  .style.display="flex";
-
-  document
-  .getElementById("apiKey")
-  .value=
-  localStorage.getItem("jovs_gemini_key") || "";
-
-}
-
-
-function closeSettings(){
-
-  document
-  .getElementById("settings")
-  .style.display="none";
-
-}
-
-
-function saveApiKey(){
-
-  const key=
-  document
-  .getElementById("apiKey")
-  .value.trim();
-
-  if(key){
+  if(apiKey){
 
     localStorage.setItem(
-      "jovs_gemini_key",
-      key
-    );
-
-    addAI(
-      "🔐 Gemini API-Key lokal im Browser gespeichert."
+      API_STORAGE,
+      apiKey
     );
 
   }else{
 
     localStorage.removeItem(
-      "jovs_gemini_key"
-    );
-
-    addAI(
-      "🔐 API-Key entfernt."
+      API_STORAGE
     );
 
   }
 
-  closeSettings();
+  closeApi();
+
+  addMessage(
+    "Gemini API wurde lokal gespeichert.",
+    "ai"
+  );
 
 }
 
 
-/* =========================================
+/* =========================================================
+   VOICE
+========================================================= */
+
+function setupRecognition(){
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if(!SpeechRecognition){
+
+    document
+      .getElementById("micBtn")
+      .style.display="none";
+
+    return;
+
+  }
+
+  recognition =
+    new SpeechRecognition();
+
+  recognition.lang="de-DE";
+
+  recognition.continuous=false;
+
+  recognition.interimResults=false;
+
+
+  recognition.onstart=()=>{
+
+    micListening=true;
+
+    document
+      .getElementById("micBtn")
+      .classList.add("active");
+
+    setStatus("ZUHÖREN");
+
+  };
+
+
+  recognition.onend=()=>{
+
+    micListening=false;
+
+    document
+      .getElementById("micBtn")
+      .classList.remove("active");
+
+    setStatus("BEREIT");
+
+  };
+
+
+  recognition.onerror=()=>{
+
+    micListening=false;
+
+    document
+      .getElementById("micBtn")
+      .classList.remove("active");
+
+    setStatus("BEREIT");
+
+  };
+
+
+  recognition.onresult=(event)=>{
+
+    const text =
+      event.results[0][0].transcript;
+
+    document
+      .getElementById("chatInput")
+      .value=text;
+
+    sendMessage();
+
+  };
+
+}
+
+
+function toggleMic(){
+
+  if(!recognition){
+
+    alert(
+      "Spracherkennung wird von diesem Browser nicht unterstützt."
+    );
+
+    return;
+
+  }
+
+  if(micListening){
+
+    recognition.stop();
+
+  }else{
+
+    recognition.start();
+
+  }
+
+}
+
+
+/* =========================================================
    STATUS
-========================================= */
+========================================================= */
 
 function setStatus(text){
 
   document
-  .getElementById("status")
-  .textContent=text;
+    .getElementById("status")
+    .textContent =
+      "● " + text;
 
 }
 
 
-/* =========================================
-   SEARCH
-========================================= */
+/* =========================================================
+   SECURITY / HELPERS
+========================================================= */
 
-document
-.getElementById("repoSearch")
-.addEventListener(
-  "input",
-  renderProjects
-);
+function escapeHtml(value){
 
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 
-/* =========================================
-   ENTER
-========================================= */
-
-document
-.getElementById("command")
-.addEventListener(
-  "keydown",
-  e=>{
-
-    if(e.key==="Enter"){
-
-      sendCommand();
-
-    }
-
-  }
-);
+}
 
 
-/* =========================================
+/* =========================================================
    START
-========================================= */
+========================================================= */
 
-renderProjects();
+renderAll();
 
-renderFiles();
+setupRecognition();
 
-loadFile();
+addMessage(
+  "JOVS ist bereit. Du kannst mir direkt sagen, was ich bauen, ändern, erstellen oder öffnen soll.",
+  "ai"
+);
 
 </script>
 
