@@ -7,18 +7,19 @@
 
 <style>
 :root{
-  --bg:#050505;
-  --panel:#0b0b0d;
-  --panel2:#101012;
-  --panel3:#151517;
-  --line:#27272b;
-  --red:#ff2638;
-  --red2:#b80015;
-  --redGlow:rgba(255,38,56,.22);
-  --text:#f4f4f5;
-  --muted:#8b8b92;
-  --green:#43e58b;
-  --blue:#4da3ff;
+  --bg:#030303;
+  --panel:#080808;
+  --panel2:#0d0d0d;
+  --panel3:#121212;
+  --red:#ff1e3c;
+  --red2:#ff0033;
+  --red3:#ff5269;
+  --text:#f5f5f5;
+  --muted:#858585;
+  --line:rgba(255,30,60,.18);
+  --green:#35ff91;
+  --blue:#38a7ff;
+  --shadow:0 0 35px rgba(255,0,45,.13);
 }
 
 *{
@@ -26,358 +27,561 @@
 }
 
 html,body{
-  margin:0;
   width:100%;
   height:100%;
+  margin:0;
   overflow:hidden;
-  background:var(--bg);
+  background:#000;
   color:var(--text);
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:Inter,Arial,Helvetica,sans-serif;
 }
 
-button,
-input,
-textarea{
-  font:inherit;
+body{
+  position:relative;
 }
 
-button{
-  cursor:pointer;
+/* BACKGROUND */
+
+.background{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:0;
+  background:
+    radial-gradient(circle at 50% 40%,rgba(255,0,45,.09),transparent 35%),
+    radial-gradient(circle at 10% 90%,rgba(255,0,45,.06),transparent 30%),
+    #020202;
 }
+
+.grid{
+  position:absolute;
+  inset:-50%;
+  background-image:
+    linear-gradient(rgba(255,0,45,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,0,45,.045) 1px,transparent 1px);
+  background-size:60px 60px;
+  transform:perspective(500px) rotateX(60deg);
+  animation:gridMove 18s linear infinite;
+  opacity:.45;
+}
+
+@keyframes gridMove{
+  from{transform:perspective(500px) rotateX(60deg) translateY(0)}
+  to{transform:perspective(500px) rotateX(60deg) translateY(60px)}
+}
+
+.orb{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(70px);
+  opacity:.17;
+  animation:float 12s ease-in-out infinite alternate;
+}
+
+.orb.a{
+  width:400px;
+  height:400px;
+  background:#ff0033;
+  left:-150px;
+  top:-150px;
+}
+
+.orb.b{
+  width:300px;
+  height:300px;
+  background:#ff1744;
+  right:-100px;
+  bottom:-100px;
+  animation-delay:-4s;
+}
+
+@keyframes float{
+  from{transform:translate(0,0) scale(1)}
+  to{transform:translate(100px,60px) scale(1.15)}
+}
+
+#particles{
+  position:absolute;
+  inset:0;
+}
+
+/* APP */
 
 .app{
-  width:100%;
-  height:100vh;
+  position:relative;
+  z-index:2;
   display:grid;
-  grid-template-columns:235px 1fr 390px;
-  grid-template-rows:64px 1fr;
-  background:
-    radial-gradient(circle at 50% -10%,rgba(255,38,56,.11),transparent 30%),
-    #050505;
+  grid-template-columns:240px minmax(400px,1fr) 370px;
+  height:100vh;
+  width:100%;
 }
 
-/* =========================
-   HEADER
-========================= */
+/* SIDEBAR */
 
-.header{
-  grid-column:1/4;
+.sidebar{
+  height:100vh;
+  background:rgba(5,5,5,.88);
+  backdrop-filter:blur(20px);
+  border-right:1px solid var(--line);
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 18px;
-  border-bottom:1px solid var(--line);
-  background:rgba(5,5,6,.92);
-  backdrop-filter:blur(18px);
-  z-index:20;
+  flex-direction:column;
+  overflow:hidden;
 }
 
 .logo{
+  height:72px;
   display:flex;
   align-items:center;
   gap:12px;
-  font-weight:900;
-  letter-spacing:4px;
+  padding:0 20px;
+  border-bottom:1px solid var(--line);
 }
 
-.logoCore{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 35% 30%,white 0 5%,transparent 7%),
-    radial-gradient(circle,var(--red) 0%,#62000b 45%,#070000 72%);
-  box-shadow:
-    0 0 15px var(--redGlow),
-    0 0 45px rgba(255,38,56,.12);
-  animation:orb 2.7s infinite;
-}
-
-@keyframes orb{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.08)}
-}
-
-.headerCenter{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.status{
-  font-size:11px;
-  padding:7px 11px;
-  border-radius:999px;
-  border:1px solid rgba(255,38,56,.25);
-  color:#ff6d78;
-  background:rgba(255,38,56,.06);
-}
-
-.headerButtons{
-  display:flex;
-  gap:7px;
-}
-
-.topBtn{
-  border:1px solid var(--line);
-  background:#0d0d0f;
-  color:#c8c8cc;
-  border-radius:8px;
-  padding:8px 10px;
-  transition:.2s;
-}
-
-.topBtn:hover{
-  color:white;
-  border-color:rgba(255,38,56,.5);
-  box-shadow:0 0 15px rgba(255,38,56,.08);
-}
-
-/* =========================
-   SIDEBAR
-========================= */
-
-.sidebar{
-  min-width:0;
-  overflow:auto;
-  border-right:1px solid var(--line);
-  background:#080809;
-  padding:15px;
-}
-
-.sectionTitle{
-  color:#66666d;
-  font-size:9px;
-  font-weight:800;
-  letter-spacing:2px;
-  margin:12px 5px 9px;
-}
-
-.navItem{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px;
-  border-radius:9px;
-  color:#9999a0;
-  cursor:pointer;
-  margin-bottom:4px;
-  transition:.2s;
-}
-
-.navItem:hover{
-  background:#111113;
-  color:white;
-}
-
-.navItem.active{
-  color:#fff;
-  background:linear-gradient(
-    90deg,
-    rgba(255,38,56,.16),
-    transparent
-  );
-  border-left:2px solid var(--red);
-}
-
-.navIcon{
-  width:27px;
-  height:27px;
+.logoMark{
+  width:38px;
+  height:38px;
+  border:2px solid var(--red);
+  border-radius:12px;
   display:grid;
   place-items:center;
-  background:#121214;
-  border-radius:7px;
+  color:var(--red);
+  font-weight:900;
+  box-shadow:
+    0 0 12px rgba(255,0,50,.5),
+    inset 0 0 12px rgba(255,0,50,.12);
+  animation:logoPulse 2s ease-in-out infinite;
 }
 
-.projectItem{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:9px;
-  border-radius:8px;
-  color:#929298;
-  cursor:pointer;
+@keyframes logoPulse{
+  50%{box-shadow:0 0 28px rgba(255,0,50,.65)}
 }
 
-.projectItem:hover{
-  background:#111113;
-  color:white;
+.logoText{
+  font-weight:900;
+  letter-spacing:3px;
+  font-size:18px;
 }
 
-.projectItem.active{
-  color:#ff6570;
-  background:rgba(255,38,56,.07);
+.logoText span{
+  color:var(--red);
 }
 
-.newProject{
-  width:100%;
-  margin-top:8px;
-  padding:9px;
-  border-radius:8px;
-  border:1px dashed rgba(255,38,56,.3);
-  background:transparent;
-  color:#ff5664;
-}
-
-/* =========================
-   CENTER
-========================= */
-
-.center{
-  min-width:0;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  background:#070708;
-}
-
-.centerTop{
-  height:48px;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 14px;
-  border-bottom:1px solid var(--line);
-}
-
-.breadcrumb{
-  color:#77777e;
-  font-size:11px;
-}
-
-.workspaceButtons{
-  display:flex;
-  gap:6px;
-}
-
-.smallBtn{
-  border:1px solid var(--line);
-  background:#0e0e10;
-  color:#aaaab0;
-  border-radius:7px;
-  padding:7px 9px;
-}
-
-.smallBtn:hover{
-  color:white;
-  border-color:rgba(255,38,56,.45);
-}
-
-.workspace{
-  flex:1;
-  min-height:0;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-}
-
-.codePanel,
-.previewPanel{
-  min-width:0;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-}
-
-.codePanel{
-  border-right:1px solid var(--line);
-}
-
-.panelTitle{
-  height:35px;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  padding:0 12px;
-  border-bottom:1px solid var(--line);
-  color:#696970;
-  font-size:9px;
-  letter-spacing:1.5px;
-  font-weight:800;
-}
-
-#editor{
-  flex:1;
-  width:100%;
-  resize:none;
-  outline:0;
-  border:0;
-  background:#050506;
-  color:#dedee2;
-  padding:15px;
-  font-family:"SFMono-Regular",Consolas,monospace;
-  font-size:12px;
-  line-height:1.65;
-}
-
-#preview{
-  width:100%;
-  flex:1;
-  border:0;
-  background:white;
-}
-
-/* =========================
-   CHAT
-========================= */
-
-.chat{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  border-left:1px solid var(--line);
-  background:#09090a;
-}
-
-.chatTop{
-  height:48px;
-  flex-shrink:0;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 14px;
-  border-bottom:1px solid var(--line);
-}
-
-.agentTitle{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.agentDot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:var(--red);
-  box-shadow:0 0 10px var(--red);
-}
-
-.agentBadge{
-  font-size:9px;
-  letter-spacing:1px;
-  padding:5px 7px;
-  border-radius:999px;
-  color:#ff6974;
-  border:1px solid rgba(255,38,56,.25);
-  background:rgba(255,38,56,.05);
-}
-
-.messages{
+.sidebarContent{
   flex:1;
   overflow:auto;
   padding:14px;
 }
 
-.msg{
-  margin-bottom:13px;
-  animation:message .2s ease;
+.sectionTitle{
+  color:#666;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  margin:13px 8px 8px;
 }
 
-@keyframes message{
+.navBtn{
+  width:100%;
+  border:1px solid transparent;
+  background:transparent;
+  color:#bbb;
+  border-radius:11px;
+  padding:11px 12px;
+  margin:3px 0;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  cursor:pointer;
+  text-align:left;
+  transition:.2s;
+}
+
+.navBtn:hover{
+  background:rgba(255,0,50,.08);
+  color:white;
+  border-color:rgba(255,0,50,.15);
+  transform:translateX(3px);
+}
+
+.navBtn.active{
+  background:linear-gradient(90deg,rgba(255,0,50,.17),rgba(255,0,50,.04));
+  color:#fff;
+  border-color:rgba(255,0,50,.3);
+  box-shadow:inset 3px 0 var(--red);
+}
+
+.navIcon{
+  width:20px;
+  text-align:center;
+}
+
+.projectList{
+  margin-top:5px;
+}
+
+.projectItem{
+  padding:9px 10px;
+  border-radius:9px;
+  color:#999;
+  font-size:12px;
+  cursor:pointer;
+  margin:2px 0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.projectItem:hover{
+  background:#111;
+  color:#fff;
+}
+
+.sidebarBottom{
+  padding:13px;
+  border-top:1px solid var(--line);
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  color:#999;
+  margin-bottom:10px;
+}
+
+.statusDot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 12px var(--green);
+}
+
+.settingsBtn{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #202020;
+  background:#0c0c0c;
+  color:#aaa;
+  cursor:pointer;
+}
+
+/* CENTER */
+
+.center{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  background:rgba(3,3,3,.72);
+  backdrop-filter:blur(10px);
+}
+
+.topbar{
+  height:72px;
+  flex-shrink:0;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+}
+
+.pageTitle{
+  font-weight:800;
+  font-size:15px;
+}
+
+.pageSub{
+  color:#666;
+  font-size:11px;
+  margin-top:3px;
+}
+
+.topActions{
+  display:flex;
+  gap:7px;
+}
+
+.topBtn{
+  border:1px solid #242424;
+  background:#0b0b0b;
+  color:#aaa;
+  border-radius:9px;
+  padding:8px 11px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.topBtn:hover{
+  color:#fff;
+  border-color:var(--red);
+  box-shadow:0 0 15px rgba(255,0,50,.13);
+}
+
+/* WORKSPACE */
+
+.workspace{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  padding:14px;
+  gap:12px;
+  overflow:hidden;
+}
+
+.modeBar{
+  display:flex;
+  gap:7px;
+  flex-shrink:0;
+}
+
+.modeBtn{
+  border:1px solid #1d1d1d;
+  background:#090909;
+  color:#888;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.modeBtn.active,
+.modeBtn:hover{
+  color:#fff;
+  border-color:rgba(255,0,50,.45);
+  background:rgba(255,0,50,.08);
+}
+
+/* EDITOR */
+
+.editorWrap{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.editorPanel,
+.previewPanel{
+  min-width:0;
+  min-height:0;
+  background:#060606;
+  border:1px solid #1b1b1b;
+  border-radius:13px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+.panelHeader{
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 11px;
+  background:#090909;
+  border-bottom:1px solid #181818;
+  color:#aaa;
+  font-size:11px;
+}
+
+.panelTools{
+  display:flex;
+  gap:5px;
+}
+
+.smallBtn{
+  border:1px solid #202020;
+  background:#101010;
+  color:#888;
+  border-radius:6px;
+  padding:5px 8px;
+  cursor:pointer;
+}
+
+.smallBtn:hover{
+  color:white;
+  border-color:var(--red);
+}
+
+textarea#editor{
+  width:100%;
+  height:calc(100% - 38px);
+  resize:none;
+  border:0;
+  outline:0;
+  background:#050505;
+  color:#eee;
+  padding:16px;
+  font-family:"SFMono-Regular",Consolas,monospace;
+  font-size:12px;
+  line-height:1.65;
+  tab-size:2;
+}
+
+#preview{
+  width:100%;
+  height:calc(100% - 38px);
+  border:0;
+  background:white;
+}
+
+/* BOTTOM */
+
+.bottomBar{
+  height:48px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  border:1px solid #191919;
+  background:#070707;
+  border-radius:11px;
+  padding:7px;
+}
+
+.actionBtn{
+  border:1px solid #242424;
+  background:#0c0c0c;
+  color:#aaa;
+  border-radius:8px;
+  padding:8px 12px;
+  cursor:pointer;
+  font-size:11px;
+}
+
+.actionBtn:hover{
+  color:#fff;
+  border-color:var(--red);
+}
+
+.actionBtn.primary{
+  background:linear-gradient(135deg,#ff0038,#b60028);
+  border-color:#ff3156;
+  color:#fff;
+  box-shadow:0 0 18px rgba(255,0,50,.2);
+}
+
+/* CHAT */
+
+.chat{
+  height:100vh;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  background:rgba(6,6,6,.92);
+  border-left:1px solid var(--line);
+  backdrop-filter:blur(20px);
+}
+
+.chatHeader{
+  height:72px;
+  flex-shrink:0;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 15px;
+}
+
+.aiIdentity{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.aiOrb{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:1px solid var(--red);
+  background:
+    radial-gradient(circle,#ff3450 0,#800018 35%,#090909 70%);
+  box-shadow:
+    0 0 20px rgba(255,0,50,.4),
+    inset 0 0 20px rgba(255,0,50,.4);
+  animation:aiOrb 2.4s ease-in-out infinite;
+}
+
+@keyframes aiOrb{
+  50%{
+    transform:scale(1.08);
+    box-shadow:0 0 40px rgba(255,0,50,.6);
+  }
+}
+
+.aiName{
+  font-weight:800;
+}
+
+.aiStatus{
+  color:#666;
+  font-size:10px;
+  margin-top:2px;
+}
+
+.chatTools{
+  display:flex;
+  gap:5px;
+}
+
+.iconBtn{
+  width:31px;
+  height:31px;
+  border:1px solid #222;
+  background:#0c0c0c;
+  color:#999;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.iconBtn:hover{
+  color:#fff;
+  border-color:var(--red);
+}
+
+/* THIS IS THE SCROLLABLE CHAT */
+
+.messages{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:15px;
+  scroll-behavior:smooth;
+}
+
+.messages::-webkit-scrollbar{
+  width:7px;
+}
+
+.messages::-webkit-scrollbar-track{
+  background:#050505;
+}
+
+.messages::-webkit-scrollbar-thumb{
+  background:#351019;
+  border-radius:20px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover{
+  background:#ff1744;
+}
+
+.message{
+  display:flex;
+  margin:9px 0;
+  animation:messageIn .25s ease;
+}
+
+@keyframes messageIn{
   from{
     opacity:0;
-    transform:translateY(5px);
+    transform:translateY(8px) scale(.98);
   }
   to{
     opacity:1;
@@ -385,260 +589,278 @@ button{
   }
 }
 
-.msg.user{
-  display:flex;
+.message.user{
   justify-content:flex-end;
 }
 
 .bubble{
-  max-width:91%;
-  padding:10px 12px;
-  border-radius:12px;
+  max-width:88%;
+  padding:11px 13px;
+  border-radius:13px;
   font-size:12px;
   line-height:1.55;
   white-space:pre-wrap;
-  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
-.msg.ai .bubble{
-  background:#111113;
-  border:1px solid #232327;
+.message.ai .bubble{
+  background:#0c0c0c;
+  border:1px solid #1b1b1b;
+  color:#ddd;
+  border-top-left-radius:4px;
 }
 
-.msg.user .bubble{
-  background:rgba(255,38,56,.13);
-  border:1px solid rgba(255,38,56,.2);
+.message.user .bubble{
+  background:linear-gradient(135deg,#4e0715,#25040b);
+  border:1px solid rgba(255,0,50,.3);
+  color:#fff;
+  border-top-right-radius:4px;
 }
 
-.action{
-  margin-top:6px;
-  padding:7px 9px;
-  border-left:2px solid var(--red);
-  background:#0d0d0f;
-  color:#77777f;
-  font-family:monospace;
+.message.system .bubble{
+  color:#777;
+  background:#080808;
+  border:1px dashed #222;
   font-size:10px;
 }
 
-.action.ok{
-  color:#83e6aa;
-  border-color:var(--green);
+.actionLine{
+  color:#ff516a;
+  font-family:monospace;
+  font-size:10px;
+  margin:3px 0;
+  opacity:.9;
 }
 
-.action.err{
-  color:#ff737d;
-  border-color:var(--red);
-}
-
-.generatedImage{
-  max-width:100%;
-  display:block;
-  margin-top:8px;
-  border-radius:10px;
-  border:1px solid #28282c;
-  cursor:pointer;
-}
-
-.chatBottom{
+.chatInputArea{
   flex-shrink:0;
-  padding:11px;
   border-top:1px solid var(--line);
+  padding:10px;
+  background:#050505;
+}
+
+.quickActions{
+  display:flex;
+  gap:5px;
+  overflow-x:auto;
+  padding-bottom:7px;
+}
+
+.quickActions::-webkit-scrollbar{
+  display:none;
 }
 
 .quick{
-  display:flex;
-  gap:5px;
-  overflow:auto;
-  margin-bottom:8px;
+  white-space:nowrap;
+  border:1px solid #222;
+  background:#0c0c0c;
+  color:#999;
+  border-radius:7px;
+  padding:6px 8px;
+  font-size:10px;
+  cursor:pointer;
 }
 
-.quick button{
-  white-space:nowrap;
-  border:1px solid var(--line);
-  background:#101012;
-  color:#7f7f86;
-  padding:6px 8px;
-  border-radius:999px;
-  font-size:9px;
+.quick:hover{
+  color:white;
+  border-color:var(--red);
 }
 
 .inputRow{
   display:flex;
-  gap:6px;
+  gap:7px;
+  align-items:flex-end;
 }
 
-#input{
+#chatInput{
   flex:1;
   min-width:0;
-  border:1px solid #29292d;
-  outline:0;
-  border-radius:10px;
-  background:#111113;
-  color:white;
+  min-height:42px;
+  max-height:130px;
+  resize:none;
+  outline:none;
+  border:1px solid #222;
+  background:#0b0b0b;
+  color:#fff;
+  border-radius:11px;
   padding:11px;
+  font-family:inherit;
+  font-size:12px;
 }
 
-#input:focus{
-  border-color:rgba(255,38,56,.5);
-  box-shadow:0 0 0 3px rgba(255,38,56,.05);
-}
-
-.iconBtn{
-  width:42px;
-  flex-shrink:0;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:#111113;
-  color:#aaaab0;
-}
-
-.iconBtn:hover{
-  color:white;
-  border-color:rgba(255,38,56,.5);
-}
-
-.iconBtn.active{
-  background:#5d0c16;
-  color:#ff7c86;
-  border-color:#a81627;
+#chatInput:focus{
+  border-color:rgba(255,0,50,.55);
+  box-shadow:0 0 15px rgba(255,0,50,.08);
 }
 
 .sendBtn{
   width:43px;
+  height:43px;
   border:0;
-  border-radius:10px;
-  background:var(--red);
-  color:white;
-  font-weight:900;
+  border-radius:11px;
+  background:linear-gradient(135deg,#ff1744,#a80027);
+  color:#fff;
+  cursor:pointer;
+  font-size:17px;
+  box-shadow:0 0 20px rgba(255,0,50,.2);
 }
 
-/* =========================
-   MODALS
-========================= */
+.sendBtn:hover{
+  transform:translateY(-2px);
+}
+
+/* IMAGE RESULT */
+
+.generatedImage{
+  max-width:100%;
+  border-radius:10px;
+  margin-top:8px;
+  border:1px solid #2b2b2b;
+  display:block;
+}
+
+/* LOADER */
+
+.typing{
+  display:flex;
+  gap:4px;
+  align-items:center;
+  height:16px;
+}
+
+.typing span{
+  width:5px;
+  height:5px;
+  background:var(--red);
+  border-radius:50%;
+  animation:typing 1s infinite;
+}
+
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+
+@keyframes typing{
+  0%,80%,100%{transform:scale(.5);opacity:.3}
+  40%{transform:scale(1);opacity:1}
+}
+
+/* MODAL */
 
 .modal{
   position:fixed;
   inset:0;
-  display:none;
-  place-items:center;
   z-index:100;
+  display:none;
+  align-items:center;
+  justify-content:center;
   background:rgba(0,0,0,.75);
   backdrop-filter:blur(12px);
 }
 
-.card{
-  width:min(520px,92vw);
-  max-height:90vh;
-  overflow:auto;
-  padding:22px;
-  border-radius:17px;
-  border:1px solid #333338;
-  background:#0c0c0e;
-  box-shadow:0 30px 100px rgba(0,0,0,.7);
-}
-
-.card h2{
-  margin:0 0 7px;
-}
-
-.card p{
-  color:#7d7d84;
-  font-size:12px;
-  line-height:1.5;
-}
-
-.card input,
-.card select{
-  width:100%;
-  margin-top:9px;
-  padding:11px;
-  border-radius:8px;
-  border:1px solid #29292d;
-  background:#050506;
-  color:white;
-  outline:0;
-}
-
-.modalButtons{
+.modal.show{
   display:flex;
-  gap:7px;
-  margin-top:12px;
 }
 
-.modalButtons button{
-  flex:1;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid var(--line);
-  background:#151517;
-  color:white;
+.modalBox{
+  width:min(540px,92vw);
+  background:#090909;
+  border:1px solid rgba(255,0,50,.3);
+  border-radius:17px;
+  box-shadow:0 0 60px rgba(255,0,50,.15);
+  padding:20px;
+  animation:modalIn .25s ease;
 }
 
-.modalButtons .primary{
-  border:0;
-  background:var(--red);
+@keyframes modalIn{
+  from{opacity:0;transform:scale(.94)}
+  to{opacity:1;transform:none}
 }
 
-/* IMAGE GALLERY */
-
-.gallery{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:8px;
-  margin-top:12px;
+.modalTitle{
+  font-weight:800;
+  margin-bottom:16px;
 }
 
-.gallery img{
+.formGroup{
+  margin:12px 0;
+}
+
+.formGroup label{
+  display:block;
+  color:#888;
+  font-size:11px;
+  margin-bottom:6px;
+}
+
+.formGroup input,
+.formGroup select{
   width:100%;
+  border:1px solid #222;
+  background:#050505;
+  color:white;
+  padding:10px;
   border-radius:9px;
+  outline:none;
 }
 
-/* RESPONSIVE */
-
-@media(max-width:1150px){
-  .app{
-    grid-template-columns:200px 1fr 340px;
-  }
+.modalActions{
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+  margin-top:18px;
 }
 
-@media(max-width:950px){
+/* MOBILE */
+
+@media(max-width:1100px){
   .app{
-    grid-template-columns:190px 1fr;
+    grid-template-columns:200px minmax(350px,1fr);
   }
 
   .chat{
-    display:none;
+    position:fixed;
+    right:0;
+    top:0;
+    width:min(380px,90vw);
+    z-index:20;
+    transform:translateX(100%);
+    transition:.3s;
+    box-shadow:-20px 0 60px #000;
   }
 
-  .header{
-    grid-column:1/3;
+  .chat.open{
+    transform:translateX(0);
   }
 }
 
-@media(max-width:700px){
+@media(max-width:750px){
   .app{
     grid-template-columns:1fr;
-    grid-template-rows:58px 1fr;
   }
 
   .sidebar{
-    display:none;
+    position:fixed;
+    left:0;
+    top:0;
+    width:250px;
+    z-index:30;
+    transform:translateX(-100%);
+    transition:.3s;
   }
 
-  .header{
-    grid-column:1;
+  .sidebar.open{
+    transform:translateX(0);
   }
 
-  .headerCenter,
-  .headerButtons{
-    display:none;
-  }
-
-  .workspace{
+  .editorWrap{
     grid-template-columns:1fr;
   }
 
-  .previewPanel{
+  .editorPanel{
+    display:none;
+  }
+
+  .topActions .topBtn:nth-child(n+3){
     display:none;
   }
 }
@@ -647,637 +869,695 @@ button{
 
 <body>
 
+<div class="background">
+  <div class="grid"></div>
+  <div class="orb a"></div>
+  <div class="orb b"></div>
+  <canvas id="particles"></canvas>
+</div>
+
 <div class="app">
-
-<!-- HEADER -->
-
-<header class="header">
-
-  <div class="logo">
-    <div class="logoCore"></div>
-    JOVS
-  </div>
-
-  <div class="headerCenter">
-    <div class="status" id="status">● BEREIT</div>
-  </div>
-
-  <div class="headerButtons">
-    <button class="topBtn" onclick="openGoogle()">Google</button>
-    <button class="topBtn" onclick="openYouTube()">YouTube</button>
-    <button class="topBtn" onclick="openMaps()">Maps</button>
-    <button class="topBtn" onclick="openSettings()">⚙ API</button>
-  </div>
-
-</header>
-
 
 <!-- SIDEBAR -->
 
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
 
-  <div class="sectionTitle">JOVS</div>
-
-  <div class="navItem active" onclick="showHome()">
-    <div class="navIcon">⌂</div>
-    <span>Agent</span>
+  <div class="logo">
+    <div class="logoMark">J</div>
+    <div class="logoText">JOV<span>S</span></div>
   </div>
 
-  <div class="navItem" onclick="quickCommand('Erstelle ein Bild von')">
-    <div class="navIcon">▧</div>
-    <span>Bilder</span>
+  <div class="sidebarContent">
+
+    <div class="sectionTitle">Agent</div>
+
+    <button class="navBtn active" data-mode="agent">
+      <span class="navIcon">◉</span>
+      <span>JOVS Agent</span>
+    </button>
+
+    <button class="navBtn" data-mode="builder">
+      <span class="navIcon">◆</span>
+      <span>Builder</span>
+    </button>
+
+    <button class="navBtn" data-mode="image">
+      <span class="navIcon">▣</span>
+      <span>Bildstudio</span>
+    </button>
+
+    <button class="navBtn" data-mode="3d">
+      <span class="navIcon">◇</span>
+      <span>3D Studio</span>
+    </button>
+
+    <button class="navBtn" data-mode="preview">
+      <span class="navIcon">◌</span>
+      <span>Live Preview</span>
+    </button>
+
+    <div class="sectionTitle">Browser</div>
+
+    <button class="navBtn" id="googleBtn">
+      <span class="navIcon">G</span>
+      <span>Google</span>
+    </button>
+
+    <button class="navBtn" id="youtubeBtn">
+      <span class="navIcon">▶</span>
+      <span>YouTube</span>
+    </button>
+
+    <button class="navBtn" id="mapsBtn">
+      <span class="navIcon">⌖</span>
+      <span>Google Maps</span>
+    </button>
+
+    <div class="sectionTitle">Projekte</div>
+
+    <div class="projectList" id="projectList"></div>
+
+    <button class="navBtn" id="newProjectBtn">
+      <span class="navIcon">＋</span>
+      <span>Neues Projekt</span>
+    </button>
+
   </div>
 
-  <div class="navItem" onclick="quickCommand('Erstelle ein beeindruckendes 3D-Modell von')">
-    <div class="navIcon">◇</div>
-    <span>3D Studio</span>
+  <div class="sidebarBottom">
+    <div class="status">
+      <span class="statusDot"></span>
+      <span id="modelStatus">JOVS ONLINE</span>
+    </div>
+
+    <button class="settingsBtn" id="settingsBtn">
+      ⚙ Einstellungen
+    </button>
   </div>
-
-  <div class="navItem" onclick="quickCommand('Baue ein komplettes Projekt für')">
-    <div class="navIcon">⌘</div>
-    <span>Builder</span>
-  </div>
-
-  <div class="navItem" onclick="runPreview()">
-    <div class="navIcon">▶</div>
-    <span>Preview</span>
-  </div>
-
-
-  <div class="sectionTitle">PROJEKTE</div>
-
-  <div id="projects"></div>
-
-  <button class="newProject" onclick="newProject()">
-    + Neues Projekt
-  </button>
-
-
-  <div class="sectionTitle">DATEIEN</div>
-
-  <div id="files"></div>
 
 </aside>
-
 
 <!-- CENTER -->
 
 <main class="center">
 
-  <div class="centerTop">
+  <header class="topbar">
 
-    <div class="breadcrumb" id="breadcrumb">
-      JOVS / index.html
+    <div>
+      <div class="pageTitle" id="pageTitle">JOVS Agent</div>
+      <div class="pageSub" id="pageSub">
+        Dein Browser-AI-Arbeitsplatz
+      </div>
     </div>
 
-    <div class="workspaceButtons">
-      <button class="smallBtn" onclick="runPreview()">▶</button>
-      <button class="smallBtn" onclick="saveProject()">Speichern</button>
-      <button class="smallBtn" onclick="downloadFile()">Export</button>
+    <div class="topActions">
+
+      <button class="topBtn" id="openChatBtn">
+        💬 Chat
+      </button>
+
+      <button class="topBtn" id="runBtn">
+        ▶ Ausführen
+      </button>
+
+      <button class="topBtn" id="saveBtn">
+        💾 Speichern
+      </button>
+
     </div>
 
-  </div>
+  </header>
 
+  <section class="workspace">
 
-  <div class="workspace">
+    <div class="modeBar">
 
-    <section class="codePanel">
+      <button class="modeBtn active" data-mode="agent">
+        Agent
+      </button>
 
-      <div class="panelTitle">
-        CODE
-      </div>
+      <button class="modeBtn" data-mode="builder">
+        Builder
+      </button>
 
-      <textarea
-        id="editor"
-        spellcheck="false"
-      ></textarea>
+      <button class="modeBtn" data-mode="image">
+        Bilder
+      </button>
 
-    </section>
+      <button class="modeBtn" data-mode="3d">
+        3D
+      </button>
 
+      <button class="modeBtn" data-mode="preview">
+        Preview
+      </button>
 
-    <section class="previewPanel">
+    </div>
 
-      <div class="panelTitle">
-        LIVE PREVIEW
-      </div>
+    <div class="editorWrap">
 
-      <iframe id="preview"></iframe>
+      <section class="editorPanel">
 
-    </section>
+        <div class="panelHeader">
+          <span id="fileName">index.html</span>
 
-  </div>
+          <div class="panelTools">
+
+            <button class="smallBtn" id="newFileBtn">
+              + Datei
+            </button>
+
+            <button class="smallBtn" id="formatBtn">
+              Format
+            </button>
+
+            <button class="smallBtn" id="clearEditorBtn">
+              Leeren
+            </button>
+
+          </div>
+        </div>
+
+        <textarea id="editor" spellcheck="false"></textarea>
+
+      </section>
+
+      <section class="previewPanel">
+
+        <div class="panelHeader">
+
+          <span>LIVE PREVIEW</span>
+
+          <div class="panelTools">
+
+            <button class="smallBtn" id="refreshPreview">
+              ↻
+            </button>
+
+            <button class="smallBtn" id="fullscreenPreview">
+              ⛶
+            </button>
+
+          </div>
+
+        </div>
+
+        <iframe
+          id="preview"
+          sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin">
+        </iframe>
+
+      </section>
+
+    </div>
+
+    <div class="bottomBar">
+
+      <button class="actionBtn primary" id="previewBtn">
+        ▶ Preview
+      </button>
+
+      <button class="actionBtn" id="downloadBtn">
+        ↓ HTML
+      </button>
+
+      <button class="actionBtn" id="duplicateBtn">
+        ⧉ Duplizieren
+      </button>
+
+      <button class="actionBtn" id="deleteProjectBtn">
+        × Projekt löschen
+      </button>
+
+      <div style="flex:1"></div>
+
+      <span id="projectInfo" style="font-size:10px;color:#555">
+        Lokal gespeichert
+      </span>
+
+    </div>
+
+  </section>
 
 </main>
 
-
 <!-- CHAT -->
 
-<section class="chat">
+<aside class="chat" id="chat">
 
-  <div class="chatTop">
+  <header class="chatHeader">
 
-    <div class="agentTitle">
-      <div class="agentDot"></div>
-      <strong>JOVS Agent</strong>
+    <div class="aiIdentity">
+
+      <div class="aiOrb"></div>
+
+      <div>
+        <div class="aiName">JOVS</div>
+        <div class="aiStatus" id="aiStatus">
+          Bereit
+        </div>
+      </div>
+
     </div>
 
-    <div class="agentBadge">
-      ONLINE
-    </div>
+    <div class="chatTools">
 
-  </div>
-
-
-  <div class="messages" id="messages"></div>
-
-
-  <div class="chatBottom">
-
-    <div class="quick">
-      <button onclick="quickCommand('Erstelle ein Bild von einem futuristischen Auto')">
-        🖼 Bild
-      </button>
-
-      <button onclick="quickCommand('Erstelle ein 3D-Modell von einem futuristischen Auto')">
-        ◇ 3D
-      </button>
-
-      <button onclick="quickCommand('Baue ein cooles Browser-Spiel')">
-        🎮 Spiel
-      </button>
-
-      <button onclick="quickCommand('Verbessere das Design dieses Projekts')">
-        ✦ Design
-      </button>
-    </div>
-
-
-    <div class="inputRow">
-
-      <button
-        class="iconBtn"
-        id="mic"
-        onclick="toggleMic()"
-      >
+      <button class="iconBtn" id="voiceBtn" title="Mikrofon">
         🎙
       </button>
 
-      <input
-        id="input"
-        placeholder="Sag JOVS, was er machen soll..."
-        autocomplete="off"
-        onkeydown="if(event.key==='Enter')sendMessage()"
-      >
+      <button class="iconBtn" id="speakBtn" title="Sprache">
+        🔊
+      </button>
 
-      <button
-        class="sendBtn"
-        onclick="sendMessage()"
-      >
-        ➤
+      <button class="iconBtn" id="clearChatBtn" title="Chat löschen">
+        ×
+      </button>
+
+    </div>
+
+  </header>
+
+  <!-- SCROLLBAR -->
+
+  <div class="messages" id="messages">
+
+    <div class="message ai">
+
+      <div class="bubble">
+        <b>JOVS online.</b><br><br>
+        Ich kann hier Projekte erstellen, Dateien bearbeiten,
+        Code schreiben, Preview starten, Bilder erzeugen,
+        3D-Szenen bauen und Webseiten öffnen.
+        <br><br>
+        Sag zum Beispiel:<br>
+        „Baue mir eine moderne 3D-Rennspiel-Webseite.“
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="chatInputArea">
+
+    <div class="quickActions">
+
+      <button class="quick" data-prompt="Baue mir eine moderne Webseite">🌐 Webseite</button>
+
+      <button class="quick" data-prompt="Erstelle ein cooles 3D Modell">🧊 3D</button>
+
+      <button class="quick" data-prompt="Erstelle ein futuristisches Bild">🎨 Bild</button>
+
+      <button class="quick" data-prompt="Verbessere mein aktuelles Projekt">⚡ Verbessern</button>
+
+      <button class="quick" data-prompt="Zeige mir Google Maps">📍 Maps</button>
+
+      <button class="quick" data-prompt="Öffne YouTube">▶ YouTube</button>
+
+    </div>
+
+    <div class="inputRow">
+
+      <textarea
+        id="chatInput"
+        placeholder="Schreib JOVS etwas..."
+        rows="1"></textarea>
+
+      <button class="sendBtn" id="sendBtn">
+        ↑
       </button>
 
     </div>
 
   </div>
 
-</section>
+</aside>
 
 </div>
 
-
 <!-- SETTINGS -->
 
-<div class="modal" id="settings">
+<div class="modal" id="settingsModal">
 
-  <div class="card">
+  <div class="modalBox">
 
-    <h2>JOVS Einstellungen</h2>
+    <div class="modalTitle">
+      ⚙ JOVS Einstellungen
+    </div>
 
-    <p>
-      Dein Gemini-Key wird nur lokal in diesem Browser
-      gespeichert. Für eine öffentlich veröffentlichte
-      Website wäre ein Backend sicherer.
-    </p>
+    <div class="formGroup">
 
-    <input
-      id="apiKey"
-      type="password"
-      placeholder="Gemini API Key"
-    >
+      <label>Gemini API Key</label>
 
-    <select id="imageSize">
-      <option value="1K">Bilder – 1K</option>
-      <option value="2K">Bilder – 2K</option>
-      <option value="4K">Bilder – 4K</option>
-    </select>
+      <input
+        id="apiKeyInput"
+        type="password"
+        placeholder="AIza...">
 
-    <select id="aspect">
-      <option value="1:1">Bild – 1:1</option>
-      <option value="16:9">Bild – 16:9</option>
-      <option value="9:16">Bild – 9:16</option>
-      <option value="4:3">Bild – 4:3</option>
-      <option value="3:4">Bild – 3:4</option>
-      <option value="21:9">Bild – 21:9</option>
-    </select>
+    </div>
 
-    <div class="modalButtons">
-      <button onclick="closeSettings()">Schließen</button>
-      <button class="primary" onclick="saveSettings()">Speichern</button>
+    <div class="formGroup">
+
+      <label>Bildauflösung</label>
+
+      <select id="imageSize">
+        <option value="1K">1K</option>
+        <option value="2K">2K</option>
+        <option value="4K">4K</option>
+      </select>
+
+    </div>
+
+    <div class="formGroup">
+
+      <label>Bild-Seitenverhältnis</label>
+
+      <select id="aspectRatio">
+        <option value="1:1">1:1</option>
+        <option value="16:9">16:9</option>
+        <option value="9:16">9:16</option>
+        <option value="4:3">4:3</option>
+        <option value="3:4">3:4</option>
+        <option value="21:9">21:9</option>
+      </select>
+
+    </div>
+
+    <div style="
+      color:#666;
+      font-size:10px;
+      line-height:1.5;
+      margin-top:12px;
+    ">
+      Der API-Key wird nur lokal in diesem Browser gespeichert.
+      Veröffentliche ihn nicht in einem öffentlichen Repository.
+    </div>
+
+    <div class="modalActions">
+
+      <button class="actionBtn" id="closeSettings">
+        Abbrechen
+      </button>
+
+      <button class="actionBtn primary" id="saveSettings">
+        Speichern
+      </button>
+
     </div>
 
   </div>
 
 </div>
 
-
 <script>
 
-/* ==========================================================
-   JOVS CONFIG
-========================================================== */
+/* =========================================================
+   JOVS CORE
+========================================================= */
 
-const TEXT_MODEL = "gemini-3.8-flash";
+const TEXT_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash-lite"
+];
+
 const IMAGE_MODEL = "gemini-3.1-flash-image";
 
-const KEY_NAME = "jovs_gemini_key";
-const PROJECT_NAME = "jovs_projects";
+let apiKey = localStorage.getItem("jovs_gemini_key") || "";
 
-let apiKey =
-  localStorage.getItem(KEY_NAME) || "";
-
-let imageSize =
-  localStorage.getItem("jovs_image_size") || "1K";
-
-let aspectRatio =
-  localStorage.getItem("jovs_aspect") || "1:1";
-
-let currentProject = "JOVS";
+let currentProject = null;
 let currentFile = "index.html";
-
-let listening = false;
-let recognition = null;
-
-let history = [];
+let currentMode = "agent";
+let speaking = true;
 
 let projects =
-  JSON.parse(
-    localStorage.getItem(PROJECT_NAME) || "null"
-  );
-
-
-/* ==========================================================
-   DEFAULT PROJECT
-========================================================== */
-
-if(!projects){
-
-  projects = {
-
-    JOVS:{
+  JSON.parse(localStorage.getItem("jovs_projects") || "null") || {
+    JOVS: {
+      name:"JOVS",
       files:{
-        "index.html":`
-<!DOCTYPE html>
-<html>
+        "index.html": defaultHTML()
+      }
+    }
+  };
+
+/* =========================================================
+   DEFAULT PROJECT
+========================================================= */
+
+function defaultHTML(){
+
+return `<!DOCTYPE html>
+<html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Mein JOVS Projekt</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JOVS Project</title>
+
 <style>
+*{
+box-sizing:border-box;
+}
+
 body{
 margin:0;
 min-height:100vh;
 display:grid;
 place-items:center;
-background:#050505;
-color:#ff2638;
-font-family:Arial;
+background:
+radial-gradient(circle at center,#35101a,#050505 55%);
+color:white;
+font-family:Arial,sans-serif;
 }
+
+.card{
+width:min(700px,90%);
+padding:50px;
+border:1px solid rgba(255,40,70,.35);
+border-radius:30px;
+background:rgba(255,255,255,.04);
+backdrop-filter:blur(20px);
+text-align:center;
+box-shadow:0 0 80px rgba(255,0,40,.15);
+}
+
 h1{
-font-size:70px;
+font-size:60px;
+margin:0 0 15px;
+}
+
+.red{
+color:#ff2147;
+}
+
+button{
+padding:13px 22px;
+border:0;
+border-radius:12px;
+background:#ff1744;
+color:white;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+transform:translateY(-2px);
 }
 </style>
 </head>
+
 <body>
-<h1>JOVS</h1>
+
+<div class="card">
+
+<h1>JOV<span class="red">S</span></h1>
+
+<p>
+Dein neues Projekt läuft.
+</p>
+
+<button onclick="alert('JOVS läuft!')">
+TEST
+</button>
+
+</div>
+
 </body>
-</html>
-`
-      }
-    },
-
-    GameZone:{
-      files:{
-        "index.html":`
-<!DOCTYPE html>
-<html>
-<body style="
-margin:0;
-background:#050505;
-color:white;
-font-family:Arial;
-text-align:center;
-padding:100px
-">
-<h1>GameZone</h1>
-<p>Dein nächstes Spiel.</p>
-</body>
-</html>
-`
-      }
-    }
-
-  };
-
-  saveProjects();
+</html>`;
 
 }
 
+/* =========================================================
+   DOM
+========================================================= */
 
-/* ==========================================================
-   STORAGE
-========================================================== */
+const editor = document.getElementById("editor");
+const preview = document.getElementById("preview");
+const messages = document.getElementById("messages");
+const chatInput = document.getElementById("chatInput");
+const modelStatus = document.getElementById("modelStatus");
+const aiStatus = document.getElementById("aiStatus");
+const pageTitle = document.getElementById("pageTitle");
+const pageSub = document.getElementById("pageSub");
+
+/* =========================================================
+   PROJECTS
+========================================================= */
 
 function saveProjects(){
 
   localStorage.setItem(
-    PROJECT_NAME,
+    "jovs_projects",
     JSON.stringify(projects)
   );
 
 }
 
+function ensureProject(){
 
-/* ==========================================================
-   PROJECT UI
-========================================================== */
+  if(!currentProject){
 
-function renderProjects(){
+    currentProject = "JOVS";
 
-  const box =
-    document.getElementById("projects");
+  }
 
-  box.innerHTML="";
+  if(!projects[currentProject]){
 
-  Object.keys(projects)
-    .forEach(name=>{
+    projects[currentProject] = {
+      name:currentProject,
+      files:{
+        "index.html":defaultHTML()
+      }
+    };
 
-      const item =
-        document.createElement("div");
-
-      item.className =
-        "projectItem " +
-        (name===currentProject
-          ?"active":"");
-
-      item.innerHTML =
-        "▣ <span>" +
-        escapeHTML(name) +
-        "</span>";
-
-      item.onclick=()=>{
-
-        currentProject=name;
-
-        const files =
-          Object.keys(
-            projects[name].files
-          );
-
-        currentFile =
-          files.includes("index.html")
-            ?"index.html"
-            :files[0];
-
-        renderAll();
-
-      };
-
-      box.appendChild(item);
-
-    });
+  }
 
 }
 
+function loadProject(name){
 
-function renderFiles(){
+  if(!projects[name]) return;
 
-  const box =
-    document.getElementById("files");
+  currentProject = name;
 
-  box.innerHTML="";
+  const files = projects[name].files || {};
 
-  Object.keys(
-    projects[currentProject].files
-  ).forEach(path=>{
+  currentFile =
+    files["index.html"]
+      ? "index.html"
+      : Object.keys(files)[0];
 
-    const item =
-      document.createElement("div");
+  editor.value = files[currentFile] || "";
 
-    item.className =
-      "projectItem " +
-      (path===currentFile
-        ?"active":"");
+  document.getElementById("fileName").textContent =
+    currentFile;
 
-    item.innerHTML =
-      "📄 <span>" +
-      escapeHTML(path) +
-      "</span>";
+  updatePreview();
 
-    item.onclick=()=>{
+  renderProjects();
 
-      currentFile=path;
+  addSystem(
+    "Projekt geöffnet: " + name
+  );
 
-      loadFile();
+}
 
-      renderFiles();
+function renderProjects(){
 
-    };
+  const list = document.getElementById("projectList");
 
-    box.appendChild(item);
+  list.innerHTML = "";
+
+  Object.keys(projects).forEach(name => {
+
+    const div = document.createElement("div");
+
+    div.className = "projectItem";
+
+    div.innerHTML = `
+      <span>▣</span>
+      <span>${escapeHTML(name)}</span>
+    `;
+
+    div.onclick = () => loadProject(name);
+
+    list.appendChild(div);
 
   });
 
 }
 
+function createProject(name){
 
-function renderAll(){
+  name =
+    (name || "Projekt")
+    .trim()
+    .replace(/[^\wäöüÄÖÜß\- ]/g,"")
+    .replace(/\s+/g,"-");
 
-  renderProjects();
-  renderFiles();
-  loadFile();
+  if(!name) name = "Projekt";
 
-}
+  let base = name;
+  let i = 2;
 
+  while(projects[name]){
 
-/* ==========================================================
-   EDITOR
-========================================================== */
-
-function loadFile(){
-
-  const content =
-    projects[currentProject]
-      .files[currentFile] || "";
-
-  document.getElementById("editor")
-    .value=content;
-
-  document.getElementById("breadcrumb")
-    .textContent =
-      currentProject +
-      " / " +
-      currentFile;
-
-  runPreview();
-
-}
-
-
-document
-.getElementById("editor")
-.addEventListener(
-  "input",
-  ()=>{
-
-    projects[currentProject]
-      .files[currentFile] =
-        document.getElementById("editor")
-          .value;
-
-    saveProjects();
-
-  }
-);
-
-
-/* ==========================================================
-   PROJECT
-========================================================== */
-
-function newProject(){
-
-  const name =
-    prompt("Name des Projekts:");
-
-  if(!name) return;
-
-  if(projects[name]){
-
-    alert("Projekt existiert bereits.");
-
-    return;
+    name = base + "-" + i;
+    i++;
 
   }
 
-  projects[name]={
+  projects[name] = {
+    name,
     files:{
-      "index.html":
-`<!DOCTYPE html>
-<html>
-<head>
-<title>${escapeHTML(name)}</title>
-</head>
-<body>
-<h1>${escapeHTML(name)}</h1>
-</body>
-</html>`
+      "index.html":defaultHTML()
     }
   };
 
-  currentProject=name;
-  currentFile="index.html";
-
-  saveProjects();
-  renderAll();
-
-}
-
-
-function saveProject(){
-
-  projects[currentProject]
-    .files[currentFile] =
-      document.getElementById("editor")
-        .value;
-
   saveProjects();
 
-  action("Projekt gespeichert","ok");
+  loadProject(name);
 
 }
 
+/* =========================================================
+   ESCAPE
+========================================================= */
 
-function downloadFile(){
+function escapeHTML(str){
 
-  const code =
-    projects[currentProject]
-      .files[currentFile];
-
-  const blob =
-    new Blob(
-      [code],
-      {type:"text/html"}
-    );
-
-  const url =
-    URL.createObjectURL(blob);
-
-  const a =
-    document.createElement("a");
-
-  a.href=url;
-  a.download=
-    currentFile.split("/").pop();
-
-  a.click();
-
-  setTimeout(
-    ()=>URL.revokeObjectURL(url),
-    1000
-  );
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
 
 }
 
+/* =========================================================
+   CHAT
+========================================================= */
 
-/* ==========================================================
-   PREVIEW
-========================================================== */
+function addMessage(text,type="ai",html=false){
 
-function runPreview(){
-
-  const code =
-    document.getElementById("editor")
-      .value;
-
-  document.getElementById("preview")
-    .srcdoc=code;
-
-}
-
-
-/* ==========================================================
-   CHAT UI
-========================================================== */
-
-function message(text,type="ai"){
-
-  const row =
-    document.createElement("div");
+  const row = document.createElement("div");
 
   row.className =
-    "msg " + type;
+    "message " + type;
 
-  const bubble =
-    document.createElement("div");
+  const bubble = document.createElement("div");
 
-  bubble.className="bubble";
+  bubble.className = "bubble";
 
-  bubble.textContent=text;
+  if(html){
+    bubble.innerHTML = text;
+  }else{
+    bubble.textContent = text;
+  }
 
   row.appendChild(bubble);
 
-  document
-    .getElementById("messages")
-    .appendChild(row);
+  messages.appendChild(row);
 
   scrollChat();
 
@@ -1285,624 +1565,411 @@ function message(text,type="ai"){
 
 }
 
+function addSystem(text){
 
-function imageMessage(base64){
+  return addMessage(text,"system");
 
-  const row =
-    document.createElement("div");
+}
 
-  row.className="msg ai";
+function addAction(text){
 
-  const bubble =
-    document.createElement("div");
+  const row = document.createElement("div");
 
-  bubble.className="bubble";
+  row.className = "message ai";
 
-  const img =
-    document.createElement("img");
+  row.innerHTML = `
+    <div class="bubble">
+      <div class="actionLine">⚡ ${escapeHTML(text)}</div>
+    </div>
+  `;
 
-  img.className="generatedImage";
-
-  img.src=
-    "data:image/png;base64,"+
-    base64;
-
-  img.onclick=()=>{
-    const a=
-      document.createElement("a");
-
-    a.href=img.src;
-    a.download="jovs-bild.png";
-    a.click();
-  };
-
-  bubble.appendChild(img);
-
-  row.appendChild(bubble);
-
-  document
-    .getElementById("messages")
-    .appendChild(row);
+  messages.appendChild(row);
 
   scrollChat();
 
 }
 
+function addTyping(){
 
-function action(text,type=""){
+  const row = document.createElement("div");
 
-  const row =
-    document.createElement("div");
+  row.className = "message ai";
 
-  row.className="msg ai";
+  row.id = "typingMessage";
 
-  const a =
-    document.createElement("div");
+  row.innerHTML = `
+    <div class="bubble">
+      <div class="typing">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  `;
 
-  a.className =
-    "action " + type;
-
-  a.textContent =
-    "› " + text;
-
-  row.appendChild(a);
-
-  document
-    .getElementById("messages")
-    .appendChild(row);
+  messages.appendChild(row);
 
   scrollChat();
 
 }
 
+function removeTyping(){
+
+  document
+    .getElementById("typingMessage")
+    ?.remove();
+
+}
 
 function scrollChat(){
 
-  const box =
-    document.getElementById("messages");
+  requestAnimationFrame(() => {
 
-  box.scrollTop=box.scrollHeight;
+    messages.scrollTop =
+      messages.scrollHeight;
 
-}
-
-
-function quickCommand(text){
-
-  document.getElementById("input")
-    .value=text;
-
-  sendMessage();
+  });
 
 }
 
+/* =========================================================
+   STATUS
+========================================================= */
 
-/* ==========================================================
-   MAIN CHAT
-========================================================== */
+function setStatus(text){
 
-async function sendMessage(){
+  modelStatus.textContent = text;
+  aiStatus.textContent = text;
 
-  const input =
-    document.getElementById("input");
+}
 
-  const text =
-    input.value.trim();
+/* =========================================================
+   GEMINI REQUEST
+========================================================= */
 
-  if(!text) return;
-
-  input.value="";
-
-  message(text,"user");
+async function requestGemini(prompt,options={}){
 
   if(!apiKey){
 
-    message(
-      "Bitte zuerst unter ⚙ API deinen Gemini-Key eintragen."
+    throw new Error(
+      "Kein Gemini API-Key gespeichert. Öffne Einstellungen und trage deinen API-Key ein."
     );
-
-    openSettings();
-
-    return;
 
   }
 
-  setStatus("DENKEN");
+  let lastError = null;
 
-  try{
+  for(const model of TEXT_MODELS){
 
-    /* IMAGE REQUEST */
-
-    if(isImageRequest(text)){
-
-      await handleImage(text);
-
-      setStatus("BEREIT");
-
-      return;
-
-    }
-
-
-    /* 3D REQUEST */
-
-    if(is3DRequest(text)){
-
-      await handle3D(text);
-
-      setStatus("BEREIT");
-
-      return;
-
-    }
-
-
-    /* NORMAL AGENT */
-
-    action(
-      "JOVS analysiert die Aufgabe..."
+    setStatus(
+      model
+        .replace("gemini-","")
+        .toUpperCase()
     );
 
-    const result =
-      await askAgent(text);
+    try{
 
-    if(result.reply){
+      const body = {
 
-      message(
-        result.reply
+        contents:[
+          {
+            role:"user",
+            parts:[
+              {
+                text:prompt
+              }
+            ]
+          }
+        ],
+
+        generationConfig:{
+          temperature:
+            options.temperature ?? .25
+        }
+
+      };
+
+      if(options.json){
+
+        body.generationConfig.responseMimeType =
+          "application/json";
+
+      }
+
+      const response = await fetch(
+
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":"application/json",
+            "x-goog-api-key":apiKey
+          },
+
+          body:JSON.stringify(body)
+
+        }
+
       );
 
-      speak(result.reply);
+      const data = await response.json();
 
-    }
+      if(response.ok){
 
-    if(
-      Array.isArray(result.actions)
-    ){
+        const text =
+          data?.candidates?.[0]?.content?.parts
+            ?.map(p => p.text || "")
+            .join("") || "";
 
-      for(
-        const a of result.actions
-      ){
+        if(text){
 
-        await execute(a);
+          return text;
+
+        }
+
+      }
+
+      const errorMessage =
+        data?.error?.message ||
+        `HTTP ${response.status}`;
+
+      lastError =
+        new Error(errorMessage);
+
+      const retryable =
+        response.status === 429 ||
+        response.status === 503 ||
+        /high demand|overload|unavailable|temporar|capacity/i
+          .test(errorMessage);
+
+      if(!retryable){
+
+        throw lastError;
+
+      }
+
+    }catch(error){
+
+      lastError = error;
+
+      const retryable =
+        /high demand|overload|unavailable|temporar|capacity/i
+          .test(error.message || "");
+
+      if(!retryable){
+
+        throw error;
 
       }
 
     }
 
-    history.push({
-      role:"user",
-      text:text
-    });
-
-    history.push({
-      role:"assistant",
-      text:result.reply || ""
-    });
-
-    if(history.length>12){
-
-      history=
-        history.slice(-12);
-
-    }
-
-    setStatus("BEREIT");
-
-  }catch(error){
-
-    console.error(error);
-
-    action(
-      "Fehler: " + error.message,
-      "err"
-    );
-
-    message(
-      "Das hat nicht funktioniert: " +
-      error.message
-    );
-
-    setStatus("FEHLER");
+    await sleep(450);
 
   }
 
-}
-
-
-/* ==========================================================
-   IMAGE DETECTION
-========================================================== */
-
-function isImageRequest(text){
-
-  const t =
-    text.toLowerCase();
-
-  const words=[
-    "erstelle ein bild",
-    "erstelle mir ein bild",
-    "mach ein bild",
-    "mach mir ein bild",
-    "generiere ein bild",
-    "generiere mir ein bild",
-    "zeichne ein bild",
-    "bild erstellen",
-    "bild generieren",
-    "generiere ein foto",
-    "mach ein foto"
-  ];
-
-  return words.some(
-    x=>t.includes(x)
+  throw new Error(
+    "Gemini ist momentan stark ausgelastet. JOVS hat alle verfügbaren Textmodelle versucht."
   );
 
 }
 
-
-/* ==========================================================
+/* =========================================================
    IMAGE GENERATION
-========================================================== */
+========================================================= */
 
-async function handleImage(prompt){
+async function generateImage(prompt){
 
-  action(
+  if(!apiKey){
+
+    throw new Error(
+      "Bitte zuerst deinen Gemini API-Key in den Einstellungen speichern."
+    );
+
+  }
+
+  addAction(
     "Bildgenerator wird gestartet..."
   );
 
-  const endpoint =
-    "https://generativelanguage.googleapis.com/v1beta/models/" +
-    IMAGE_MODEL +
-    ":generateContent";
+  const size =
+    localStorage.getItem("jovs_image_size") || "1K";
 
+  const aspect =
+    localStorage.getItem("jovs_aspect") || "16:9";
 
-  const response =
-    await fetch(
-      endpoint,
-      {
-        method:"POST",
+  const response = await fetch(
 
-        headers:{
-          "Content-Type":
-            "application/json",
+    `https://generativelanguage.googleapis.com/v1/models/${IMAGE_MODEL}:generateContent`,
 
-          "x-goog-api-key":
-            apiKey
-        },
+    {
+      method:"POST",
 
-        body:JSON.stringify({
+      headers:{
+        "Content-Type":"application/json",
+        "x-goog-api-key":apiKey
+      },
 
-          contents:[
-            {
-              parts:[
-                {
-                  text:
-                    "Erzeuge genau das gewünschte Bild. " +
-                    "Keine zusätzliche Erklärung. " +
-                    prompt
-                }
-              ]
-            }
-          ],
+      body:JSON.stringify({
 
-          generationConfig:{
-
-            responseModalities:[
-              "IMAGE"
-            ],
-
-            responseFormat:{
-              image:{
-                aspectRatio:
-                  aspectRatio,
-
-                imageSize:
-                  imageSize
+        contents:[
+          {
+            parts:[
+              {
+                text:prompt
               }
-            }
+            ]
+          }
+        ],
 
+        generationConfig:{
+          responseModalities:["IMAGE"],
+
+          responseFormat:{
+            image:{
+              aspectRatio:aspect,
+              imageSize:size
+            }
           }
 
-        })
+        }
 
-      }
-    );
+      })
 
+    }
 
-  const data =
-    await response.json();
+  );
 
+  const data = await response.json();
 
   if(!response.ok){
 
     throw new Error(
       data?.error?.message ||
-      "Bild-API Fehler"
+      "Bildgenerierung fehlgeschlagen."
     );
 
   }
-
 
   const parts =
-    data?.candidates?.[0]
-      ?.content?.parts || [];
+    data?.candidates?.[0]?.content?.parts || [];
 
+  const imagePart =
+    parts.find(
+      p => p.inlineData?.data
+    );
 
-  let found=false;
-
-  for(
-    const part of parts
-  ){
-
-    if(
-      part.inlineData &&
-      part.inlineData.data
-    ){
-
-      found=true;
-
-      imageMessage(
-        part.inlineData.data
-      );
-
-    }
-
-  }
-
-
-  if(!found){
+  if(!imagePart){
 
     throw new Error(
-      "Das Bildmodell hat kein Bild zurückgegeben."
+      "Gemini hat kein Bild zurückgegeben."
     );
 
   }
 
-
-  action(
-    "Bild wurde erstellt.",
-    "ok"
-  );
-
-}
-
-
-/* ==========================================================
-   3D DETECTION
-========================================================== */
-
-function is3DRequest(text){
-
-  const t =
-    text.toLowerCase();
-
-  return(
-    t.includes("3d") &&
-    (
-      t.includes("modell") ||
-      t.includes("model") ||
-      t.includes("szene") ||
-      t.includes("objekt") ||
-      t.includes("erstell") ||
-      t.includes("bau") ||
-      t.includes("mach")
-    )
-  );
+  return {
+    data:imagePart.inlineData.data,
+    mime:imagePart.inlineData.mimeType || "image/png"
+  };
 
 }
 
-
-/* ==========================================================
-   3D GENERATION
-========================================================== */
-
-async function handle3D(prompt){
-
-  action(
-    "JOVS baut ein neues 3D-Modell..."
-  );
-
-  const request =
-`Erstelle eine vollständige interaktive
-3D-Webszene für diese Aufgabe:
-
-${prompt}
-
-Verwende Three.js per CDN.
-Erstelle eine hochwertige Szene mit:
-- Kamera
-- Beleuchtung
-- Materialien
-- Schatten wenn sinnvoll
-- Boden/Umgebung
-- Animation
-- Maussteuerung
-- Touchsteuerung
-- responsive Darstellung
-
-Gib ausschließlich den vollständigen HTML-Code zurück.
-Keine Markdown-Codeblöcke.`;
-
-
-  const html =
-    await askText(
-      request
-    );
-
-
-  const clean =
-    cleanCode(html);
-
-
-  const path =
-    "3d/" +
-    safeName(
-      prompt.substring(0,45)
-    ) +
-    ".html";
-
-
-  projects[currentProject]
-    .files[path]=clean;
-
-  currentFile=path;
-
-  saveProjects();
-  renderAll();
-
-  action(
-    "3D-Modell erstellt: " + path,
-    "ok"
-  );
-
-}
-
-
-/* ==========================================================
+/* =========================================================
    AGENT
-========================================================== */
+========================================================= */
 
-async function askAgent(userText){
+async function runAgent(userText){
 
-  const files =
+  ensureProject();
+
+  const fileNames =
     Object.keys(
       projects[currentProject].files
     );
 
-  const current =
-    projects[currentProject]
-      .files[currentFile] || "";
+  const currentContent =
+    projects[currentProject].files[currentFile] || "";
 
+  const prompt = `Du bist JOVS, ein Browser-Agent für Webentwicklung.
 
-  const system = `
+Antworte ausschließlich als gültiges JSON.
 
-Du bist JOVS, ein autonomer KI-Agent für
-Programmierung, Webseiten, Spiele, 3D und Projekte.
+Mögliche Aktionen:
+- chat
+- create_file
+- edit_file
+- delete_file
+- build_project
+- preview
+- save_project
+- open_google
+- open_youtube
+- open_maps
+- open_website
+- generate_image
+- generate_3d
 
-Antworte immer auf Deutsch.
-
-JOVS kann:
-
-- Dateien erstellen
-- Dateien bearbeiten
-- Dateien löschen
-- komplette Projekte bauen
-- Webseiten bauen
-- Spiele bauen
-- 3D-Projekte bauen
-- JOVS-Projekte verändern
-- UI verändern
-- Preview starten
-- Google öffnen
-- YouTube öffnen
-- Maps öffnen
-- Webseiten öffnen
-- Projekte speichern
-
-Wenn der Nutzer sagt, dass etwas gebaut,
-geändert oder erstellt werden soll, führe die
-Aktionen tatsächlich aus.
-
-Wenn eine bestehende Datei geändert wird,
-liefere den kompletten neuen Inhalt.
-
-Wenn ein komplettes Projekt gebaut wird,
-verwende build_project und liefere alle Dateien.
-
-Wenn der Nutzer JOVS selbst verändern möchte,
-darfst du das aktuelle Projekt bearbeiten.
-
-WICHTIG:
-Keine API-Keys in Dateien schreiben.
-
-AKTUELLES PROJEKT:
-${currentProject}
-
-AKTUELLE DATEI:
-${currentFile}
-
-DATEIEN:
-${files.join(", ")}
-
-AKTUELLER CODE:
------START-----
-${current}
------END-----
-
-Antworte ausschließlich als JSON.
-
-Format:
+JSON-Format:
 
 {
-  "reply":"kurze Antwort",
+  "message":"Antwort an den Benutzer",
   "actions":[
     {
-      "type":"edit_file",
-      "path":"index.html",
-      "content":"vollständiger Code"
+      "type":"chat|create_file|edit_file|delete_file|build_project|preview|save_project|open_google|open_youtube|open_maps|open_website|generate_image|generate_3d",
+      "name":"Dateiname oder Projektname",
+      "content":"Dateiinhalt falls nötig",
+      "url":"URL falls nötig",
+      "prompt":"Prompt falls nötig"
     }
   ]
 }
 
-Erlaubte action types:
+Regeln:
 
-edit_file
-create_file
-delete_file
-build_project
-preview
-save_project
-open_google
-open_youtube
-open_maps
-open_website
-change_ui
+1. Wenn der Benutzer eine Webseite bauen möchte, erstelle vollständigen funktionierenden Code.
+2. Wenn eine Datei geändert werden soll, liefere den kompletten neuen Dateiinhalt.
+3. Niemals API Keys in generierten Dateien ausgeben.
+4. Für 3D-Webseiten darf Three.js über CDN verwendet werden.
+5. Verwende moderne HTML/CSS/JS-Techniken.
+6. Erkläre nicht unnötig lange.
+7. Wenn eine Webseite geöffnet werden soll, benutze die passende open-Aktion.
+8. Wenn der Benutzer ausdrücklich ein Bild möchte, benutze generate_image.
+9. Wenn der Benutzer ausdrücklich 3D möchte, benutze generate_3d.
+10. Bei normalen Fragen nur chat verwenden.
 
-Für build_project:
+AKTUELLES PROJEKT:
+${currentProject}
 
-{
-"type":"build_project",
-"files":[
-  {
-    "path":"index.html",
-    "content":"..."
-  },
-  {
-    "path":"style.css",
-    "content":"..."
-  }
-]
-}
+DATEIEN:
+${fileNames.join(", ")}
 
-`;
+AKTUELLE DATEI:
+${currentFile}
 
+AKTUELLER CODE:
+${currentContent}
 
-  const prompt =
-    system +
-    "\n\nBisheriger Chat:\n" +
-    history.map(
-      x=>x.role+": "+x.text
-    ).join("\n") +
-    "\n\nNeue Aufgabe:\n" +
-    userText;
-
+BENUTZER:
+${userText}`;
 
   const raw =
-    await askText(prompt);
-
+    await requestGemini(prompt,{
+      json:true,
+      temperature:.15
+    });
 
   let parsed;
 
   try{
 
-    parsed =
-      JSON.parse(
-        cleanJSON(raw)
-      );
+    parsed = JSON.parse(raw);
 
   }catch{
 
-    return{
-      reply:raw,
+    return {
+      message:raw,
       actions:[]
     };
 
@@ -1912,506 +1979,985 @@ Für build_project:
 
 }
 
+/* =========================================================
+   AGENT ACTION EXECUTION
+========================================================= */
 
-/* ==========================================================
-   TEXT REQUEST
-========================================================== */
+async function executeAgent(result){
 
-async function askText(prompt){
+  if(result.message){
 
-  const endpoint =
-    "https://generativelanguage.googleapis.com/v1beta/models/" +
-    TEXT_MODEL +
-    ":generateContent";
+    addMessage(
+      result.message,
+      "ai"
+    );
 
+    speakText(result.message);
 
-  const response =
-    await fetch(
-      endpoint,
+  }
+
+  const actions =
+    Array.isArray(result.actions)
+      ? result.actions
+      : [];
+
+  for(const action of actions){
+
+    await executeAction(action);
+
+  }
+
+}
+
+async function executeAction(action){
+
+  const type = action.type;
+
+  if(type === "chat"){
+
+    return;
+
+  }
+
+  if(type === "create_file"){
+
+    ensureProject();
+
+    const name =
+      action.name || "new.html";
+
+    projects[currentProject].files[name] =
+      action.content || "";
+
+    saveProjects();
+
+    addAction(
+      `Datei erstellt: ${name}`
+    );
+
+    loadFile(name);
+
+    return;
+
+  }
+
+  if(type === "edit_file"){
+
+    ensureProject();
+
+    const name =
+      action.name || currentFile;
+
+    projects[currentProject].files[name] =
+      action.content || "";
+
+    saveProjects();
+
+    addAction(
+      `Datei geändert: ${name}`
+    );
+
+    loadFile(name);
+
+    return;
+
+  }
+
+  if(type === "delete_file"){
+
+    ensureProject();
+
+    const name =
+      action.name || currentFile;
+
+    delete projects[currentProject].files[name];
+
+    saveProjects();
+
+    addAction(
+      `Datei gelöscht: ${name}`
+    );
+
+    const files =
+      Object.keys(
+        projects[currentProject].files
+      );
+
+    if(files.length){
+
+      loadFile(files[0]);
+
+    }
+
+    return;
+
+  }
+
+  if(type === "build_project"){
+
+    addAction(
+      "Projekt wird gebaut..."
+    );
+
+    const buildPrompt =
+      `Erstelle ein vollständiges modernes Webprojekt.
+
+Benutzerwunsch:
+${action.prompt || action.content || ""}
+
+Gib ausschließlich den kompletten HTML-Code zurück.
+Alles soll in einer einzigen HTML-Datei funktionieren.
+Nutze CSS und JavaScript direkt in der Datei.
+Keine Erklärungen.`;
+
+    const html =
+      await requestGemini(
+        buildPrompt,
+        {
+          temperature:.2
+        }
+      );
+
+    projects[currentProject].files["index.html"] =
+      cleanCode(html);
+
+    currentFile = "index.html";
+
+    saveProjects();
+
+    loadFile("index.html");
+
+    addAction(
+      "Projekt fertig gebaut."
+    );
+
+    updatePreview();
+
+    return;
+
+  }
+
+  if(type === "preview"){
+
+    addAction(
+      "Live Preview wird aktualisiert."
+    );
+
+    updatePreview();
+
+    return;
+
+  }
+
+  if(type === "save_project"){
+
+    saveProjects();
+
+    addAction(
+      "Projekt lokal gespeichert."
+    );
+
+    return;
+
+  }
+
+  if(type === "open_google"){
+
+    window.location.href =
+      "https://www.google.com/";
+
+    return;
+
+  }
+
+  if(type === "open_youtube"){
+
+    window.location.href =
+      "https://www.youtube.com/";
+
+    return;
+
+  }
+
+  if(type === "open_maps"){
+
+    window.location.href =
+      "https://www.google.com/maps/";
+
+    return;
+
+  }
+
+  if(type === "open_website"){
+
+    let url =
+      action.url || "";
+
+    if(!url){
+
+      addSystem(
+        "Keine URL angegeben."
+      );
+
+      return;
+
+    }
+
+    if(!/^https?:\/\//i.test(url)){
+
+      url = "https://" + url;
+
+    }
+
+    window.location.href = url;
+
+    return;
+
+  }
+
+  if(type === "generate_image"){
+
+    const image =
+      await generateImage(
+        action.prompt || action.content || ""
+      );
+
+    const src =
+      `data:${image.mime};base64,${image.data}`;
+
+    addMessage(
+      `
+      <div>
+        <div>Bild wurde generiert.</div>
+        <img
+          class="generatedImage"
+          src="${src}"
+          alt="KI-generiertes Bild">
+      </div>
+      `,
+      "ai",
+      true
+    );
+
+    return;
+
+  }
+
+  if(type === "generate_3d"){
+
+    await generate3D(
+      action.prompt ||
+      action.content ||
+      "Erstelle eine futuristische 3D Szene"
+    );
+
+    return;
+
+  }
+
+}
+
+/* =========================================================
+   3D GENERATOR
+========================================================= */
+
+async function generate3D(prompt){
+
+  addAction(
+    "3D Studio wird gestartet..."
+  );
+
+  const request =
+`Erstelle eine vollständige eigenständige HTML-Datei für diese 3D-Szene:
+
+${prompt}
+
+Anforderungen:
+
+- Three.js per CDN verwenden.
+- Vollbild-3D.
+- OrbitControls.
+- moderne Beleuchtung.
+- schöne Materialien.
+- Animation.
+- Responsive.
+- keine Erklärungen.
+- nur vollständiger HTML-Code.
+- alles in einer Datei.`;
+
+  const html =
+    await requestGemini(
+      request,
       {
-        method:"POST",
-
-        headers:{
-          "Content-Type":
-            "application/json",
-
-          "x-goog-api-key":
-            apiKey
-        },
-
-        body:JSON.stringify({
-
-          contents:[
-            {
-              role:"user",
-              parts:[
-                {
-                  text:prompt
-                }
-              ]
-            }
-          ],
-
-          generationConfig:{
-            temperature:.2,
-            responseMimeType:
-              "application/json"
-          }
-
-        })
+        temperature:.2
       }
     );
 
+  const cleaned =
+    cleanCode(html);
 
-  const data =
-    await response.json();
+  const fileName =
+    "3d-" +
+    Date.now() +
+    ".html";
 
+  projects[currentProject].files[fileName] =
+    cleaned;
 
-  if(!response.ok){
+  saveProjects();
 
-    throw new Error(
-      data?.error?.message ||
-      "Gemini Fehler"
-    );
+  loadFile(fileName);
 
-  }
-
-
-  return (
-    data?.candidates?.[0]
-      ?.content?.parts?.[0]?.text
-    || ""
+  addAction(
+    `3D-Szene erstellt: ${fileName}`
   );
+
+  updatePreview();
 
 }
 
+/* =========================================================
+   LOAD FILE
+========================================================= */
 
-/* ==========================================================
-   ACTION EXECUTION
-========================================================== */
+function loadFile(name){
 
-async function execute(a){
+  ensureProject();
 
-  if(!a || !a.type)
-    return;
-
-
-  action(
-    "→ " + a.type
-  );
-
-
-  switch(a.type){
-
-    case "edit_file":
-
-      if(
-        a.path &&
-        typeof a.content==="string"
-      ){
-
-        projects[currentProject]
-          .files[a.path]=a.content;
-
-        currentFile=a.path;
-
-        saveProjects();
-        renderAll();
-
-        action(
-          "Datei geändert: "+a.path,
-          "ok"
-        );
-
-      }
-
-      break;
-
-
-    case "create_file":
-
-      if(a.path){
-
-        projects[currentProject]
-          .files[a.path]=
-            a.content || "";
-
-        currentFile=a.path;
-
-        saveProjects();
-        renderAll();
-
-        action(
-          "Datei erstellt: "+a.path,
-          "ok"
-        );
-
-      }
-
-      break;
-
-
-    case "delete_file":
-
-      if(
-        a.path &&
-        projects[currentProject]
-          .files[a.path]
-      ){
-
-        delete projects[currentProject]
-          .files[a.path];
-
-        const files =
-          Object.keys(
-            projects[currentProject].files
-          );
-
-        currentFile =
-          files[0] || "";
-
-        saveProjects();
-        renderAll();
-
-        action(
-          "Datei gelöscht: "+a.path,
-          "ok"
-        );
-
-      }
-
-      break;
-
-
-    case "build_project":
-
-      if(
-        Array.isArray(a.files)
-      ){
-
-        for(
-          const file of a.files
-        ){
-
-          if(
-            file.path &&
-            typeof file.content==="string"
-          ){
-
-            projects[currentProject]
-              .files[file.path]=
-                file.content;
-
-            action(
-              "Baue "+file.path
-            );
-
-          }
-
-        }
-
-        if(a.files.length){
-
-          currentFile =
-            a.files[0].path;
-
-        }
-
-        saveProjects();
-        renderAll();
-
-        action(
-          "Projekt fertig gebaut.",
-          "ok"
-        );
-
-      }
-
-      break;
-
-
-    case "preview":
-
-      runPreview();
-
-      action(
-        "Preview aktualisiert.",
-        "ok"
-      );
-
-      break;
-
-
-    case "save_project":
-
-      saveProject();
-
-      break;
-
-
-    case "open_google":
-
-      openGoogle(
-        a.query || ""
-      );
-
-      break;
-
-
-    case "open_youtube":
-
-      openYouTube(
-        a.query || ""
-      );
-
-      break;
-
-
-    case "open_maps":
-
-      openMaps(
-        a.query || ""
-      );
-
-      break;
-
-
-    case "open_website":
-
-      if(a.url){
-
-        openWebsite(a.url);
-
-      }
-
-      break;
-
-
-    case "change_ui":
-
-      applyUIChange(
-        a.instruction || ""
-      );
-
-      break;
-
-  }
-
-}
-
-
-/* ==========================================================
-   UI CHANGES
-========================================================== */
-
-function applyUIChange(text){
-
-  const t=
-    text.toLowerCase();
-
-  if(
-    t.includes("mehr rot")
-  ){
-
-    document.documentElement
-      .style.setProperty(
-        "--red",
-        "#ff1028"
-      );
-
-  }
-
-  if(
-    t.includes("dunkler")
-  ){
-
-    document.documentElement
-      .style.setProperty(
-        "--bg",
-        "#000000"
-      );
-
-  }
-
-  action(
-    "JOVS-Oberfläche geändert.",
-    "ok"
-  );
-
-}
-
-
-/* ==========================================================
-   VOICE INPUT
-========================================================== */
-
-function setupSpeech(){
-
-  const Speech =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
-
-
-  if(!Speech){
+  if(!projects[currentProject].files[name]){
 
     return;
 
   }
 
+  currentFile = name;
 
-  recognition =
-    new Speech();
+  editor.value =
+    projects[currentProject].files[name];
 
+  document.getElementById("fileName")
+    .textContent = name;
 
-  recognition.lang =
-    "de-DE";
+  updatePreview();
 
-  recognition.continuous =
-    false;
+}
 
-  recognition.interimResults =
-    false;
+/* =========================================================
+   EDITOR
+========================================================= */
 
+editor.addEventListener("input",() => {
 
-  recognition.onstart=()=>{
+  ensureProject();
 
-    listening=true;
+  projects[currentProject].files[currentFile] =
+    editor.value;
 
-    document
-      .getElementById("mic")
-      .classList.add("active");
+  saveProjects();
 
-    setStatus("ZUHÖREN");
+});
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+function updatePreview(){
+
+  preview.srcdoc =
+    editor.value;
+
+}
+
+document
+  .getElementById("previewBtn")
+  .onclick = updatePreview;
+
+document
+  .getElementById("refreshPreview")
+  .onclick = updatePreview;
+
+document
+  .getElementById("runBtn")
+  .onclick = updatePreview;
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+document
+  .getElementById("fullscreenPreview")
+  .onclick = () => {
+
+    if(preview.requestFullscreen){
+
+      preview.requestFullscreen();
+
+    }
 
   };
 
+/* =========================================================
+   SAVE
+========================================================= */
 
-  recognition.onend=()=>{
+document
+  .getElementById("saveBtn")
+  .onclick = () => {
 
-    listening=false;
+    ensureProject();
 
-    document
-      .getElementById("mic")
-      .classList.remove("active");
+    projects[currentProject].files[currentFile] =
+      editor.value;
 
-    setStatus("BEREIT");
+    saveProjects();
 
-  };
-
-
-  recognition.onerror=()=>{
-
-    listening=false;
-
-    document
-      .getElementById("mic")
-      .classList.remove("active");
-
-    setStatus("BEREIT");
+    addSystem(
+      "Projekt gespeichert."
+    );
 
   };
 
+/* =========================================================
+   DOWNLOAD
+========================================================= */
 
-  recognition.onresult=
-    event=>{
+document
+  .getElementById("downloadBtn")
+  .onclick = () => {
 
-      const text =
-        event.results[0][0]
-          .transcript;
+    const blob =
+      new Blob(
+        [editor.value],
+        {type:"text/html"}
+      );
 
-      document
-        .getElementById("input")
-        .value=text;
+    const url =
+      URL.createObjectURL(blob);
 
-      sendMessage();
+    const a =
+      document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+      currentFile.endsWith(".html")
+        ? currentFile
+        : "index.html";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+  };
+
+/* =========================================================
+   DUPLICATE
+========================================================= */
+
+document
+  .getElementById("duplicateBtn")
+  .onclick = () => {
+
+    ensureProject();
+
+    const newName =
+      currentProject + "-copy";
+
+    projects[newName] = {
+      name:newName,
+      files:{
+        ...projects[currentProject].files
+      }
+    };
+
+    saveProjects();
+
+    loadProject(newName);
+
+  };
+
+/* =========================================================
+   DELETE PROJECT
+========================================================= */
+
+document
+  .getElementById("deleteProjectBtn")
+  .onclick = () => {
+
+    ensureProject();
+
+    if(
+      !confirm(
+        `Projekt "${currentProject}" wirklich löschen?`
+      )
+    ){
+
+      return;
+
+    }
+
+    delete projects[currentProject];
+
+    const remaining =
+      Object.keys(projects);
+
+    if(!remaining.length){
+
+      createProject("JOVS");
+
+    }else{
+
+      saveProjects();
+
+      loadProject(
+        remaining[0]
+      );
+
+    }
+
+  };
+
+/* =========================================================
+   NEW PROJECT
+========================================================= */
+
+document
+  .getElementById("newProjectBtn")
+  .onclick = () => {
+
+    const name =
+      prompt(
+        "Name des neuen Projekts:"
+      );
+
+    if(name){
+
+      createProject(name);
+
+    }
+
+  };
+
+/* =========================================================
+   NEW FILE
+========================================================= */
+
+document
+  .getElementById("newFileBtn")
+  .onclick = () => {
+
+    const name =
+      prompt(
+        "Dateiname, z.B. style.css oder app.js:"
+      );
+
+    if(!name) return;
+
+    ensureProject();
+
+    projects[currentProject].files[name] =
+      "";
+
+    saveProjects();
+
+    loadFile(name);
+
+  };
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+document
+  .getElementById("clearEditorBtn")
+  .onclick = () => {
+
+    if(
+      confirm(
+        "Aktuelle Datei leeren?"
+      )
+    ){
+
+      editor.value = "";
+
+      projects[currentProject].files[currentFile] =
+        "";
+
+      saveProjects();
+
+      updatePreview();
+
+    }
+
+  };
+
+/* =========================================================
+   FORMAT
+========================================================= */
+
+document
+  .getElementById("formatBtn")
+  .onclick = () => {
+
+    let code =
+      editor.value.trim();
+
+    code =
+      code
+        .replace(/>\s+</g,"><")
+        .replace(/\n\s*\n+/g,"\n\n");
+
+    editor.value = code;
+
+    projects[currentProject].files[currentFile] =
+      code;
+
+    saveProjects();
+
+    updatePreview();
+
+  };
+
+/* =========================================================
+   CHAT SEND
+========================================================= */
+
+async function sendMessage(text){
+
+  text =
+    (text || "").trim();
+
+  if(!text) return;
+
+  addMessage(
+    text,
+    "user"
+  );
+
+  chatInput.value = "";
+
+  autoResize();
+
+  addTyping();
+
+  aiStatus.textContent =
+    "Denkt...";
+
+  try{
+
+    const lower =
+      text.toLowerCase();
+
+    /* DIRECT COMMANDS */
+
+    if(
+      lower.includes("öffne google") ||
+      lower === "google"
+    ){
+
+      removeTyping();
+
+      addAction(
+        "Google wird geöffnet."
+      );
+
+      window.location.href =
+        "https://www.google.com/";
+
+      return;
+
+    }
+
+    if(
+      lower.includes("öffne youtube") ||
+      lower === "youtube"
+    ){
+
+      removeTyping();
+
+      addAction(
+        "YouTube wird geöffnet."
+      );
+
+      window.location.href =
+        "https://www.youtube.com/";
+
+      return;
+
+    }
+
+    if(
+      lower.includes("öffne maps") ||
+      lower.includes("google maps")
+    ){
+
+      removeTyping();
+
+      addAction(
+        "Google Maps wird geöffnet."
+      );
+
+      window.location.href =
+        "https://www.google.com/maps/";
+
+      return;
+
+    }
+
+    /* IMAGE */
+
+    const wantsImage =
+      /erstelle.*bild|generiere.*bild|mach.*bild|generiere ein bild|bild von/i
+        .test(text);
+
+    if(wantsImage){
+
+      removeTyping();
+
+      addAction(
+        "Bildwunsch erkannt."
+      );
+
+      const image =
+        await generateImage(text);
+
+      const src =
+        `data:${image.mime};base64,${image.data}`;
+
+      addMessage(
+        `
+        <div>
+          <div>Fertig.</div>
+          <img
+            class="generatedImage"
+            src="${src}"
+            alt="Generiertes Bild">
+        </div>
+        `,
+        "ai",
+        true
+      );
+
+      speakText("Das Bild ist fertig.");
+
+      return;
+
+    }
+
+    /* 3D */
+
+    const wants3D =
+      /3d|dreidimensional|three\.js|3d modell|3d szene/i
+        .test(text);
+
+    if(
+      wants3D &&
+      /erstell|mach|bau|generier/i.test(text)
+    ){
+
+      removeTyping();
+
+      await generate3D(text);
+
+      addMessage(
+        "Die 3D-Szene wurde erstellt und im Preview geöffnet.",
+        "ai"
+      );
+
+      return;
+
+    }
+
+    /* NORMAL AGENT */
+
+    removeTyping();
+
+    addAction(
+      "JOVS analysiert die Aufgabe..."
+    );
+
+    const result =
+      await runAgent(text);
+
+    await executeAgent(result);
+
+  }catch(error){
+
+    removeTyping();
+
+    addMessage(
+      "Fehler: " +
+      error.message,
+      "ai"
+    );
+
+    speakText(
+      "Es ist ein Fehler aufgetreten."
+    );
+
+  }finally{
+
+    setStatus(
+      apiKey
+        ? "JOVS ONLINE"
+        : "API KEY FEHLT"
+    );
+
+  }
+
+}
+
+document
+  .getElementById("sendBtn")
+  .onclick = () => {
+
+    sendMessage(
+      chatInput.value
+    );
+
+  };
+
+chatInput.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key === "Enter" &&
+      !event.shiftKey
+    ){
+
+      event.preventDefault();
+
+      sendMessage(
+        chatInput.value
+      );
+
+    }
+
+  }
+);
+
+/* =========================================================
+   QUICK BUTTONS
+========================================================= */
+
+document
+  .querySelectorAll(".quick")
+  .forEach(button => {
+
+    button.onclick = () => {
+
+      sendMessage(
+        button.dataset.prompt
+      );
 
     };
 
+  });
+
+/* =========================================================
+   SPEECH
+========================================================= */
+
+let recognition = null;
+
+if(
+  "SpeechRecognition" in window ||
+  "webkitSpeechRecognition" in window
+){
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  recognition =
+    new SpeechRecognition();
+
+  recognition.lang = "de-DE";
+
+  recognition.continuous = false;
+
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+
+    aiStatus.textContent =
+      "Hört zu...";
+
+  };
+
+  recognition.onresult = event => {
+
+    const text =
+      event.results[0][0].transcript;
+
+    chatInput.value = text;
+
+    autoResize();
+
+    sendMessage(text);
+
+  };
+
+  recognition.onerror = () => {
+
+    aiStatus.textContent =
+      "Bereit";
+
+  };
+
+  recognition.onend = () => {
+
+    aiStatus.textContent =
+      "Bereit";
+
+  };
+
 }
 
+document
+  .getElementById("voiceBtn")
+  .onclick = () => {
 
-function toggleMic(){
+    if(!recognition){
 
-  if(!recognition){
+      addSystem(
+        "Spracherkennung wird von diesem Browser nicht unterstützt."
+      );
 
-    alert(
-      "Dein Browser unterstützt keine Spracherkennung."
-    );
+      return;
 
-    return;
-
-  }
-
-
-  if(listening){
-
-    recognition.stop();
-
-  }else{
+    }
 
     recognition.start();
 
-  }
+  };
 
-}
+/* =========================================================
+   TEXT TO SPEECH
+========================================================= */
 
+function speakText(text){
 
-/* ==========================================================
-   SPEECH OUTPUT
-========================================================== */
+  if(!speaking) return;
 
-function speak(text){
-
-  if(
-    !window.speechSynthesis
-  ){
-
+  if(!("speechSynthesis" in window))
     return;
 
-  }
-
-  window.speechSynthesis.cancel();
-
+  speechSynthesis.cancel();
 
   const utterance =
     new SpeechSynthesisUtterance(
       text
     );
 
+  utterance.lang = "de-DE";
 
-  utterance.lang =
-    "de-DE";
+  utterance.rate = .93;
 
-  utterance.rate =
-    .95;
+  utterance.pitch = .75;
 
-  utterance.pitch =
-    .72;
-
-  utterance.volume =
-    1;
-
-
-  const voices =
-    speechSynthesis.getVoices();
-
-
-  const german =
-    voices.find(
-      v=>
-        v.lang &&
-        v.lang.toLowerCase()
-          .startsWith("de")
-    );
-
-
-  if(german){
-
-    utterance.voice=
-      german;
-
-  }
-
+  utterance.volume = 1;
 
   speechSynthesis.speak(
     utterance
@@ -2419,279 +2965,464 @@ function speak(text){
 
 }
 
+document
+  .getElementById("speakBtn")
+  .onclick = () => {
 
-/* ==========================================================
-   STATUS
-========================================================== */
+    speaking = !speaking;
 
-function setStatus(text){
+    document
+      .getElementById("speakBtn")
+      .textContent =
+        speaking ? "🔊" : "🔇";
+
+  };
+
+/* =========================================================
+   CLEAR CHAT
+========================================================= */
+
+document
+  .getElementById("clearChatBtn")
+  .onclick = () => {
+
+    messages.innerHTML = "";
+
+    addMessage(
+      "Chat wurde geleert. JOVS ist bereit.",
+      "ai"
+    );
+
+  };
+
+/* =========================================================
+   AUTO RESIZE
+========================================================= */
+
+function autoResize(){
+
+  chatInput.style.height =
+    "auto";
+
+  chatInput.style.height =
+    Math.min(
+      chatInput.scrollHeight,
+      130
+    ) + "px";
+
+}
+
+chatInput.addEventListener(
+  "input",
+  autoResize
+);
+
+/* =========================================================
+   MODES
+========================================================= */
+
+function setMode(mode){
+
+  currentMode = mode;
 
   document
-    .getElementById("status")
-    .textContent =
-      "● "+text;
+    .querySelectorAll("[data-mode]")
+    .forEach(btn => {
 
-}
+      if(btn.dataset.mode === mode){
 
+        btn.classList.add("active");
 
-/* ==========================================================
-   WEB
-========================================================== */
+      }else{
 
-function openGoogle(query=""){
+        btn.classList.remove("active");
 
-  const url =
-    query
-    ?"https://www.google.com/search?q="+
-      encodeURIComponent(query)
-    :"https://www.google.com/";
+      }
 
-  window.location.href=url;
+    });
 
-}
+  const names = {
 
+    agent:[
+      "JOVS Agent",
+      "Dein Browser-AI-Arbeitsplatz"
+    ],
 
-function openYouTube(query=""){
+    builder:[
+      "Project Builder",
+      "Erstelle komplette Webprojekte"
+    ],
 
-  const url =
-    query
-    ?"https://www.youtube.com/results?search_query="+
-      encodeURIComponent(query)
-    :"https://www.youtube.com/";
+    image:[
+      "Bildstudio",
+      "KI-Bildgenerierung"
+    ],
 
-  window.location.href=url;
+    "3d":[
+      "3D Studio",
+      "Erstelle interaktive 3D-Szenen"
+    ],
 
-}
+    preview:[
+      "Live Preview",
+      "Teste dein Projekt direkt im Browser"
+    ]
 
+  };
 
-function openMaps(query=""){
+  const data =
+    names[mode] ||
+    names.agent;
 
-  const url =
-    query
-    ?"https://www.google.com/maps/search/"+
-      encodeURIComponent(query)
-    :"https://www.google.com/maps/";
+  pageTitle.textContent =
+    data[0];
 
-  window.location.href=url;
+  pageSub.textContent =
+    data[1];
 
-}
+  if(mode === "preview"){
 
-
-function openWebsite(url){
-
-  if(!url)
-    return;
-
-  if(
-    !/^https?:\/\//i.test(url)
-  ){
-
-    url="https://"+url;
+    updatePreview();
 
   }
 
-  window.location.href=url;
-
 }
 
+document
+  .querySelectorAll("[data-mode]")
+  .forEach(btn => {
 
-/* ==========================================================
+    btn.onclick = () => {
+
+      setMode(
+        btn.dataset.mode
+      );
+
+    };
+
+  });
+
+/* =========================================================
+   BROWSER BUTTONS
+========================================================= */
+
+document
+  .getElementById("googleBtn")
+  .onclick = () => {
+
+    window.location.href =
+      "https://www.google.com/";
+
+  };
+
+document
+  .getElementById("youtubeBtn")
+  .onclick = () => {
+
+    window.location.href =
+      "https://www.youtube.com/";
+
+  };
+
+document
+  .getElementById("mapsBtn")
+  .onclick = () => {
+
+    window.location.href =
+      "https://www.google.com/maps/";
+
+  };
+
+/* =========================================================
    SETTINGS
-========================================================== */
+========================================================= */
 
-function openSettings(){
+const settingsModal =
+  document.getElementById("settingsModal");
 
-  document
-    .getElementById("settings")
-    .style.display="grid";
+document
+  .getElementById("settingsBtn")
+  .onclick = () => {
 
-  document
-    .getElementById("apiKey")
-    .value=apiKey;
-
-  document
-    .getElementById("imageSize")
-    .value=imageSize;
-
-  document
-    .getElementById("aspect")
-    .value=aspectRatio;
-
-}
-
-
-function closeSettings(){
-
-  document
-    .getElementById("settings")
-    .style.display="none";
-
-}
-
-
-function saveSettings(){
-
-  apiKey =
     document
-      .getElementById("apiKey")
-      .value.trim();
+      .getElementById("apiKeyInput")
+      .value = apiKey;
 
-  imageSize =
     document
       .getElementById("imageSize")
-      .value;
+      .value =
+        localStorage.getItem(
+          "jovs_image_size"
+        ) || "1K";
 
-  aspectRatio =
     document
-      .getElementById("aspect")
-      .value;
+      .getElementById("aspectRatio")
+      .value =
+        localStorage.getItem(
+          "jovs_aspect"
+        ) || "16:9";
 
+    settingsModal.classList.add("show");
 
-  if(apiKey){
+  };
+
+document
+  .getElementById("closeSettings")
+  .onclick = () => {
+
+    settingsModal.classList.remove(
+      "show"
+    );
+
+  };
+
+document
+  .getElementById("saveSettings")
+  .onclick = () => {
+
+    apiKey =
+      document
+        .getElementById("apiKeyInput")
+        .value
+        .trim();
 
     localStorage.setItem(
-      KEY_NAME,
+      "jovs_gemini_key",
       apiKey
     );
 
-  }else{
-
-    localStorage.removeItem(
-      KEY_NAME
+    localStorage.setItem(
+      "jovs_image_size",
+      document
+        .getElementById("imageSize")
+        .value
     );
 
-  }
+    localStorage.setItem(
+      "jovs_aspect",
+      document
+        .getElementById("aspectRatio")
+        .value
+    );
 
+    settingsModal.classList.remove(
+      "show"
+    );
 
-  localStorage.setItem(
-    "jovs_image_size",
-    imageSize
-  );
+    setStatus(
+      apiKey
+        ? "JOVS ONLINE"
+        : "API KEY FEHLT"
+    );
 
-  localStorage.setItem(
-    "jovs_aspect",
-    aspectRatio
-  );
+    addSystem(
+      apiKey
+        ? "Gemini API-Key gespeichert."
+        : "API-Key entfernt."
+    );
 
+  };
 
-  closeSettings();
+/* =========================================================
+   MOBILE CHAT
+========================================================= */
 
-  message(
-    "JOVS wurde aktualisiert."
+document
+  .getElementById("openChatBtn")
+  .onclick = () => {
+
+    document
+      .getElementById("chat")
+      .classList.toggle("open");
+
+  };
+
+/* =========================================================
+   MOBILE SIDEBAR
+========================================================= */
+
+document
+  .querySelector(".logo")
+  .ondblclick = () => {
+
+    document
+      .getElementById("sidebar")
+      .classList.toggle("open");
+
+  };
+
+/* =========================================================
+   UTILS
+========================================================= */
+
+function sleep(ms){
+
+  return new Promise(
+    resolve =>
+      setTimeout(resolve,ms)
   );
 
 }
-
-
-/* ==========================================================
-   HELPERS
-========================================================== */
-
-function escapeHTML(value){
-
-  return String(value)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-
-}
-
-
-function cleanJSON(text){
-
-  let value =
-    String(text).trim();
-
-  value =
-    value.replace(
-      /^```json/i,
-      ""
-    );
-
-  value =
-    value.replace(
-      /^```/i,
-      ""
-    );
-
-  value =
-    value.replace(
-      /```$/i,
-      ""
-    );
-
-  return value.trim();
-
-}
-
 
 function cleanCode(text){
 
-  let value =
-    String(text).trim();
-
-  value =
-    value.replace(
-      /^```html/i,
-      ""
-    );
-
-  value =
-    value.replace(
-      /^```/i,
-      ""
-    );
-
-  value =
-    value.replace(
-      /```$/i,
-      ""
-    );
-
-  return value.trim();
-
-}
-
-
-function safeName(text){
-
   return text
-    .toLowerCase()
-    .replace(
-      /[^a-z0-9äöüß_-]+/gi,
-      "_"
-    )
-    .replace(
-      /^_+|_+$/g,
-      ""
-    )
-    .substring(0,50)
-    || "3d_modell";
+    .replace(/^```html\s*/i,"")
+    .replace(/^```javascript\s*/i,"")
+    .replace(/^```js\s*/i,"")
+    .replace(/^```\s*/,"")
+    .replace(/\s*```$/,"")
+    .trim();
 
 }
 
+/* =========================================================
+   PARTICLES
+========================================================= */
 
-function showHome(){
+const canvas =
+  document.getElementById("particles");
 
-  message(
-    "JOVS ist bereit. Sag mir einfach, was ich bauen, ändern, generieren oder öffnen soll."
+const ctx =
+  canvas.getContext("2d");
+
+let particleArray = [];
+
+function resizeCanvas(){
+
+  canvas.width =
+    window.innerWidth *
+    devicePixelRatio;
+
+  canvas.height =
+    window.innerHeight *
+    devicePixelRatio;
+
+  canvas.style.width =
+    window.innerWidth + "px";
+
+  canvas.style.height =
+    window.innerHeight + "px";
+
+  ctx.scale(
+    devicePixelRatio,
+    devicePixelRatio
   );
 
 }
 
+function createParticles(){
 
-/* ==========================================================
-   START
-========================================================== */
+  particleArray = [];
 
-renderAll();
+  const count =
+    Math.min(
+      90,
+      Math.floor(
+        window.innerWidth / 18
+      )
+    );
 
-setupSpeech();
+  for(let i=0;i<count;i++){
 
-message(
-  "JOVS ist online. Du kannst schreiben oder ins Mikrofon sprechen. Ich kann Projekte bauen, Code ändern, 3D-Szenen erstellen und Bilder generieren."
+    particleArray.push({
+
+      x:Math.random()*innerWidth,
+
+      y:Math.random()*innerHeight,
+
+      vx:(Math.random()-.5)*.25,
+
+      vy:(Math.random()-.5)*.25,
+
+      r:Math.random()*1.5+.3,
+
+      a:Math.random()*.6+.1
+
+    });
+
+  }
+
+}
+
+function animateParticles(){
+
+  ctx.clearRect(
+    0,
+    0,
+    innerWidth,
+    innerHeight
+  );
+
+  particleArray.forEach(p => {
+
+    p.x += p.vx;
+
+    p.y += p.vy;
+
+    if(p.x < 0) p.x = innerWidth;
+
+    if(p.x > innerWidth)
+      p.x = 0;
+
+    if(p.y < 0) p.y = innerHeight;
+
+    if(p.y > innerHeight)
+      p.y = 0;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      p.r,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fillStyle =
+      `rgba(255,25,55,${p.a})`;
+
+    ctx.fill();
+
+  });
+
+  requestAnimationFrame(
+    animateParticles
+  );
+
+}
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    resizeCanvas();
+    createParticles();
+
+  }
+);
+
+/* =========================================================
+   INIT
+========================================================= */
+
+resizeCanvas();
+
+createParticles();
+
+animateParticles();
+
+renderProjects();
+
+loadProject(
+  Object.keys(projects)[0]
+);
+
+setStatus(
+  apiKey
+    ? "JOVS ONLINE"
+    : "API KEY FEHLT"
 );
 
 </script>
