@@ -2,437 +2,389 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>JARVIS HOME</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JOVS CoWork</title>
 
 <style>
 *{
   box-sizing:border-box;
+}
+
+html,body{
   margin:0;
-  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Inter,Arial,sans-serif;
+  background:#05070a;
+  color:#fff;
 }
 
 body{
-  background:#030605;
-  color:#eafff2;
-  font-family:Arial,Helvetica,sans-serif;
-  min-height:100vh;
-  overflow-x:hidden;
-}
-
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
   background:
-    radial-gradient(circle at 50% 20%,rgba(55,255,150,.08),transparent 35%),
-    linear-gradient(transparent 97%,rgba(80,255,160,.025) 98%);
-  background-size:auto,100% 5px;
+    radial-gradient(circle at 20% 10%,#123522 0,transparent 30%),
+    radial-gradient(circle at 90% 20%,#11253a 0,transparent 30%),
+    #05070a;
 }
 
-button,input,select{
-  font:inherit;
+/* APP */
+
+.app{
+  height:100vh;
+  display:grid;
+  grid-template-columns:260px 1fr 350px;
+  grid-template-rows:65px 1fr 42px;
+  grid-template-areas:
+    "header header header"
+    "sidebar workspace chat"
+    "footer footer footer";
 }
 
-button{
-  cursor:pointer;
-}
+/* HEADER */
 
 header{
-  height:74px;
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  z-index:100;
+  grid-area:header;
   display:flex;
   align-items:center;
-  padding:0 25px;
-  background:rgba(3,6,5,.88);
+  padding:0 20px;
+  border-bottom:1px solid #202833;
+  background:#080c12dd;
   backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(74,255,159,.15);
 }
 
 .logo{
-  display:flex;
-  align-items:center;
-  gap:13px;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:4px;
+  color:#45ff9a;
+  text-shadow:0 0 25px #45ff9a66;
 }
 
-.logoOrb{
-  width:13px;
-  height:13px;
+.status{
+  margin-left:18px;
+  color:#8b98a9;
+  font-size:12px;
+}
+
+.status-dot{
+  width:8px;
+  height:8px;
+  display:inline-block;
   border-radius:50%;
-  background:#55ff9b;
-  box-shadow:
-    0 0 10px #55ff9b,
-    0 0 35px #55ff9b;
+  background:#45ff9a;
+  box-shadow:0 0 14px #45ff9a;
+  margin-right:6px;
 }
 
-.logoText{
-  font-weight:800;
-  letter-spacing:7px;
-  font-size:19px;
-}
-
-.logoSub{
-  font-size:8px;
-  letter-spacing:3px;
-  color:#6f8c7d;
-  margin-top:3px;
-}
-
-.headerRight{
+.header-right{
   margin-left:auto;
   display:flex;
-  align-items:center;
-  gap:14px;
+  gap:8px;
 }
 
-.connection{
-  font-size:10px;
-  letter-spacing:2px;
-  color:#55ff9b;
+button{
+  border:1px solid #27313e;
+  background:#101620;
+  color:#fff;
+  padding:9px 12px;
+  border-radius:9px;
+  cursor:pointer;
 }
 
-.loginBtn,
-.primary{
-  border:0;
-  border-radius:10px;
-  padding:11px 16px;
-  background:#55ff9b;
-  color:#021008;
-  font-weight:bold;
+button:hover{
+  border-color:#45ff9a;
+  background:#122019;
 }
 
-.logout{
-  background:#241113;
-  color:#ff929b;
-  border:1px solid #54242a;
+.green{
+  color:#45ff9a;
+  border-color:#45ff9a55;
 }
 
-.layout{
-  display:flex;
-  padding-top:74px;
-  min-height:100vh;
-}
+/* SIDEBAR */
 
 .sidebar{
-  width:235px;
-  position:fixed;
-  top:74px;
-  bottom:0;
-  left:0;
-  padding:20px 13px;
-  border-right:1px solid rgba(74,255,159,.12);
-  background:rgba(3,6,5,.8);
-}
-
-.nav{
-  width:100%;
+  grid-area:sidebar;
+  border-right:1px solid #202833;
+  background:#080c11ee;
   padding:14px;
-  margin-bottom:6px;
-  border-radius:11px;
-  background:transparent;
-  color:#779184;
-  border:1px solid transparent;
-  text-align:left;
+  overflow:auto;
 }
 
-.nav:hover,
-.nav.active{
-  color:#55ff9b;
-  background:#0a1510;
-  border-color:#1d4a34;
+.title{
+  font-size:11px;
+  color:#687789;
+  letter-spacing:1.5px;
+  margin:12px 4px 8px;
 }
 
-.main{
-  margin-left:235px;
-  width:calc(100% - 235px);
-  padding:30px;
-  max-width:1500px;
-}
-
-.page{
-  display:none;
-}
-
-.page.active{
-  display:block;
-}
-
-.hero{
-  display:grid;
-  grid-template-columns:1.2fr .8fr;
-  gap:20px;
-}
-
-.panel{
-  background:linear-gradient(145deg,#09100d,#060a08);
-  border:1px solid #173629;
-  border-radius:22px;
-  padding:24px;
-  box-shadow:0 20px 60px rgba(0,0,0,.3);
-}
-
-.heroTitle{
-  font-size:clamp(40px,6vw,75px);
-  margin:10px 0;
-}
-
-.muted{
-  color:#71877b;
-}
-
-.core{
-  min-height:370px;
-  display:grid;
-  place-items:center;
-}
-
-.coreOrb{
-  width:190px;
-  height:190px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at center,
-    #eafff3 0 2%,
-    #75ffb4 5%,
-    #1b9b5b 18%,
-    #0a3421 42%,
-    #04100a 68%);
-  box-shadow:
-    0 0 30px #55ff9b,
-    0 0 90px rgba(85,255,155,.35),
-    inset 0 0 50px rgba(255,255,255,.2);
-  animation:corePulse 3s infinite;
-}
-
-@keyframes corePulse{
-  50%{
-    transform:scale(1.08);
-    box-shadow:
-      0 0 45px #55ff9b,
-      0 0 140px rgba(85,255,155,.35);
-  }
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-  gap:15px;
-  margin-top:18px;
-}
-
-.card{
-  background:#080e0b;
-  border:1px solid #173629;
-  border-radius:17px;
-  padding:19px;
-}
-
-.card h3{
-  margin-bottom:8px;
-}
-
-.number{
-  font-size:31px;
-  font-weight:bold;
-  color:#55ff9b;
-  margin-top:8px;
-}
-
-.toolbar{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin:20px 0;
-}
-
-input,select{
-  background:#050a08;
+.search{
+  width:100%;
+  padding:10px;
+  border-radius:9px;
+  border:1px solid #27313e;
+  background:#0e141d;
   color:white;
-  border:1px solid #254636;
-  border-radius:10px;
-  padding:12px;
   outline:none;
 }
 
-input:focus,
-select:focus{
-  border-color:#55ff9b;
+.repo{
+  padding:11px;
+  margin:5px 0;
+  border-radius:9px;
+  background:#0d131b;
+  border:1px solid transparent;
+  cursor:pointer;
 }
 
-.form{
-  display:flex;
-  gap:9px;
-  flex-wrap:wrap;
+.repo:hover,
+.repo.active{
+  border-color:#45ff9a55;
+  background:#102019;
 }
 
-.form input,
-.form select{
-  flex:1;
-  min-width:170px;
+.repo small{
+  display:block;
+  color:#6e7c8e;
+  margin-top:4px;
 }
 
-.deviceHeader,
-.sceneHeader{
+.file{
+  padding:8px;
+  color:#aab5c3;
+  border-radius:7px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.file:hover,
+.file.active{
+  background:#141c26;
+  color:#45ff9a;
+}
+
+/* WORKSPACE */
+
+.workspace{
+  grid-area:workspace;
+  display:grid;
+  grid-template-rows:48px 1fr 38%;
+  min-width:0;
+}
+
+.editor-bar{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:10px;
+  padding:0 12px;
+  border-bottom:1px solid #202833;
 }
 
-.switch{
-  width:52px;
-  height:29px;
-  border-radius:30px;
-  border:1px solid #315244;
-  background:#16201b;
+.filename{
+  color:#dbe4ed;
+  font-size:13px;
+}
+
+.editor-buttons{
+  margin-left:auto;
+  display:flex;
+  gap:6px;
+}
+
+.editor{
+  width:100%;
+  height:100%;
+  resize:none;
+  border:0;
+  outline:0;
+  background:#06090d;
+  color:#d9e5f1;
+  padding:18px;
+  font-family:monospace;
+  font-size:14px;
+  line-height:1.6;
+}
+
+.preview{
   position:relative;
+  border-top:1px solid #202833;
+  background:white;
 }
 
-.switch::after{
-  content:"";
+.preview iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  background:white;
+}
+
+.preview-label{
   position:absolute;
-  width:21px;
-  height:21px;
-  top:3px;
-  left:3px;
-  border-radius:50%;
-  background:#718178;
-  transition:.2s;
+  right:10px;
+  top:8px;
+  z-index:5;
+  background:#070b11dd;
+  color:#45ff9a;
+  padding:5px 8px;
+  border-radius:6px;
+  font-size:10px;
 }
 
-.switch.on{
-  background:#145d3a;
-}
-
-.switch.on::after{
-  left:26px;
-  background:#55ff9b;
-}
+/* CHAT */
 
 .chat{
-  height:650px;
+  grid-area:chat;
+  border-left:1px solid #202833;
+  background:#080c11ee;
   display:flex;
   flex-direction:column;
+}
+
+.chat-header{
+  height:48px;
+  display:flex;
+  align-items:center;
+  padding:0 14px;
+  border-bottom:1px solid #202833;
+  font-weight:bold;
 }
 
 .messages{
   flex:1;
   overflow:auto;
-  padding:10px;
+  padding:13px;
 }
 
 .message{
-  max-width:80%;
-  padding:13px 16px;
-  margin:8px 0;
-  border-radius:15px;
-  line-height:1.45;
+  max-width:94%;
+  padding:10px 12px;
+  border-radius:11px;
+  margin-bottom:8px;
+  font-size:13px;
+  line-height:1.5;
   white-space:pre-wrap;
 }
 
-.message.jarvis{
-  background:#0d1a13;
-  border:1px solid #1c4a33;
+.ai{
+  background:#101722;
+  border:1px solid #202a36;
 }
 
-.message.user{
+.user{
   margin-left:auto;
-  background:#16442e;
+  background:#123622;
+  border:1px solid #246d49;
 }
 
-.chatbar{
+.action{
+  border-left:2px solid #45ff9a;
+  padding-left:10px;
+}
+
+.chat-input{
   display:flex;
-  gap:8px;
+  gap:6px;
+  padding:10px;
+  border-top:1px solid #202833;
 }
 
-.chatbar input{
+.chat-input input{
   flex:1;
+  min-width:0;
+  padding:10px;
+  background:#101620;
+  border:1px solid #27313e;
+  color:white;
+  border-radius:9px;
+  outline:none;
 }
 
-.settingsGrid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:18px;
+/* FOOTER */
+
+footer{
+  grid-area:footer;
+  display:flex;
+  align-items:center;
+  padding:0 14px;
+  border-top:1px solid #202833;
+  color:#69788a;
+  font-size:11px;
 }
 
-.statusGood{
-  color:#55ff9b;
-}
+/* SETTINGS */
 
-.statusBad{
-  color:#ff7f8b;
-}
-
-.empty{
-  color:#71877b;
-  padding:30px;
-  text-align:center;
-}
-
-.hidden{
-  display:none!important;
-}
-
-.toast{
+.settings{
   position:fixed;
-  right:20px;
-  bottom:20px;
-  background:#0d1913;
-  border:1px solid #2d6048;
-  padding:14px 18px;
-  border-radius:12px;
+  inset:0;
+  background:#0009;
   display:none;
-  z-index:500;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
 }
 
-@media(max-width:850px){
+.settings-box{
+  width:min(550px,92vw);
+  background:#0c121a;
+  border:1px solid #2a3542;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 20px 80px #000;
+}
 
-  .sidebar{
-    top:auto;
-    bottom:0;
-    width:100%;
-    height:70px;
-    display:flex;
-    overflow-x:auto;
-    padding:7px;
-    z-index:200;
-    background:#030605f5;
+.settings-box h2{
+  margin-top:0;
+}
+
+.settings-box input{
+  width:100%;
+  padding:11px;
+  background:#070b10;
+  border:1px solid #27313e;
+  color:white;
+  border-radius:8px;
+}
+
+.info{
+  color:#8391a2;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.settings-buttons{
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+  margin-top:12px;
+}
+
+/* MOBILE */
+
+@media(max-width:1050px){
+
+  .app{
+    grid-template-columns:220px 1fr;
+    grid-template-areas:
+      "header header"
+      "sidebar workspace"
+      "footer footer";
   }
 
-  .nav{
-    min-width:100px;
-    text-align:center;
-    font-size:11px;
-  }
-
-  .main{
-    margin-left:0;
-    width:100%;
-    padding:20px 14px 90px;
-  }
-
-  .hero{
-    grid-template-columns:1fr;
-  }
-
-  .core{
-    min-height:250px;
-  }
-
-  header{
-    padding:0 14px;
-  }
-
-  .logoSub{
+  .chat{
     display:none;
   }
+}
 
-  .connection{
+@media(max-width:700px){
+
+  .app{
+    grid-template-columns:1fr;
+    grid-template-areas:
+      "header"
+      "workspace"
+      "footer";
+  }
+
+  .sidebar{
     display:none;
   }
 }
@@ -441,30 +393,37 @@ select:focus{
 
 <body>
 
+<div class="app">
+
+<!-- HEADER -->
+
 <header>
 
   <div class="logo">
-    <div class="logoOrb"></div>
-
-    <div>
-      <div class="logoText">JARVIS</div>
-      <div class="logoSub">HOME INTELLIGENCE</div>
-    </div>
+    JOVS
   </div>
 
-  <div class="headerRight">
+  <div class="status">
+    <span class="status-dot"></span>
+    <span id="status">BEREIT</span>
+  </div>
 
-    <div id="connection" class="connection">
-      OFFLINE
-    </div>
+  <div class="header-right">
 
-    <button id="loginBtn" class="loginBtn">
-      Mit Google anmelden
+    <button onclick="openSettings()">
+      ⚙ API
     </button>
 
-    <button id="logoutBtn"
-            class="loginBtn logout hidden">
-      Abmelden
+    <button onclick="openGoogle()">
+      🔎 Google
+    </button>
+
+    <button onclick="openYouTube()">
+      ▶ YouTube
+    </button>
+
+    <button onclick="openMaps()">
+      🗺 Maps
     </button>
 
   </div>
@@ -472,1693 +431,625 @@ select:focus{
 </header>
 
 
-<div class="layout">
+<!-- SIDEBAR -->
 
 <aside class="sidebar">
 
-<button class="nav active" data-page="home">
-⌂ Übersicht
-</button>
+  <input
+    id="repoSearch"
+    class="search"
+    placeholder="🔎 Projekt suchen..."
+  >
 
-<button class="nav" data-page="rooms">
-▦ Räume
-</button>
+  <div class="title">
+    PROJEKTE
+  </div>
 
-<button class="nav" data-page="devices">
-◈ Geräte
-</button>
+  <div id="repositories"></div>
 
-<button class="nav" data-page="scenes">
-◆ Szenen
-</button>
+  <div class="title">
+    DATEIEN
+  </div>
 
-<button class="nav" data-page="automations">
-↻ Automationen
-</button>
-
-<button class="nav" data-page="ai">
-✦ JARVIS AI
-</button>
-
-<button class="nav" data-page="settings">
-⚙ Einstellungen
-</button>
+  <div id="files"></div>
 
 </aside>
 
 
-<main class="main">
+<!-- WORKSPACE -->
+
+<main class="workspace">
+
+  <div class="editor-bar">
+
+    <div class="filename" id="filename">
+      index.html
+    </div>
+
+    <div class="editor-buttons">
+
+      <button onclick="saveFile()">
+        💾 Speichern
+      </button>
+
+      <button
+        class="green"
+        onclick="runPreview()">
+        ▶ Vorschau
+      </button>
+
+      <button onclick="openCurrentWebsite()">
+        ↗ Öffnen
+      </button>
+
+    </div>
+
+  </div>
 
 
-<!-- HOME -->
-
-<section id="home" class="page active">
-
-<div class="hero">
-
-<div class="panel">
-
-<div class="muted">
-SYSTEM STATUS
-</div>
-
-<h1 class="heroTitle">
-JARVIS
-</h1>
-
-<p class="muted">
-Deine persönliche Smart-Home-Zentrale.
-</p>
-
-<div class="grid">
-
-<div class="card">
-<div class="muted">GERÄTE</div>
-<div id="deviceCount" class="number">0</div>
-</div>
-
-<div class="card">
-<div class="muted">RÄUME</div>
-<div id="roomCount" class="number">0</div>
-</div>
-
-<div class="card">
-<div class="muted">SZENEN</div>
-<div id="sceneCount" class="number">0</div>
-</div>
-
-<div class="card">
-<div class="muted">KI ANFRAGEN</div>
-<div id="aiCount" class="number">0</div>
-</div>
-
-</div>
-
-</div>
+  <textarea
+    id="editor"
+    class="editor"
+    spellcheck="false">
+  </textarea>
 
 
-<div class="panel core">
+  <div class="preview">
 
-<div class="coreOrb"></div>
+    <div class="preview-label">
+      JOVS LIVE
+    </div>
 
-</div>
+    <iframe
+      id="previewFrame"
+      sandbox="allow-scripts allow-forms allow-modals">
+    </iframe>
 
-</div>
+  </div>
 
-</section>
-
-
-<!-- ROOMS -->
-
-<section id="rooms" class="page">
-
-<div class="panel">
-
-<h2>Räume</h2>
-
-<div class="toolbar form">
-
-<input
-id="roomName"
-placeholder="z.B. Wohnzimmer">
-
-<button
-id="addRoom"
-class="primary">
-Raum hinzufügen
-</button>
-
-</div>
-
-<div id="roomsGrid" class="grid"></div>
-
-</div>
-
-</section>
+</main>
 
 
-<!-- DEVICES -->
+<!-- CHAT -->
 
-<section id="devices" class="page">
+<section class="chat">
 
-<div class="panel">
+  <div class="chat-header">
+    JOVS
+    <span
+      style="margin-left:7px;color:#69788a;font-size:11px">
+      COWORK
+    </span>
+  </div>
 
-<h2>Geräte</h2>
 
-<div class="toolbar form">
+  <div id="messages" class="messages">
 
-<input
-id="deviceName"
-placeholder="Gerätename">
+    <div class="message ai">
 
-<select id="deviceType">
+Hallo. Ich bin JOVS.
 
-<option value="light">
-Licht
-</option>
+Du kannst mir zum Beispiel sagen:
 
-<option value="switch">
-Schalter
-</option>
+„Öffne Google“
 
-<option value="sensor">
-Sensor
-</option>
+„Suche auf YouTube nach Formel 1“
 
-<option value="tv">
-TV
-</option>
+„Öffne Maps“
 
-<option value="speaker">
-Lautsprecher
-</option>
+„Öffne index.html“
 
-</select>
+„Ändere den Titel auf JOVS“
 
-<select id="deviceRoom">
+„Zeig die Vorschau“
 
-<option value="">
-Kein Raum
-</option>
+    </div>
 
-</select>
+  </div>
 
-<button
-id="addDevice"
-class="primary">
-Gerät speichern
-</button>
 
-</div>
+  <div class="chat-input">
 
-<div id="devicesGrid" class="grid"></div>
+    <input
+      id="command"
+      placeholder="Was soll ich machen?">
 
-</div>
+    <button onclick="voiceInput()">
+      🎙
+    </button>
+
+    <button
+      class="green"
+      onclick="sendCommand()">
+      ➤
+    </button>
+
+  </div>
 
 </section>
 
 
-<!-- SCENES -->
+<footer>
 
-<section id="scenes" class="page">
+  <span id="path">
+    JOVS › Demo › index.html
+  </span>
 
-<div class="panel">
+  <span style="margin-left:auto">
+    JOVS CoWork • Browser Mode
+  </span>
 
-<h2>Szenen</h2>
-
-<div class="toolbar form">
-
-<input
-id="sceneName"
-placeholder="z.B. Filmabend">
-
-<button
-id="addScene"
-class="primary">
-Szene erstellen
-</button>
+</footer>
 
 </div>
-
-<div id="scenesGrid" class="grid"></div>
-
-</div>
-
-</section>
-
-
-<!-- AUTOMATIONS -->
-
-<section id="automations" class="page">
-
-<div class="panel">
-
-<h2>Automationen</h2>
-
-<p class="muted">
-Regeln für dein Smart Home.
-</p>
-
-<div class="toolbar form">
-
-<input
-id="automationName"
-placeholder="z.B. Licht bei Präsenz">
-
-<button
-id="addAutomation"
-class="primary">
-Automation speichern
-</button>
-
-</div>
-
-<div id="automationsGrid" class="grid"></div>
-
-</div>
-
-</section>
-
-
-<!-- AI -->
-
-<section id="ai" class="page">
-
-<div class="panel chat">
-
-<div class="deviceHeader">
-
-<h2>JARVIS AI</h2>
-
-<span id="aiStatus"
-class="statusGood">
-BEREIT
-</span>
-
-</div>
-
-
-<div id="messages"
-class="messages">
-
-<div class="message jarvis">
-JARVIS online.
-Was kann ich für dich tun?
-</div>
-
-</div>
-
-
-<div class="chatbar">
-
-<input
-id="chatInput"
-placeholder="Sag JARVIS etwas…">
-
-<button
-id="micBtn"
-class="primary">
-🎙
-</button>
-
-<button
-id="sendBtn"
-class="primary">
-Senden
-</button>
-
-</div>
-
-</div>
-
-</section>
 
 
 <!-- SETTINGS -->
 
-<section id="settings" class="page">
+<div id="settings" class="settings">
 
-<div class="settingsGrid">
+  <div class="settings-box">
 
-<div class="panel">
+    <h2>JOVS API</h2>
 
-<h2>Firebase</h2>
+    <p class="info">
+      Dein API-Key wird ausschließlich lokal in diesem Browser
+      gespeichert. Er wird nicht automatisch in GitHub geschrieben.
+    </p>
 
-<p class="muted">
-Projekt
-</p>
+    <input
+      id="apiKey"
+      type="password"
+      placeholder="Gemini API Key">
 
-<p>
-jarvis-ae4ed
-</p>
+    <div class="settings-buttons">
 
-<br>
+      <button onclick="closeSettings()">
+        Abbrechen
+      </button>
 
-<p id="firebaseStatus"
-class="statusGood">
-Firebase verbunden
-</p>
+      <button
+        class="green"
+        onclick="saveApiKey()">
+        Speichern
+      </button>
 
-</div>
+    </div>
 
-
-<div class="panel">
-
-<h2>Home Assistant</h2>
-
-<br>
-
-<div class="form">
-
-<input
-id="haUrl"
-placeholder="http://homeassistant.local:8123">
-
-<input
-id="haToken"
-type="password"
-placeholder="Long-Lived Access Token">
-
-</div>
-
-<br>
-
-<button
-id="saveHA"
-class="primary">
-Home Assistant speichern
-</button>
-
-<button
-id="testHA"
-class="loginBtn">
-Verbindung testen
-</button>
-
-<br><br>
-
-<p id="haStatus"
-class="muted">
-Noch nicht verbunden.
-</p>
+  </div>
 
 </div>
 
 
-<div class="panel">
+<script>
 
-<h2>Sprache</h2>
+/* =========================================
+   DEMO PROJEKTE
+========================================= */
 
-<br>
+const projects = [
 
-<button
-id="testVoice"
-class="primary">
-JARVIS sprechen lassen
-</button>
+  {
+    name:"JOVS",
+    files:{
+      "index.html":`
+<!DOCTYPE html>
+<html>
+<head>
+<title>JOVS</title>
 
-</div>
+<style>
 
-</div>
-
-</section>
-
-</main>
-
-</div>
-
-
-<div id="toast" class="toast"></div>
-
-
-<script type="module">
-
-/* ==========================================
-   FIREBASE
-========================================== */
-
-import {
-  initializeApp
+body{
+  margin:0;
+  height:100vh;
+  display:grid;
+  place-items:center;
+  background:#050b08;
+  color:#45ff9a;
+  font-family:Arial;
 }
-from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  signOut,
-  onAuthStateChanged
+h1{
+  font-size:70px;
+  text-shadow:0 0 30px #45ff9a;
 }
-from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+</style>
+
+</head>
+
+<body>
+
+<h1>JOVS</h1>
+
+</body>
+</html>
+      `,
+
+      "README.md":
+"# JOVS\n\nJOVS CoWork Browser AI.",
+
+      "style.css":
+"body{background:#050505;color:#45ff9a}",
+
+      "app.js":
+"console.log('JOVS online');"
+    }
+  },
+
+  {
+    name:"GameZone",
+    files:{
+      "index.html":`
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>GameZone</h1>
+
+<p>Dein Spielprojekt.</p>
+
+</body>
+</html>
+      `,
+
+      "README.md":
+"# GameZone"
+    }
+  },
+
+  {
+    name:"Axolotl",
+    files:{
+      "index.html":`
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Axolotl</h1>
+
+<p>Axolotl Website.</p>
+
+</body>
+</html>
+      `,
+
+      "README.md":
+"# Axolotl"
+    }
+  }
+
+];
 
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  doc,
-  setDoc,
-  serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-
-
-import {
-  getAI,
-  getGenerativeModel,
-  GoogleAIBackend
-}
-from "https://www.gstatic.com/firebasejs/12.3.0/firebase-ai.js";
-
-
-const firebaseConfig = {
-
-  apiKey:
-  "AIzaSyAo9N68MbT1zHQfPSoQsvOImzmaVjtyPnY",
-
-  authDomain:
-  "jarvis-ae4ed.firebaseapp.com",
-
-  projectId:
-  "jarvis-ae4ed",
-
-  storageBucket:
-  "jarvis-ae4ed.firebasestorage.app",
-
-  messagingSenderId:
-  "537076649397",
-
-  appId:
-  "1:537076649397:web:ce53d342c63b537c799dfc"
-
-};
-
-
-const firebaseApp =
-initializeApp(firebaseConfig);
-
-
-const auth =
-getAuth(firebaseApp);
-
-
-const db =
-getFirestore(firebaseApp);
-
-
-/* ==========================================
-   FIREBASE AI LOGIC
-========================================== */
-
-const ai =
-getAI(firebaseApp,{
-  backend:new GoogleAIBackend()
-});
-
-
-/*
-  WICHTIG:
-  Trage hier ein Modell ein,
-  das in deinem Firebase-AI-Logic-Projekt
-  tatsächlich verfügbar ist.
-*/
-
-const model =
-getGenerativeModel(ai,{
-  model:"gemini-2.5-flash"
-});
-
-
-/* ==========================================
+/* =========================================
    STATE
-========================================== */
+========================================= */
 
-let currentUser=null;
+let currentProject = projects[0];
 
-let rooms=[];
-let devices=[];
-let scenes=[];
-let automations=[];
+let currentFile = "index.html";
 
-let aiRequests=0;
+let files = {...currentProject.files};
 
-let currentPage="home";
 
+/* =========================================
+   ELEMENTS
+========================================= */
 
-/* ==========================================
-   HELPERS
-========================================== */
+const editor =
+document.getElementById("editor");
 
-const $ =
-selector =>
-document.querySelector(selector);
+const previewFrame =
+document.getElementById("previewFrame");
 
+const messages =
+document.getElementById("messages");
 
-function toast(text){
 
-  const t=$("#toast");
+/* =========================================
+   PROJECTS
+========================================= */
 
-  t.textContent=text;
+function renderProjects(){
 
-  t.style.display="block";
+  const container =
+  document.getElementById("repositories");
 
-  setTimeout(()=>{
-    t.style.display="none";
-  },2500);
+  container.innerHTML="";
 
-}
-
-
-function escapeHTML(value){
-
-  return String(value ?? "")
-  .replaceAll("&","&amp;")
-  .replaceAll("<","&lt;")
-  .replaceAll(">","&gt;")
-  .replaceAll('"',"&quot;")
-  .replaceAll("'","&#039;");
-
-}
-
-
-/* ==========================================
-   VOICE
-========================================== */
-
-function speak(text){
-
-  if(!("speechSynthesis" in window))
-    return;
-
-  speechSynthesis.cancel();
-
-  const utterance =
-  new SpeechSynthesisUtterance(text);
-
-  utterance.lang="de-DE";
-  utterance.rate=.94;
-  utterance.pitch=.82;
-  utterance.volume=1;
-
-  speechSynthesis.speak(utterance);
-
-}
-
-
-$("#testVoice").onclick=()=>{
-
-  speak(
-    "JARVIS ist online. Alle Systeme sind bereit."
-  );
-
-};
-
-
-/* ==========================================
-   NAVIGATION
-========================================== */
-
-document
-.querySelectorAll(".nav")
-.forEach(button=>{
-
-  button.onclick=()=>{
-
-    currentPage=
-    button.dataset.page;
-
-    document
-    .querySelectorAll(".nav")
-    .forEach(x=>
-      x.classList.remove("active")
-    );
-
-    button.classList.add("active");
-
-    document
-    .querySelectorAll(".page")
-    .forEach(page=>
-      page.classList.remove("active")
-    );
-
-    $("#"+currentPage)
-    .classList.add("active");
-
-  };
-
-});
-
-
-/* ==========================================
-   LOGIN
-========================================== */
-
-$("#loginBtn").onclick=async()=>{
-
-  const provider=
-  new GoogleAuthProvider();
-
-  await signInWithRedirect(
-    auth,
-    provider
-  );
-
-};
-
-
-$("#logoutBtn").onclick=()=>{
-
-  signOut(auth);
-
-};
-
-
-onAuthStateChanged(
-auth,
-user=>{
-
-  currentUser=user;
-
-  if(user){
-
-    $("#loginBtn")
-    .classList.add("hidden");
-
-    $("#logoutBtn")
-    .classList.remove("hidden");
-
-    $("#connection")
-    .textContent="ONLINE";
-
-    loadUserData();
-
-  }else{
-
-    $("#loginBtn")
-    .classList.remove("hidden");
-
-    $("#logoutBtn")
-    .classList.add("hidden");
-
-    $("#connection")
-    .textContent="OFFLINE";
-
-  }
-
-});
-
-
-/* ==========================================
-   FIRESTORE
-========================================== */
-
-function userCollection(name){
-
-  return collection(
-    db,
-    "users",
-    currentUser.uid,
-    name
-  );
-
-}
-
-
-function loadUserData(){
-
-  onSnapshot(
-    userCollection("rooms"),
-    snapshot=>{
-
-      rooms=
-      snapshot.docs.map(
-        d=>({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-      renderRooms();
-      updateCounters();
-
-    }
-  );
-
-
-  onSnapshot(
-    userCollection("devices"),
-    snapshot=>{
-
-      devices=
-      snapshot.docs.map(
-        d=>({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-      renderDevices();
-      updateCounters();
-
-    }
-  );
-
-
-  onSnapshot(
-    userCollection("scenes"),
-    snapshot=>{
-
-      scenes=
-      snapshot.docs.map(
-        d=>({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-      renderScenes();
-      updateCounters();
-
-    }
-  );
-
-
-  onSnapshot(
-    userCollection("automations"),
-    snapshot=>{
-
-      automations=
-      snapshot.docs.map(
-        d=>({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-      renderAutomations();
-
-    }
-  );
-
-}
-
-
-/* ==========================================
-   COUNTERS
-========================================== */
-
-function updateCounters(){
-
-  $("#deviceCount").textContent=
-  devices.length;
-
-  $("#roomCount").textContent=
-  rooms.length;
-
-  $("#sceneCount").textContent=
-  scenes.length;
-
-  $("#aiCount").textContent=
-  aiRequests;
-
-}
-
-
-/* ==========================================
-   ROOMS
-========================================== */
-
-$("#addRoom").onclick=async()=>{
-
-  if(!currentUser)
-    return toast("Bitte zuerst anmelden.");
-
-  const name=
-  $("#roomName").value.trim();
-
-  if(!name)
-    return;
-
-  await addDoc(
-    userCollection("rooms"),
-    {
-      name,
-      createdAt:serverTimestamp()
-    }
-  );
-
-  $("#roomName").value="";
-
-  toast("Raum gespeichert.");
-
-};
-
-
-function renderRooms(){
-
-  const grid=
-  $("#roomsGrid");
-
-  grid.innerHTML="";
-
-  if(!rooms.length){
-
-    grid.innerHTML=
-    `<div class="empty">
-      Noch keine Räume vorhanden.
-    </div>`;
-
-    return;
-  }
-
-
-  rooms.forEach(room=>{
-
-    const amount=
-    devices.filter(
-      d=>d.roomId===room.id
-    ).length;
-
-    grid.innerHTML+=`
-
-      <div class="card">
-
-        <h3>
-          ${escapeHTML(room.name)}
-        </h3>
-
-        <p class="muted">
-          ${amount} Geräte
-        </p>
-
-      </div>
-
-    `;
-
-  });
-
-
-  updateRoomSelect();
-
-}
-
-
-/* ==========================================
-   DEVICE SELECT
-========================================== */
-
-function updateRoomSelect(){
-
-  const select=
-  $("#deviceRoom");
-
-  select.innerHTML=
-  `<option value="">
-    Kein Raum
-  </option>`;
-
-  rooms.forEach(room=>{
-
-    select.innerHTML+=`
-
-      <option value="${room.id}">
-        ${escapeHTML(room.name)}
-      </option>
-
-    `;
-
-  });
-
-}
-
-
-/* ==========================================
-   DEVICES
-========================================== */
-
-$("#addDevice").onclick=async()=>{
-
-  if(!currentUser)
-    return toast("Bitte zuerst anmelden.");
-
-  const name=
-  $("#deviceName").value.trim();
-
-  if(!name)
-    return;
-
-
-  await addDoc(
-    userCollection("devices"),
-    {
-
-      name,
-
-      type:
-      $("#deviceType").value,
-
-      roomId:
-      $("#deviceRoom").value,
-
-      state:false,
-
-      /*
-        entityId wird später mit
-        Home Assistant verbunden.
-      */
-
-      entityId:"",
-
-      createdAt:
-      serverTimestamp()
-
-    }
-  );
-
-
-  $("#deviceName").value="";
-
-  toast("Gerät gespeichert.");
-
-};
-
-
-function renderDevices(){
-
-  const grid=
-  $("#devicesGrid");
-
-  grid.innerHTML="";
-
-
-  if(!devices.length){
-
-    grid.innerHTML=
-    `<div class="empty">
-      Noch keine Geräte.
-    </div>`;
-
-    return;
-
-  }
-
-
-  devices.forEach(device=>{
-
-    const room=
-    rooms.find(
-      r=>r.id===device.roomId
-    );
-
-
-    grid.innerHTML+=`
-
-      <div class="card">
-
-        <div class="deviceHeader">
-
-          <div>
-
-            <h3>
-              ${escapeHTML(device.name)}
-            </h3>
-
-            <p class="muted">
-              ${escapeHTML(device.type)}
-              ·
-              ${escapeHTML(room?.name||"Kein Raum")}
-            </p>
-
-          </div>
-
-
-          <button
-
-            class="switch
-            ${device.state?"on":""}"
-
-            data-device="${device.id}">
-
-          </button>
-
-        </div>
-
-      </div>
-
-    `;
-
-  });
-
-
+  const search =
   document
-  .querySelectorAll("[data-device]")
-  .forEach(button=>{
-
-    button.onclick=
-    ()=>toggleDevice(
-      button.dataset.device
-    );
-
-  });
-
-}
-
-
-async function toggleDevice(id){
-
-  const device=
-  devices.find(
-    d=>d.id===id
-  );
-
-  if(!device)
-    return;
-
-
-  const newState=
-  !device.state;
-
-
-  /*
-    Wenn entityId vorhanden ist,
-    versuchen wir zusätzlich Home Assistant.
-  */
-
-  if(
-    device.entityId &&
-    getHASettings()
-  ){
-
-    const success=
-    await callHomeAssistant(
-      device,
-      newState
-    );
-
-    if(!success)
-      return;
-
-  }
-
-
-  await setDoc(
-
-    doc(
-      db,
-      "users",
-      currentUser.uid,
-      "devices",
-      id
-    ),
-
-    {
-      state:newState
-    },
-
-    {
-      merge:true
-    }
-
-  );
-
-
-  toast(
-    `${device.name}: ${newState?"AN":"AUS"}`
-  );
-
-}
-
-
-/* ==========================================
-   SCENES
-========================================== */
-
-$("#addScene").onclick=async()=>{
-
-  const name=
-  $("#sceneName").value.trim();
-
-  if(!name)
-    return;
-
-
-  await addDoc(
-    userCollection("scenes"),
-    {
-      name,
-      createdAt:serverTimestamp()
-    }
-  );
-
-
-  $("#sceneName").value="";
-
-  toast("Szene gespeichert.");
-
-};
-
-
-function renderScenes(){
-
-  const grid=
-  $("#scenesGrid");
-
-  grid.innerHTML="";
-
-
-  if(!scenes.length){
-
-    grid.innerHTML=
-    `<div class="empty">
-      Noch keine Szenen.
-    </div>`;
-
-    return;
-
-  }
-
-
-  scenes.forEach(scene=>{
-
-    grid.innerHTML+=`
-
-      <div class="card">
-
-        <div class="sceneHeader">
-
-          <div>
-
-            <h3>
-              ${escapeHTML(scene.name)}
-            </h3>
-
-            <p class="muted">
-              Szene
-            </p>
-
-          </div>
-
-          <button
-            class="primary"
-            data-scene="${scene.id}">
-            Start
-          </button>
-
-        </div>
-
-      </div>
-
-    `;
-
-  });
-
-
-  document
-  .querySelectorAll("[data-scene]")
-  .forEach(button=>{
-
-    button.onclick=
-    ()=>runScene(
-      button.dataset.scene
-    );
-
-  });
-
-}
-
-
-async function runScene(id){
-
-  const scene=
-  scenes.find(
-    s=>s.id===id
-  );
-
-  if(!scene)
-    return;
-
-  /*
-    Hier können später mehrere
-    Home-Assistant-Aktionen
-    hinterlegt werden.
-  */
-
-  toast(
-    `Szene "${scene.name}" gestartet.`
-  );
-
-  speak(
-    `Szene ${scene.name} wurde gestartet.`
-  );
-
-}
-
-
-/* ==========================================
-   AUTOMATIONS
-========================================== */
-
-$("#addAutomation").onclick=
-async()=>{
-
-  const name=
-  $("#automationName")
+  .getElementById("repoSearch")
   .value
-  .trim();
+  .toLowerCase();
 
-  if(!name)
-    return;
+  projects
+  .filter(p =>
+    p.name.toLowerCase().includes(search)
+  )
+  .forEach(project=>{
 
+    const div =
+    document.createElement("div");
 
-  await addDoc(
-    userCollection("automations"),
-    {
+    div.className =
+    "repo " +
+    (project===currentProject
+      ? "active"
+      : "");
 
-      name,
-
-      enabled:true,
-
-      description:
-      "JARVIS Automation",
-
-      createdAt:
-      serverTimestamp()
-
-    }
-  );
-
-
-  $("#automationName")
-  .value="";
-
-  toast("Automation gespeichert.");
-
-};
-
-
-function renderAutomations(){
-
-  const grid=
-  $("#automationsGrid");
-
-  grid.innerHTML="";
-
-
-  if(!automations.length){
-
-    grid.innerHTML=
-    `<div class="empty">
-      Noch keine Automationen.
-    </div>`;
-
-    return;
-
-  }
-
-
-  automations.forEach(auto=>{
-
-    grid.innerHTML+=`
-
-      <div class="card">
-
-        <h3>
-          ${escapeHTML(auto.name)}
-        </h3>
-
-        <p class="muted">
-          ${escapeHTML(
-            auto.description||"Automation"
-          )}
-        </p>
-
-      </div>
-
+    div.innerHTML =
+    `
+    <b>📦 ${project.name}</b>
+    <small>${Object.keys(project.files).length} Dateien</small>
     `;
+
+    div.onclick=()=>{
+
+      currentProject=project;
+
+      files={...project.files};
+
+      currentFile=
+      Object.keys(files)[0];
+
+      renderProjects();
+
+      renderFiles();
+
+      loadFile();
+
+      addAI(
+        "Projekt geöffnet: "+
+        project.name
+      );
+
+    };
+
+    container.appendChild(div);
 
   });
 
 }
 
 
-/* ==========================================
-   HOME ASSISTANT
-========================================== */
+/* =========================================
+   FILES
+========================================= */
 
-function getHASettings(){
+function renderFiles(){
 
-  const url=
-  localStorage.getItem(
-    "jarvis_ha_url"
-  );
+  const container =
+  document.getElementById("files");
 
-  const token=
-  localStorage.getItem(
-    "jarvis_ha_token"
-  );
+  container.innerHTML="";
 
-  if(!url || !token)
-    return null;
+  Object.keys(files).forEach(file=>{
 
-  return {
-    url:url.replace(/\/$/,""),
-    token
-  };
+    const div =
+    document.createElement("div");
+
+    div.className =
+    "file " +
+    (file===currentFile
+      ? "active"
+      : "");
+
+    div.textContent =
+    "📄 "+file;
+
+    div.onclick=()=>{
+
+      currentFile=file;
+
+      loadFile();
+
+      renderFiles();
+
+    };
+
+    container.appendChild(div);
+
+  });
 
 }
 
 
-$("#saveHA").onclick=()=>{
+/* =========================================
+   LOAD FILE
+========================================= */
 
-  const url=
-  $("#haUrl").value.trim();
+function loadFile(){
 
-  const token=
-  $("#haToken").value.trim();
+  document
+  .getElementById("filename")
+  .textContent=currentFile;
 
-
-  if(!url || !token){
-
-    toast(
-      "URL und Token eingeben."
-    );
-
-    return;
-
-  }
-
-
-  localStorage.setItem(
-    "jarvis_ha_url",
-    url
-  );
-
-  localStorage.setItem(
-    "jarvis_ha_token",
-    token
-  );
-
-
-  $("#haStatus")
+  document
+  .getElementById("path")
   .textContent=
-  "Verbindung gespeichert.";
+  "JOVS › "+
+  currentProject.name+
+  " › "+
+  currentFile;
 
-  toast(
-    "Home Assistant gespeichert."
+  editor.value=
+  files[currentFile] || "";
+
+  if(currentFile.endsWith(".html")){
+
+    runPreview();
+
+  }
+
+}
+
+
+/* =========================================
+   SAVE
+========================================= */
+
+function saveFile(){
+
+  files[currentFile]=editor.value;
+
+  localStorage.setItem(
+    "jovs_"+currentProject.name,
+    JSON.stringify(files)
   );
 
-};
+  addAI(
+    "💾 "+currentFile+
+    " lokal im Browser gespeichert."
+  );
+
+}
 
 
-$("#testHA").onclick=
-async()=>{
+/* =========================================
+   PREVIEW
+========================================= */
 
-  const settings=
-  getHASettings();
+function runPreview(){
 
-  if(!settings){
+  files[currentFile]=editor.value;
 
-    $("#haStatus")
-    .textContent=
-    "Keine Verbindung konfiguriert.";
+  if(!currentFile.endsWith(".html")){
+
+    addAI(
+      "Die Live-Vorschau funktioniert direkt für HTML-Dateien."
+    );
 
     return;
 
   }
 
+  previewFrame.srcdoc=
+  files[currentFile];
 
-  try{
+  setStatus("LIVE");
 
-    const response=
-    await fetch(
-      `${settings.url}/api/`,
-      {
-        headers:{
-          Authorization:
-          `Bearer ${settings.token}`,
-          "Content-Type":
-          "application/json"
-        }
-      }
-    );
+}
 
 
-    if(!response.ok)
-      throw new Error(
-        "HTTP "+response.status
-      );
+/* =========================================
+   OPEN CURRENT WEBSITE
+========================================= */
 
+function openCurrentWebsite(){
 
-    const data=
-    await response.json();
-
-
-    $("#haStatus")
-    .textContent=
-    `${data.message||"Home Assistant"} verbunden.`;
-
-    $("#haStatus")
-    .className=
-    "statusGood";
-
-
-    toast(
-      "Home Assistant ist erreichbar."
-    );
-
-
-  }catch(error){
-
-    console.error(error);
-
-    $("#haStatus")
-    .textContent=
-    "Verbindung fehlgeschlagen. Prüfe URL, Token und CORS.";
-
-    $("#haStatus")
-    .className=
-    "statusBad";
-
-  }
-
-};
-
-
-async function callHomeAssistant(
-  device,
-  state
-){
-
-  const settings=
-  getHASettings();
-
-  if(!settings)
-    return false;
-
+  runPreview();
 
   /*
-    Für light und switch:
-    Home Assistant REST Service.
+    Kein Popup:
+    Wir navigieren direkt zum Inhalt.
   */
 
-  let domain=
-  device.type==="light"
-  ?"light"
-  :"switch";
+  const html=
+  files[currentFile];
 
+  const blob=
+  new Blob(
+    [html],
+    {type:"text/html"}
+  );
 
-  try{
+  const url=
+  URL.createObjectURL(blob);
 
-    const response=
-    await fetch(
-
-      `${settings.url}/api/services/${domain}/${state?"turn_on":"turn_off"}`,
-
-      {
-
-        method:"POST",
-
-        headers:{
-          Authorization:
-          `Bearer ${settings.token}`,
-
-          "Content-Type":
-          "application/json"
-        },
-
-        body:JSON.stringify({
-
-          entity_id:
-          device.entityId
-
-        })
-
-      }
-
-    );
-
-
-    if(!response.ok){
-
-      toast(
-        "Home Assistant konnte das Gerät nicht schalten."
-      );
-
-      return false;
-
-    }
-
-
-    return true;
-
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Home Assistant ist nicht erreichbar."
-    );
-
-    return false;
-
-  }
+  window.location.href=url;
 
 }
 
 
-/* ==========================================
-   JARVIS AI
-========================================== */
+/* =========================================
+   GOOGLE
+========================================= */
 
-function localAnswer(text){
+function openGoogle(){
 
-  const t=
-  text
-  .toLowerCase()
-  .trim();
-
-
-  if(
-    t.includes("hallo") ||
-    t.includes("hey jarvis")
-  ){
-
-    return "Hallo. JARVIS ist bereit.";
-
-  }
-
-
-  if(
-    t.includes("wie spät") ||
-    t.includes("uhrzeit")
-  ){
-
-    return `
-      Es ist ${
-        new Date().toLocaleTimeString(
-          "de-DE",
-          {
-            hour:"2-digit",
-            minute:"2-digit"
-          }
-        )
-      } Uhr.
-    `;
-
-  }
-
-
-  if(
-    t.includes("welcher tag") ||
-    t.includes("datum")
-  ){
-
-    return `
-      Heute ist ${
-        new Date().toLocaleDateString(
-          "de-DE",
-          {
-            weekday:"long",
-            day:"numeric",
-            month:"long"
-          }
-        )
-      }.
-    `;
-
-  }
-
-
-  return null;
+  window.location.href=
+  "https://www.google.com/";
 
 }
 
 
-async function askGemini(text){
+/* =========================================
+   YOUTUBE
+========================================= */
 
-  const local=
-  localAnswer(text);
+function openYouTube(){
 
-  if(local)
-    return local;
-
-
-  $("#aiStatus")
-  .textContent="DENKEN…";
-
-
-  try{
-
-    const result=
-    await model.generateContent(
-
-      `
-Du bist JARVIS, ein futuristischer
-deutscher Smart-Home-Assistent.
-
-Antworte natürlich, kurz und präzise.
-
-Du darfst niemals behaupten,
-dass ein Gerät geschaltet wurde,
-wenn keine erfolgreiche Home-Assistant-
-Antwort vorliegt.
-
-Verfügbare Geräte:
-${JSON.stringify(devices)}
-
-Verfügbare Räume:
-${JSON.stringify(rooms)}
-
-Benutzeranfrage:
-${text}
-      `
-
-    );
-
-
-    aiRequests++;
-
-    updateCounters();
-
-
-    $("#aiStatus")
-    .textContent="BEREIT";
-
-
-    return result.response.text();
-
-
-  }catch(error){
-
-    console.error(error);
-
-    $("#aiStatus")
-    .textContent="FEHLER";
-
-
-    return "Die KI ist momentan nicht erreichbar.";
-
-  }
+  window.location.href=
+  "https://www.youtube.com/";
 
 }
 
 
-function addMessage(
-  text,
-  type
-){
+/* =========================================
+   MAPS
+========================================= */
 
-  const messages=
-  $("#messages");
+function openMaps(){
+
+  window.location.href=
+  "https://www.google.com/maps/";
+
+}
+
+
+/* =========================================
+   GOOGLE SEARCH
+========================================= */
+
+function searchGoogle(query){
+
+  window.location.href=
+  "https://www.google.com/search?q="+
+  encodeURIComponent(query);
+
+}
+
+
+/* =========================================
+   YOUTUBE SEARCH
+========================================= */
+
+function searchYouTube(query){
+
+  window.location.href=
+  "https://www.youtube.com/results?search_query="+
+  encodeURIComponent(query);
+
+}
+
+
+/* =========================================
+   MAP SEARCH
+========================================= */
+
+function searchMaps(query){
+
+  window.location.href=
+  "https://www.google.com/maps/search/"+
+  encodeURIComponent(query);
+
+}
+
+
+/* =========================================
+   CHAT
+========================================= */
+
+function addUser(text){
 
   const div=
   document.createElement("div");
 
   div.className=
-  `message ${type}`;
+  "message user";
 
   div.textContent=text;
 
@@ -2170,71 +1061,361 @@ function addMessage(
 }
 
 
-async function sendMessage(){
+function addAI(text){
 
-  const input=
-  $("#chatInput");
+  const div=
+  document.createElement("div");
 
-  const text=
-  input.value.trim();
+  div.className=
+  "message ai";
 
-  if(!text)
-    return;
+  div.textContent=text;
 
+  messages.appendChild(div);
 
-  input.value="";
-
-  addMessage(
-    text,
-    "user"
-  );
-
-
-  const answer=
-  await askGemini(text);
-
-
-  addMessage(
-    answer,
-    "jarvis"
-  );
-
-
-  speak(answer);
+  messages.scrollTop=
+  messages.scrollHeight;
 
 }
 
 
-$("#sendBtn").onclick=
-sendMessage;
+function action(text){
+
+  const div=
+  document.createElement("div");
+
+  div.className=
+  "message ai action";
+
+  div.textContent=
+  "AKTION\n"+text;
+
+  messages.appendChild(div);
+
+  messages.scrollTop=
+  messages.scrollHeight;
+
+}
 
 
-$("#chatInput")
-.addEventListener(
-  "keydown",
-  event=>{
+/* =========================================
+   COMMAND SYSTEM
+========================================= */
 
-    if(event.key==="Enter")
-      sendMessage();
+function sendCommand(){
+
+  const input=
+  document.getElementById("command");
+
+  const text=
+  input.value.trim();
+
+  if(!text)return;
+
+  addUser(text);
+
+  input.value="";
+
+  executeCommand(text);
+
+}
+
+
+/* =========================================
+   COMMANDS
+========================================= */
+
+function executeCommand(text){
+
+  const lower=
+  text.toLowerCase();
+
+
+  /* GOOGLE */
+
+  if(
+    lower.includes("google")
+  ){
+
+    let query=
+    text
+    .replace(/google/gi,"")
+    .replace(/suche/gi,"")
+    .trim();
+
+    if(query){
+
+      action(
+        "🔎 Google-Suche: "+
+        query
+      );
+
+      searchGoogle(query);
+
+    }else{
+
+      action(
+        "🔎 Google wird geöffnet."
+      );
+
+      openGoogle();
+
+    }
+
+    return;
 
   }
-);
 
 
-/* ==========================================
-   SPEECH RECOGNITION
-========================================== */
+  /* YOUTUBE */
 
-$("#micBtn").onclick=()=>{
+  if(
+    lower.includes("youtube")
+  ){
 
-  const SpeechRecognition=
+    let query=
+    text
+    .replace(/youtube/gi,"")
+    .replace(/suche/gi,"")
+    .trim();
+
+    if(query){
+
+      action(
+        "▶ YouTube-Suche: "+
+        query
+      );
+
+      searchYouTube(query);
+
+    }else{
+
+      action(
+        "▶ YouTube wird geöffnet."
+      );
+
+      openYouTube();
+
+    }
+
+    return;
+
+  }
+
+
+  /* MAPS */
+
+  if(
+    lower.includes("maps") ||
+    lower.includes("karte")
+  ){
+
+    let query=
+    text
+    .replace(/maps/gi,"")
+    .replace(/karte/gi,"")
+    .replace(/öffne/gi,"")
+    .trim();
+
+    if(query){
+
+      action(
+        "🗺 Maps-Suche: "+
+        query
+      );
+
+      searchMaps(query);
+
+    }else{
+
+      action(
+        "🗺 Google Maps wird geöffnet."
+      );
+
+      openMaps();
+
+    }
+
+    return;
+
+  }
+
+
+  /* VORSCHAU */
+
+  if(
+    lower.includes("vorschau") ||
+    lower.includes("preview")
+  ){
+
+    action(
+      "▶ Live-Vorschau wird aktualisiert."
+    );
+
+    runPreview();
+
+    return;
+
+  }
+
+
+  /* SPEICHERN */
+
+  if(
+    lower.includes("speicher")
+  ){
+
+    saveFile();
+
+    return;
+
+  }
+
+
+  /* DATEI ÖFFNEN */
+
+  const fileMatch=
+  text.match(
+    /(?:öffne|open)\s+(?:die\s+)?([a-zA-Z0-9_.\/-]+)/i
+  );
+
+  if(fileMatch){
+
+    const requested=
+    fileMatch[1];
+
+    const found=
+    Object.keys(files)
+    .find(f =>
+      f.toLowerCase()===
+      requested.toLowerCase()
+    );
+
+    if(found){
+
+      currentFile=found;
+
+      loadFile();
+
+      renderFiles();
+
+      action(
+        "📄 Datei geöffnet: "+
+        found
+      );
+
+      return;
+
+    }
+
+  }
+
+
+  /* TITEL ÄNDERN */
+
+  const titleMatch=
+  text.match(
+    /titel\s+(?:auf|zu)\s+(.+)/i
+  );
+
+  if(titleMatch){
+
+    const newTitle=
+    titleMatch[1];
+
+    let code=
+    editor.value;
+
+    if(
+      /<title>[\s\S]*?<\/title>/i
+      .test(code)
+    ){
+
+      code=
+      code.replace(
+        /<title>[\s\S]*?<\/title>/i,
+        "<title>"+
+        newTitle+
+        "</title>"
+      );
+
+    }else{
+
+      code=
+      code.replace(
+        /<head>/i,
+        "<head><title>"+
+        newTitle+
+        "</title>"
+      );
+
+    }
+
+    editor.value=code;
+
+    files[currentFile]=code;
+
+    runPreview();
+
+    action(
+      "✏️ Titel geändert auf: "+
+      newTitle
+    );
+
+    return;
+
+  }
+
+
+  /* URL */
+
+  const urlMatch=
+  text.match(
+    /https?:\/\/[^\s]+/i
+  );
+
+  if(urlMatch){
+
+    action(
+      "🌐 Webseite wird geöffnet."
+    );
+
+    window.location.href=
+    urlMatch[0];
+
+    return;
+
+  }
+
+
+  addAI(
+    "Ich habe den Befehl noch nicht erkannt.\n\n"+
+    "Beispiele:\n"+
+    "• Öffne Google\n"+
+    "• Suche auf YouTube nach F1\n"+
+    "• Öffne Maps Paris\n"+
+    "• Öffne index.html\n"+
+    "• Ändere den Titel auf JOVS\n"+
+    "• Zeig die Vorschau\n"+
+    "• Speichere"
+  );
+
+}
+
+
+/* =========================================
+   VOICE
+========================================= */
+
+function voiceInput(){
+
+  const Recognition=
   window.SpeechRecognition ||
   window.webkitSpeechRecognition;
 
+  if(!Recognition){
 
-  if(!SpeechRecognition){
-
-    toast(
+    addAI(
       "Spracherkennung wird in diesem Browser nicht unterstützt."
     );
 
@@ -2242,72 +1423,156 @@ $("#micBtn").onclick=()=>{
 
   }
 
-
   const recognition=
-  new SpeechRecognition();
-
+  new Recognition();
 
   recognition.lang=
   "de-DE";
 
-  recognition.interimResults=
-  false;
+  recognition.interimResults=false;
 
-  recognition.continuous=
-  false;
+  recognition.onstart=()=>{
 
-
-  $("#aiStatus")
-  .textContent="ZUHÖREN…";
-
-
-  recognition.onresult=
-  event=>{
-
-    const text=
-    event.results[0][0]
-    .transcript;
-
-    $("#chatInput")
-    .value=text;
-
-    sendMessage();
+    setStatus("ZUHÖREN");
 
   };
 
+  recognition.onresult=e=>{
 
-  recognition.onerror=
-  ()=>{
-
-    $("#aiStatus")
-    .textContent="BEREIT";
-
-    toast(
-      "Mikrofon konnte nicht verwendet werden."
-    );
+    document
+    .getElementById("command")
+    .value=
+    e.results[0][0].transcript;
 
   };
 
+  recognition.onend=()=>{
 
-  recognition.onend=
-  ()=>{
-
-    $("#aiStatus")
-    .textContent="BEREIT";
+    setStatus("BEREIT");
 
   };
-
 
   recognition.start();
 
-};
+}
 
 
-/* ==========================================
+/* =========================================
+   API KEY
+========================================= */
+
+function openSettings(){
+
+  document
+  .getElementById("settings")
+  .style.display="flex";
+
+  document
+  .getElementById("apiKey")
+  .value=
+  localStorage.getItem("jovs_gemini_key") || "";
+
+}
+
+
+function closeSettings(){
+
+  document
+  .getElementById("settings")
+  .style.display="none";
+
+}
+
+
+function saveApiKey(){
+
+  const key=
+  document
+  .getElementById("apiKey")
+  .value.trim();
+
+  if(key){
+
+    localStorage.setItem(
+      "jovs_gemini_key",
+      key
+    );
+
+    addAI(
+      "🔐 Gemini API-Key lokal im Browser gespeichert."
+    );
+
+  }else{
+
+    localStorage.removeItem(
+      "jovs_gemini_key"
+    );
+
+    addAI(
+      "🔐 API-Key entfernt."
+    );
+
+  }
+
+  closeSettings();
+
+}
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+function setStatus(text){
+
+  document
+  .getElementById("status")
+  .textContent=text;
+
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+document
+.getElementById("repoSearch")
+.addEventListener(
+  "input",
+  renderProjects
+);
+
+
+/* =========================================
+   ENTER
+========================================= */
+
+document
+.getElementById("command")
+.addEventListener(
+  "keydown",
+  e=>{
+
+    if(e.key==="Enter"){
+
+      sendCommand();
+
+    }
+
+  }
+);
+
+
+/* =========================================
    START
-========================================== */
+========================================= */
 
-updateCounters();
+renderProjects();
+
+renderFiles();
+
+loadFile();
 
 </script>
 
