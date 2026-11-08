@@ -144,7 +144,10 @@ function scoreModel(m,kind){
 function selectModels(text){
  const kind=classifyRequest(text);
  return modelCatalog.map(m=>({m,score:scoreModel(m,kind)})).filter(x=>x.score>-1e5)
-  .sort((a,b)=>b.score-a.score).map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,cool:0}));
+  .sort((a,b)=>b.score-a.score)
+  // Ein Modell pro Anbieter wird separat getestet. So kann JARVIS bei einem Ausfall
+  // auch einen anderen Anbieter mit demselben Modellnamen probieren.
+  .map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,provider:x.m.provider||null,cool:0}));
 }
 /* Browser-only: keine Online-KI, kein lokaler Server und keine BAT-Datei. */
 let puterReady=!!window.puter;
@@ -174,7 +177,7 @@ $("login").onclick=async()=>{
   if(!signed()) throw new Error("Anmeldung wurde nicht bestätigt");
   btn.textContent="ONLINE-KI VERBUNDEN ✓";
   await refreshModelCatalog(true);
-  log("Online-KI verbunden. JARVIS hat alle als kostenlos erkennbaren Modelle geladen und testet sie automatisch.","s");
+  log("Online-KI verbunden. JARVIS lädt alle vom Anbieter gemeldeten Gratis-Varianten und schaltet bei Fehlern automatisch zum nächsten Modell/Anbieter weiter.","s");
  }catch(e){btn.textContent="ONLINE-KI VERBINDEN";log("Online-KI-Verbindung fehlgeschlagen: "+emsg(e),"s")}
 };
 addEventListener("DOMContentLoaded",()=>{autoConnectAI()});
@@ -206,11 +209,13 @@ async function call(p,msgs,sys,img){
  // Jeder Anbieter erhält die vollständige Systemanweisung und den gesamten bisherigen Chatverlauf.
  const history=[{role:"system",content:sys},...msgs];
  let r;
+ const opts={model:p.model,normalize:true};
+ if(p.provider)opts.provider=p.provider;
  if(img){
   const prompt=history.map(m=>m.role.toUpperCase()+": "+m.content).join("\n\n");
-  r=await puter.ai.chat(prompt,img,false,{model:p.model,normalize:true});
+  r=await puter.ai.chat(prompt,img,false,opts);
  } else {
-  r=await puter.ai.chat(history,false,{model:p.model,normalize:true});
+  r=await puter.ai.chat(history,false,opts);
  }
  if(r&&r.success===false)throw r;
  const out=txt(r).trim();
@@ -237,7 +242,7 @@ async function ask(msgs,sys,img){
   }catch(e){
    const m=String(emsg(e));errs.push(p.name+": "+m.slice(0,90));
    p.cool=Date.now()+(e&&e.code==="not_granted"?3600e3:/limit|quota|credit|insufficient|429|402|rate/i.test(m)?300e3:45000);
-   renderProv();log(p.name+" nicht verfügbar – nächstes Modell wird getestet.","s");
+   renderProv();log(p.name+(p.provider?" ("+p.provider+")":"")+" nicht verfügbar – nächstes kostenloses Modell wird getestet.","s");
   }
  }
  active=-1;renderProv();
