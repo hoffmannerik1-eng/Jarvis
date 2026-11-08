@@ -147,7 +147,7 @@ function selectModels(text){
   .sort((a,b)=>b.score-a.score)
   // Ein Modell pro Anbieter wird separat getestet. So kann JARVIS bei einem Ausfall
   // auch einen anderen Anbieter mit demselben Modellnamen probieren.
-  .map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,provider:x.m.provider||null,cool:0}));
+  .map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,provider:x.m.provider||null,key:String(x.m.provider||"puter")+":"+String(x.m.id)}));
 }
 /* Browser-only: keine Online-KI, kein lokaler Server und keine BAT-Datei. */
 let puterReady=!!window.puter;
@@ -230,31 +230,59 @@ async function call(p,msgs,sys,img){
  return out;
 }
 /* Aufgabe erkennen, passende Modelle zuerst testen, bei Ausfall automatisch weiterschalten. */
+// Modell-Sperren bleiben auch zwischen mehreren Nachrichten erhalten.
+const modelCooldowns=new Map();
+const wait=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 async function ask(msgs,sys,img){
  if(!puterReady)puterReady=await loadPuter();
  if(!puterReady)throw new Error("Online-KI-Skript konnte nicht geladen werden. Bitte Internetverbindung prüfen.");
  if(!signed())await ensureFreeSession();
  if(!signed())throw new Error("Kostenloser Gastzugang konnte nicht gestartet werden.");
- await refreshModelCatalog();
  const lastUser=[...msgs].reverse().find(m=>m.role==="user")?.content||"";
- const candidates=selectModels(lastUser);
- if(!candidates.length)throw new Error("Der Anbieter hat keine verfügbaren Modelle geliefert. Bitte Verbindung prüfen oder später erneut versuchen.");
- const errs=[];
- for(let i=0;i<candidates.length;i++){
-  const p=candidates[i];if(p.cool>Date.now())continue;
-  try{
-   active=i;renderProv();
-   const answer=await call(p,msgs,sys,img);
-   if(!answer||!answer.trim())throw new Error("leere Antwort");
-   log("Antwort von "+p.name+" erhalten.","s");return answer;
-  }catch(e){
-   const m=String(emsg(e));errs.push(p.name+": "+m.slice(0,90));
-   p.cool=Date.now()+(e&&e.code==="not_granted"?3600e3:/limit|quota|credit|insufficient|429|402|rate/i.test(m)?300e3:45000);
-   renderProv();log(p.name+(p.provider?" ("+p.provider+")":"")+" nicht verfügbar – nächstes kostenloses Modell wird getestet.","s");
+ let round=0;
+ // Bei Limits endet die Suche nicht nach einem Durchlauf: JARVIS wartet und prüft erneut.
+ while(true){
+  round++;
+  await refreshModelCatalog(true);
+  const candidates=selectModels(lastUser);
+  if(!candidates.length){
+   log("Keine kostenlosen Modelle in der Liste. JARVIS prüft erneut …","s");
+   await wait(15000);
+   continue;
   }
+  const now=Date.now();
+  const ready=candidates.filter(p=>(modelCooldowns.get(p.key)||0)<=now);
+  if(!ready.length){
+   const next=Math.min(...candidates.map(p=>modelCooldowns.get(p.key)||now));
+   const pause=Math.max(1000,Math.min(15000,next-now));
+   log("Alle Gratis-Modelle sind ausgelastet. Neuer Versuch in "+Math.ceil(pause/1000)+" s.","s");
+   await wait(pause);
+   continue;
+  }
+  for(let i=0;i<ready.length;i++){
+   const p=ready[i];
+   try{
+    active=candidates.indexOf(p);renderProv();
+    log("Teste kostenloses Modell "+p.name+" …","s");
+    const answer=await call(p,msgs,sys,img);
+    if(!answer||!answer.trim())throw new Error("Modell hat eine leere Antwort geliefert");
+    modelCooldowns.delete(p.key);
+    log("Antwort von "+p.name+" erhalten.","s");
+    return answer;
+   }catch(e){
+    const m=String(emsg(e)),low=m.toLowerCase();
+    const limited=/limit|quota|credit|insufficient|429|402|rate|capacity|overload|busy|503|temporar|too many/.test(low);
+    const auth=/not_granted|unauthori[sz]ed|sign.?in|auth/.test(low);
+    const pause=auth?120000:limited?60000:20000;
+    modelCooldowns.set(p.key,Date.now()+pause);
+    renderProv();
+    log(p.name+" nicht verfügbar ("+(limited?"Limit/Auslastung":"Fehler")+"). JARVIS wechselt zum nächsten Modell.","s");
+   }
+  }
+  active=-1;renderProv();
+  log("Alle derzeit verfügbaren Gratis-Modelle geprüft. JARVIS beginnt automatisch einen neuen Durchlauf.","s");
+  await wait(3000);
  }
- active=-1;renderProv();
- throw new Error("Keines der "+candidates.length+" geprüften kostenlosen Online-Modelle antwortet gerade. "+errs.slice(0,5).join(" | "));
 }
 
 /* ---------- Agent ---------- */
