@@ -119,9 +119,15 @@ async function refreshModelCatalog(force=false){
   const rows=await puter.ai.listModels();
   modelCatalog=Array.isArray(rows)?rows.filter(m=>m&&m.id):[];
   catalogAt=Date.now();renderProv();
-  if(!modelCatalog.length) log("Puter ist angemeldet, hat aber gerade keine Modelle geliefert.","s");
+  $("kihealth").textContent=modelCatalog.length
+   ? "MODELLLISTE ERREICHBAR · "+modelCatalog.filter(isFreeModel).length+" GRATIS-KANDIDATEN"
+   : "KEINE MODELLE GEMELDET · PRÜFE ERNEUT";
+  if(!modelCatalog.length) log("Der KI-Anbieter hat gerade keine Modelle gemeldet. JARVIS prüft automatisch erneut.","s");
   return modelCatalog;
- }catch(e){log("KI-Modellliste konnte nicht geladen werden: "+emsg(e),"s");return modelCatalog}
+ }catch(e){
+  $("kihealth").textContent="KI-VERBINDUNG NICHT ERREICHBAR · NEUER VERSUCH FOLGT";
+  log("KI-Modellliste nicht erreichbar: "+emsg(e),"s");return modelCatalog
+ }
 }
 function classifyRequest(text){
  const t=String(text||"").toLowerCase();
