@@ -460,7 +460,7 @@ function renderTasks(){
 }
 $("accountbtn").onclick=()=>{$("account").classList.toggle("hide");renderTasks()};
 $("accountclose").onclick=()=>$("account").classList.add("hide");
-$("emailsave").onclick=async()=>{const email=$("owneremail").value.trim();if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){$("emailstatus").textContent="Bitte eine gültige E-Mail-Adresse eingeben.";return}cloudData.ownerEmail=email;const ok=await saveCloud({ownerEmail:email});try{localStorage.setItem("jarvis_email",email)}catch(e){}$("emailstatus").textContent=ok?"E-Mail-Adresse in Firebase gespeichert.":"Lokal gespeichert. Firebase ist nicht verbunden."};
+$("emailsave").onclick=async()=>{const email=$("owneremail").value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$("emailstatus").textContent="Bitte eine gültige E-Mail-Adresse eingeben.";return}cloudData.ownerEmail=email;const ok=await saveCloud({ownerEmail:email});try{localStorage.setItem("jarvis_email",email)}catch(e){}$("emailstatus").textContent=ok?"E-Mail-Adresse in Firebase gespeichert.":"Lokal gespeichert. Firebase ist nicht verbunden."};
 $("taskadd").onclick=async()=>{const description=$("taskinput").value.trim();if(!description)return;const result=await tools.taskadd(JSON.stringify({description}));$("taskinput").value="";$("taskstatus").textContent=result;};
 function loadAccountFields(){const email=cloudData.ownerEmail||(()=>{try{return localStorage.getItem("jarvis_email")||""}catch(e){return""}})();$("owneremail").value=email;const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks:(()=>{try{return JSON.parse(localStorage.getItem("jarvis_tasks")||"[]")}catch(e){return[]}})();if(!cloudData.tasks)cloudData.tasks=tasks;renderTasks();}
 /* ---------- Stimme ---------- */
