@@ -652,8 +652,8 @@ $("mic").onclick=async()=>{
   listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");log("Mikrofon aktiv. Ich warte, bis du fertig gesprochen hast (1,5 Sekunden Sprechpause).","s");
  }catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s");}
 };
-$("go").onclick=()=>{const v=$("in").value;$("in").value="";run(v)};
-$("in").onkeydown=e=>{if(e.key==="Enter"){const v=$("in").value;$("in").value="";run(v)}};
+$("go").onclick=()=>{if(speaking)return;const v=$("in").value.trim();if(!v)return;$("in").value="";run(v)};
+$("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();if(speaking)return;const v=$("in").value.trim();if(!v)return;$("in").value="";run(v)}};
 
 /* ---------- Kern-Animation ---------- */
 const cv=$("cv"),x=cv.getContext("2d");const TH={orange:{c:"255,138,31",think:"255,225,110",listen:"93,255,176",bg:"10,5,3",v:{"--bg":"#0a0503","--rgb":"255,138,31","--c":"#ff8a1f","--c2":"#a84f00","--w":"#ffd36b","--t":"#ffe9d2","--dim":"#b0825a","--bg2":"#1c0d03","--bd":"#6b3300","--pan":"12,5,1"}},
