@@ -51,17 +51,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #camstatus{font-size:11px;color:var(--dim);margin:4px 0}
 .hide{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 
-#plugbtn{position:fixed;right:16px;bottom:94px;z-index:60;pointer-events:auto}
-#plugins{position:fixed;z-index:80;inset:5% 5%;max-width:900px;margin:auto;overflow:auto;background:rgba(12,7,4,.97);border:1px solid var(--c);padding:18px;box-shadow:0 0 35px rgba(var(--rgb),.2)}
-#plugins h2,#plugins h3{color:var(--c);letter-spacing:.12em;margin:8px 0}
-#plugins input,#plugins textarea{width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:9px;margin:4px 0 9px;font:inherit}
-#plugins textarea{min-height:80px;resize:vertical}
-.plugin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.plugin-card{border:1px solid var(--bd);padding:12px;background:rgba(var(--rgb),.04)}
-.plugin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.code-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
-#ghpreview{white-space:pre-wrap;overflow-wrap:anywhere;background:#090909;border:1px solid var(--bd);padding:10px;max-height:220px;overflow:auto;font:12px ui-monospace,monospace}
-@media(max-width:800px){#plugins{inset:2%;padding:12px}#plugbtn{right:10px;bottom:84px}}
+#accountbtn{position:fixed;right:16px;bottom:94px;z-index:60;pointer-events:auto}
+#account{border-radius:12px}
+#account input,#account textarea{font:inherit}
+#tasklist .taskrow{border:1px solid var(--bd);padding:9px;margin:7px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}
+#tasklist button{white-space:nowrap}
+@media(max-width:800px){#account{inset:2%;padding:12px}#accountbtn{right:10px;bottom:84px}}
 </style>
 </head>
 <body>
@@ -98,40 +93,22 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <p id="hint" style="margin-top:8px">JARVIS lädt alle verfügbaren kostenlosen Online-Modelle. Bei Fehlern, Limits oder leeren Antworten wird automatisch das nächste Modell getestet. Der gesamte Gesprächsverlauf wird mitgegeben.</p>
 </div>
 
-<button id="plugbtn" type="button">PLUGINS</button>
-<section id="plugins" class="hide" aria-label="JARVIS Plugins">
- <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>J.A.R.V.I.S. · PLUGIN-ZENTRALE</h2><button id="plugclose">SCHLIESSEN</button></div>
- <div class="plugin-grid">
-  <div class="plugin-card">
-   <h3>E-MAIL-ASSISTENT</h3>
-   <label>Empfänger</label><input id="mailto" type="email" placeholder="name@beispiel.de">
-   <label>Betreff</label><input id="mailsubject" placeholder="Betreff">
-   <label>Nachricht</label><textarea id="mailbody" placeholder="JARVIS kann den Entwurf vorbereiten …"></textarea>
-   <button id="mailopen">E-MAIL-ENTWURF ÖFFNEN</button>
-   <p id="mailnote" style="font-size:12px;color:var(--dim);margin-top:6px">Öffnet dein Mailprogramm mit einem Entwurf. JARVIS sendet nichts selbstständig.</p>
-  </div>
-  <div class="plugin-card">
-   <h3>GITHUB-VERBINDUNG</h3>
-   <label>Repository (owner/name)</label><input id="ghrepo" value="hoffmannerik1-eng/Jarvis">
-   <label>Dateipfad in GitHub</label><input id="ghpath" value="index.html">
-   <p style="font-size:12px;color:var(--dim)">JARVIS kopiert den Code und öffnet den GitHub-Editor. Du prüfst und speicherst die Änderung direkt bei GitHub. Kein Zugriffstoken nötig.</p>
-  </div>
-  <div class="plugin-card">
-   <h3>EIGENES PLUGIN ERSTELLEN</h3>
-   <label>Plugin-Name</label><input id="pname" placeholder="z. B. Schulplaner">
-   <label>Was soll es tun?</label><textarea id="pdesc" placeholder="Beschreibe die Aufgabe und wie JARVIS helfen soll."></textarea>
-   <button id="pcreate">PLUGIN SPEICHERN</button>
-   <div id="pluginlist" style="font-size:12px;margin-top:8px">Noch keine eigenen Plugins.</div>
-  </div>
- </div>
- <div id="ghreview" class="plugin-card" style="display:none;margin-top:12px">
-  <h3>GITHUB-ÄNDERUNG PRÜFEN</h3>
-  <div id="ghpreview"></div>
-  <div class="plugin-actions"><button id="ghcommit">CODE IN GITHUB ÜBERNEHMEN</button><button id="ghcancel">ABBRECHEN</button></div>
-  <p style="font-size:12px;color:var(--dim);margin-top:6px">Es wird erst nach deinem Klick gespeichert. Vorhandene Dateien werden aktualisiert.</p>
- </div>
+<button id="accountbtn" type="button">MEIN KONTO &amp; AUFGABEN</button>
+<section id="account" class="hide" aria-label="Mein Konto und Daueraufgaben" style="position:fixed;z-index:80;inset:5% 5%;max-width:760px;margin:auto;overflow:auto;background:rgba(12,7,4,.97);border:1px solid var(--c);padding:18px;box-shadow:0 0 35px rgba(var(--rgb),.2)">
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="color:var(--c)">J.A.R.V.I.S. · MEIN KONTO</h2><button id="accountclose">SCHLIESSEN</button></div>
+ <h3 style="color:var(--c)">MEINE E-MAIL-ADRESSE</h3>
+ <input id="owneremail" type="email" placeholder="deine@email.de" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:10px;margin:6px 0">
+ <button id="emailsave">E-MAIL-ADRESSE SPEICHERN</button>
+ <p id="emailstatus" style="font-size:12px;color:var(--dim)">Die Adresse dient als Ziel für vorbereitete E-Mail-Entwürfe. Sie verbindet noch kein Postfach.</p>
+ <h3 style="color:var(--c)">DAUERAUFGABEN</h3>
+ <p style="font-size:12px;color:var(--dim)">Beschreibe Aufgaben in normaler Sprache. JARVIS speichert sie in Firebase und berücksichtigt sie bei deinen nächsten Aufträgen.</p>
+ <textarea id="taskinput" rows="3" placeholder="Zum Beispiel: Fasse jeden Bericht zusammen, den ich dir hier gebe." style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:10px"></textarea>
+ <button id="taskadd">DAUERAUFGABE SPEICHERN</button>
+ <div id="taskstatus" style="font-size:12px;color:var(--dim);margin:8px 0"></div>
+ <div id="tasklist"></div>
+ <h3 style="color:var(--c)">KAMERA</h3>
+ <p style="font-size:12px;color:var(--dim)">Die Kamera zeigt nur eine lokale Live-Vorschau. Bilder werden nicht hochgeladen. Deshalb kann ein Cloud-KI-Modell das Kamerabild nicht direkt analysieren.</p>
 </section>
-
 <div class="pan" id="bar">
   <button id="mic" aria-label="Mikrofon">MIKRO</button>
   <input id="in" placeholder="Auftrag eingeben …" autocomplete="off">
@@ -161,10 +138,10 @@ async function initCloud(){
   cloudDoc=db.collection("jarvis_users").doc(jarvisUid).collection("memory").doc("main");
   const snap=await cloudDoc.get();
   cloudData=snap.exists?snap.data():{};
-  try{const local=JSON.parse(localStorage.getItem("jarvis_plugins")||"[]");if(!Array.isArray(cloudData.plugins))cloudData.plugins=local}catch(e){}
+  try{if(!cloudData.tasks)cloudData.tasks=JSON.parse(localStorage.getItem("jarvis_tasks")||"[]");if(!cloudData.ownerEmail)cloudData.ownerEmail=localStorage.getItem("jarvis_email")||""}catch(e){}
   cloudReady=true;
   if(Array.isArray(cloudData.history)&&!hist.length)hist=cloudData.history.slice(-100);
-  renderPlugins();
+  loadAccountFields();
   log("Firebase-Gedächtnis verbunden. Gespeicherte Daten geladen.","s");
   return true;
  }catch(e){
@@ -419,10 +396,10 @@ async function ask(msgs,sys,img){
 
 /* ---------- Agent ---------- */
 const SYS=`Du bist J.A.R.V.I.S., ein souveräner, trocken-witziger KI-Butler (wie bei Iron Man). Sprich Deutsch, kurz, höflich, nenne den Nutzer "Sir" oder "Boss" gelegentlich.
-Du arbeitest selbstständig: zerlege Aufgaben und nutze Werkzeuge, bis sie gelöst sind. Wähle die Antworttiefe passend zur Frage. Bei Programmieraufgaben liefere korrekten, vollständigen Code; bei komplexen Fragen erkläre nachvollziehbar. Behaupte niemals, ein Werkzeug oder Internet benutzt zu haben, wenn das nicht geschehen ist.
+Du arbeitest selbstständig: zerlege Aufgaben und nutze Werkzeuge, bis sie gelöst sind. Daueraufgaben des Nutzers: ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. Berücksichtige sie bei jeder passenden Unterhaltung, behaupte aber niemals, im Hintergrund zu arbeiten, wenn die Seite geschlossen ist. Wähle die Antworttiefe passend zur Frage. Bei Programmieraufgaben liefere korrekten, vollständigen Code; bei komplexen Fragen erkläre nachvollziehbar. Behaupte niemals, ein Werkzeug oder Internet benutzt zu haben, wenn das nicht geschehen ist.
 Antworte IMMER nur mit JSON: {"say":"Text für den Nutzer","tool":null}
-oder {"say":"kurzer Zwischenstand","tool":{"name":"mouse|type|key|web|image|draw|file|time|calc|open|timer|search|email|github|plugin|runplugin","arg":"..."}}.
-Werkzeuge: web (arg: Suchbegriff; holt echte Infos aus dem Internet, nutze es bei jeder Wissensfrage), image (arg: Suchbegriff; zeigt echte Fotos), draw (arg: englische Bildbeschreibung; erzeugt ein neues Bild), file (arg: "name.ext|Inhalt"; erstellt eine herunterladbare Datei), time (arg leer), calc (arg: Rechenausdruck), open (arg: URL), timer (arg: "Sekunden|Beschreibung"), search (arg: Suchbegriff, öffnet Websuche), email (JSON mit to, subject und body; erstellt einen E-Mail-Entwurf), github (JSON mit path, content und message; zeigt eine Vorschau und öffnet den GitHub-Editor), plugin (JSON mit name und description; erstellt ein Prompt-Plugin), runplugin (Name eines Plugins; führt dessen Arbeitsauftrag aus).
+oder {"say":"kurzer Zwischenstand","tool":{"name":"mouse|type|key|web|image|draw|file|time|calc|open|timer|search|taskadd|email","arg":"..."}}.
+Werkzeuge: web (arg: Suchbegriff; holt echte Infos aus dem Internet, nutze es bei jeder Wissensfrage), image (arg: Suchbegriff; zeigt echte Fotos), draw (arg: englische Bildbeschreibung; erzeugt ein neues Bild), file (arg: "name.ext|Inhalt"; erstellt eine herunterladbare Datei), time (arg leer), calc (arg: Rechenausdruck), open (arg: URL), timer (arg: "Sekunden|Beschreibung"), search (arg: Suchbegriff, öffnet Websuche), email (JSON mit to, subject und body; erstellt einen E-Mail-Entwurf), github (JSON mit path, content und message; zeigt eine Vorschau und öffnet den GitHub-Editor), plugin (JSON mit name und description; erstellt ein Prompt-Plugin), taskadd (JSON mit description; speichert eine Daueraufgabe in Firebase), email (JSON mit subject und body; bereitet einen Entwurf an die gespeicherte E-Mail-Adresse vor).
 Nach einem Werkzeug bekommst du "ERGEBNIS: ...". Setze tool auf null, wenn du fertig bist.`;
 let hist=[];
 let NET=true;
@@ -444,11 +421,8 @@ function logImg(urls,cap){setUI(["log"],true);const d=document.createElement("di
  $("log").appendChild(d);$("log").scrollTop=1e9}
 const tools={
 
- email:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "E-Mail-Daten fehlen. Nutze JSON mit to, subject und body."} $("mailto").value=String(v.to||"");$("mailsubject").value=String(v.subject||"");$("mailbody").value=String(v.body||"");$("plugins").classList.remove("hide");return "E-Mail-Entwurf vorbereitet. Bitte im Plugin-Fenster prüfen und selbst öffnen/senden."},
- github:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "GitHub-Auftrag braucht JSON mit path, content und message."}if(!v.path||typeof v.content!=="string")return "Dateipfad oder Code fehlt.";stageGitHub(v.content,String(v.path));pendingGitHub.message=String(v.message||"JARVIS: Datei aktualisiert");return "GitHub-Vorschau geöffnet. Erst nach deiner Bestätigung wird gespeichert."},
- plugin:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Plugin bitte als JSON mit name und description angeben."}const name=String(v.name||"").trim(),description=String(v.description||"").trim();if(!name||!description)return "Name und Beschreibung fehlen.";const list=Array.isArray(cloudData.plugins)?cloudData.plugins.slice():[];const item={name,description,createdAt:Date.now()};const ix=list.findIndex(x=>String(x.name).toLowerCase()===name.toLowerCase());if(ix>=0)list[ix]=item;else list.push(item);cloudData.plugins=list;try{localStorage.setItem("jarvis_plugins",JSON.stringify(list))}catch(e){}const saved=await saveCloud({plugins:list});renderPlugins();return "Plugin "+name+" erstellt. "+(saved?"In Firebase gespeichert.":"Lokal in diesem Browser gespeichert; Firebase ist nicht verbunden.")+" Es ist ein sicheres Prompt-Plugin, kein beliebiger JavaScript-Code."},
- runplugin:async a=>{const list=Array.isArray(cloudData.plugins)?cloudData.plugins:[];const p=list.find(x=>String(x.name).toLowerCase()===String(a).trim().toLowerCase());if(!p)return "Plugin nicht gefunden.";return "PLUGIN-AUFTRAG: "+p.name+"\n"+p.description+"\nBearbeite diesen Auftrag jetzt. Nutze verfügbare Werkzeuge nur wenn passend."},
-
+ taskadd:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Bitte die Daueraufgabe als JSON mit description angeben."}const description=String(v.description||"").trim();if(!description)return "Die Beschreibung fehlt.";const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks.slice():[];tasks.push({id:"t"+Date.now(),description,active:true,createdAt:Date.now()});cloudData.tasks=tasks;const saved=await saveCloud({tasks});try{localStorage.setItem("jarvis_tasks",JSON.stringify(tasks))}catch(e){}renderTasks();return saved?"Daueraufgabe wurde in Firebase gespeichert.":"Daueraufgabe wurde lokal gespeichert; Firebase ist nicht verbunden."},
+ email:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Bitte Betreff und Nachricht als JSON angeben."}const to=String(cloudData.ownerEmail||"");if(!to)return "Bitte zuerst unter MEIN KONTO deine E-Mail-Adresse speichern.";const subject=String(v.subject||""),body=String(v.body||"");const url="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);window.open(url,"_self");return "E-Mail-Entwurf für "+to+" vorbereitet. Bitte selbst prüfen und senden."},
  mouse:a=>{const p=a.trim().split(/\s+/);if(TK&&SC&&/^(move|click|double|right)$/.test(p[0])&&p.length>=3){p[1]=Math.round(p[1]*SC.w/SC.iw);p[2]=Math.round(p[2]*SC.h/SC.ih)}return hand(p[0],p.slice(1))},
  type:a=>hand("type",[a]),
  key:a=>hand("key",[a.trim()]),
@@ -478,87 +452,17 @@ const tools={
 };
 
 /* ---------- Plugin-Zentrale ---------- */
-function renderPlugins(){
- const root=$("pluginlist");if(!root)return;
- const list=Array.isArray(cloudData.plugins)?cloudData.plugins:[];
- root.innerHTML="";
- if(!list.length){root.textContent="Noch keine eigenen Plugins.";return}
- list.forEach(p=>{const d=document.createElement("div");d.className="plugin-card";const b=document.createElement("b");b.textContent=p.name;const q=document.createElement("p");q.textContent=p.description;const btn=document.createElement("button");btn.textContent="PLUGIN AUSFÜHREN";btn.onclick=()=>run("PLUGIN "+p.name+": "+p.description);d.append(b,q,btn);root.appendChild(d)});
+function renderTasks(){
+ const root=$("tasklist");if(!root)return;root.innerHTML="";
+ const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks:[];
+ if(!tasks.length){root.textContent="Noch keine Daueraufgaben gespeichert.";return}
+ tasks.forEach(t=>{const row=document.createElement("div");row.className="taskrow";const label=document.createElement("span");label.textContent=t.description;const del=document.createElement("button");del.textContent="LÖSCHEN";del.onclick=async()=>{cloudData.tasks=tasks.filter(x=>x.id!==t.id);try{localStorage.setItem("jarvis_tasks",JSON.stringify(cloudData.tasks))}catch(e){}const ok=await saveCloud({tasks:cloudData.tasks});renderTasks();$("taskstatus").textContent=ok?"Aufgabe aus Firebase gelöscht.":"Lokal gelöscht; Firebase nicht verbunden."};row.append(label,del);root.appendChild(row)});
 }
-function stageGitHub(content,path){
- pendingGitHub={content,path:path||$("ghpath").value.trim()||"index.html",message:"JARVIS: Code eingefügt"};
- $("ghpreview").textContent="Repository: "+$("ghrepo").value.trim()+"\\nDatei: "+pendingGitHub.path+"\\n\\n"+content.slice(0,5000)+(content.length>5000?"\\n… Vorschau gekürzt":"");
- $("ghreview").style.display="block";$("plugins").classList.remove("hide");
-}
-$("plugbtn").onclick=()=>{$("plugins").classList.toggle("hide");renderPlugins()};
-$("plugclose").onclick=()=>$("plugins").classList.add("hide");
-$("mailopen").onclick=()=>{const to=$("mailto").value.trim(),subject=$("mailsubject").value,body=$("mailbody").value;const url="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);location.href=url;$("mailnote").textContent="Dein Mailprogramm sollte den Entwurf geöffnet haben. Bitte selbst prüfen und senden."};
-$("pcreate").onclick=async()=>{const name=$("pname").value.trim(),description=$("pdesc").value.trim();if(!name||!description){log("Bitte Plugin-Name und Beschreibung ausfüllen.","s");return}const res=await tools.plugin(JSON.stringify({name,description}));log(res,"s");$("pname").value="";$("pdesc").value=""};
-$("ghcancel").onclick=()=>{pendingGitHub=null;$("ghreview").style.display="none"};
-$("ghcommit").onclick=async()=>{
- if(!pendingGitHub){log("Keine Änderung zum Einfügen vorhanden.","s");return}
- const repo=$("ghrepo").value.trim();
- if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)){log("Bitte Repository im Format owner/name eintragen.","s");return}
- const path=pendingGitHub.path.split("/").filter(Boolean).map(encodeURIComponent).join("/");
- const url="https://github.com/"+repo+"/edit/main/"+path;
- try{
-  await navigator.clipboard.writeText(pendingGitHub.content);
-  window.open(url,"_blank","noopener");
-  log("Code kopiert und GitHub-Editor geöffnet. Füge den Code dort ein und speichere ihn selbst. JARVIS hat noch nichts veröffentlicht.","s");
-  pendingGitHub=null;$("ghreview").style.display="none";
- }catch(e){log("Kopieren nicht möglich. Bitte Browser-Zugriff auf die Zwischenablage erlauben.","s")}
-}
-
-let busy=false;
-let TK=false,ABORT=false,SC=null;
-const HNK="\nÜBERNAHME-MODUS: Du steuerst den PC des Nutzers. Werkzeuge: mouse (arg: 'click x y' | 'double x y' | 'right x y' | 'move x y' | 'scroll n'), type (arg: Text), key (arg: Tastenkürzel wie 'win', 'ctrl+l', 'enter'). Du bekommst vor JEDER Antwort einen frischen Screenshot (Größe {iw}x{ih}); alle Koordinaten beziehen sich genau auf dieses Bild. Arbeite präzise: genau EIN Schritt pro Antwort, klicke auf die Mitte des Ziels, prüfe im nächsten Screenshot ob es geklappt hat und korrigiere sonst. Ist die Aufgabe erledigt, setze tool auf null und sage kurz was erledigt ist. Bei Bezahlen, Löschen, Senden oder Unklarheit: tool null und nachfragen.";
-async function shot(){const r=await hand("shot",[]);try{SC=JSON.parse(r);return SC.data}catch(e){throw new Error("Screenshot fehlgeschlagen: "+r.slice(0,80))}}
-async function run(text){
- if(busy||!text.trim())return;
- {const u=uiCmd(text);if(u){beep(900,.06);await speak(u);return}}
- if(/(gib|geb).{0,12}(pc|computer|rechner).{0,8}zurück|übernahme beenden|steuerung beenden|stopp.{0,10}(pc|computer)/i.test(text)){TK=false;ABORT=true;await speak("Übernahme beendet. Der Computer gehört wieder Ihnen.");return}
- if(/übernimm|übernehm|übernahme|take ?over/i.test(text)&&/(pc|computer|rechner|maus)/i.test(text)){
-  if(!window.JTOKEN&&!$("hk").value.trim()){setUI(CH,true);log("Für die Übernahme muss einmal das Hilfsprogramm installiert sein (install_autostart.bat). Danach öffnest du Jarvis über http://127.0.0.1:8765.","s");await speak("Dafür muss einmal das Hilfsprogramm installiert sein. Details stehen im Verlauf.");return}
-  TK=true;$("hc").checked=true;text+=" (Übernahme-Modus aktiv. Falls keine konkrete Aufgabe genannt wurde, frage kurz nach.)"}
- busy=true;ABORT=false;log(text,"u");pulse=1;beep(660,.08);setState("DENKE …","w");
- hist.push({role:"user",content:text});
- try{
-  const max=TK?25:6;
-  for(let step=0;step<max&&!ABORT;step++){
-   let img=null;if(TK){setState("SEHE ZU …","w");img=await shot()}
-   const sys=SYS+(NET?"":NOTE)+(TK?HNK.replace("{iw}",SC.iw).replace("{ih}",SC.ih):($("hc").checked?HN:""));
-   setState("DENKE …","w");
-   const raw=await ask(hist.slice(-20),sys,img);
-   if(ABORT)break;
-   hist.push({role:"assistant",content:raw});
-   let o;try{o=JSON.parse((raw.match(/\{[\s\S]*\}/)||[raw])[0])}catch(e){o={say:raw,tool:null}}
-   if(o.say){beep(880,.07);log(o.say,"j");const cm=o.say.match(/```(?:[a-zA-Z0-9_+-]+)?\\s*\\n([\\s\\S]*?)```/);if(cm){const actions=document.createElement("div");actions.className="code-actions";const copy=document.createElement("button");copy.textContent="CODE KOPIEREN";copy.onclick=()=>navigator.clipboard?.writeText(cm[1]).then(()=>log("Code kopiert.","s")).catch(()=>log("Kopieren nicht möglich.","s"));const gh=document.createElement("button");gh.textContent="CODE IN GITHUB ÜBERNEHMEN";gh.onclick=()=>stageGitHub(cm[1]);actions.append(copy,gh);$("log").appendChild(actions)}if(!TK||!o.tool)await speak(o.say)}
-   if(!o.tool||!tools[o.tool.name])break;
-   setState("ARBEITE …","w");
-   const res=await tools[o.tool.name](String(o.tool.arg||""));
-   log("⚙ "+o.tool.name+" "+(o.tool.arg||"")+": "+res,"s");
-   hist.push({role:"user",content:"ERGEBNIS: "+res});
-   if(TK)await new Promise(r=>setTimeout(r,700));
-  }
- }catch(e){setUI(["log"],true);log(e.message,"s");}
- busy=false;setState(listening?"HÖRE ZU":"BEREIT");
- // Gesprächsverlauf als privates, anonymes Firebase-Gedächtnis sichern.
- if(cloudReady)await saveCloud({history:hist.slice(-100)});
- if(listening&&queuedVoice.length){const next=queuedVoice.shift();setTimeout(()=>run(next),250)}
-}
-const UIN={log:"log",side:"side",bar:"bar",hud:"hud",state:"state"},ALL=["side","hud","state"],CH=["log","bar"];
-function setUI(n,on){n.forEach(k=>$(UIN[k]).classList.toggle("hide",!on))}
-function uiCmd(t){const l=t.toLowerCase();
- if(/(verstecke|verberge|blende|mach).{0,12}(alles|alle|das).{0,10}(aus|weg)|nur die kugel|alles (weg|aus)|alles ausblenden|alles verstecken/.test(l)){setUI(ALL,false);return"Alles ausgeblendet, Sir. Der Chat bleibt."}
- if(/(zeig|zeige|blende|öffne).{0,10}(alles|alle|die oberfläche|das menü|das interface)|alles (anzeigen|einblenden|zeigen)/.test(l)){setUI(ALL,true);return"Bitte sehr, Sir."}
- if(/(verstecke|verberge|blende|mach).{0,14}(chat|verlauf).{0,10}(aus|weg)|chat (ausblenden|verstecken)/.test(l)){setUI(CH,false);return"Chat ausgeblendet."}
- if(/(zeig|zeige|öffne|blende).{0,14}(verlauf|chat|protokoll)/.test(l)){setUI(CH,true);return"Chat eingeblendet."}
- if(/(zeig|zeige|öffne|blende).{0,14}(einstellungen|status|stimme|computersteuerung|menü)/.test(l)){setUI(["side"],true);return"Einstellungen eingeblendet."}
- if(/(zeig|zeige|öffne|blende).{0,14}(eingabe|textfeld|tastatur)/.test(l)){setUI(["bar"],true);$("in").focus();return"Eingabefeld eingeblendet."}
- if(/(zeig|zeige|blende).{0,14}(uhr|zeit|titel)/.test(l)){setUI(["hud","state"],true);return"Bitte sehr."}
- return""}
-function log(t,c){const d=document.createElement("div");d.className="m "+(c||"");$("log").appendChild(d);if(c==="j"){let i=0;const iv=setInterval(()=>{d.textContent=t.slice(0,++i);$("log").scrollTop=1e9;if(i>=t.length)clearInterval(iv)},16)}else d.textContent=t;$("log").scrollTop=1e9}
-
+$("accountbtn").onclick=()=>{$("account").classList.toggle("hide");renderTasks()};
+$("accountclose").onclick=()=>$("account").classList.add("hide");
+$("emailsave").onclick=async()=>{const email=$("owneremail").value.trim();if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){$("emailstatus").textContent="Bitte eine gültige E-Mail-Adresse eingeben.";return}cloudData.ownerEmail=email;const ok=await saveCloud({ownerEmail:email});try{localStorage.setItem("jarvis_email",email)}catch(e){}$("emailstatus").textContent=ok?"E-Mail-Adresse in Firebase gespeichert.":"Lokal gespeichert. Firebase ist nicht verbunden."};
+$("taskadd").onclick=async()=>{const description=$("taskinput").value.trim();if(!description)return;const result=await tools.taskadd(JSON.stringify({description}));$("taskinput").value="";$("taskstatus").textContent=result;};
+function loadAccountFields(){const email=cloudData.ownerEmail||(()=>{try{return localStorage.getItem("jarvis_email")||""}catch(e){return""}})();$("owneremail").value=email;const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks:(()=>{try{return JSON.parse(localStorage.getItem("jarvis_tasks")||"[]")}catch(e){return[]}})();if(!cloudData.tasks)cloudData.tasks=tasks;renderTasks();}
 /* ---------- Stimme ---------- */
 let speaking=false,listening=false,rec=null;
 let voices=[];
@@ -580,23 +484,24 @@ function scheduleRecognitionRestart(){
  restartDelay=Math.min(5000,Math.round(restartDelay*1.5));
 }
 function speak(t){return new Promise(res=>{
- if(!$("vo").checked||!window.speechSynthesis){res();return}
+ const synth=window.speechSynthesis;
+ if(!$("vo").checked||!synth){res();return}
  if(listening&&rec){recognitionPaused=true;try{rec.stop()}catch(e){}}
- speechSynthesis.cancel();
- const parts=String(t).replace(/[*_`#]/g," ").match(/[^.!?\n]+[.!?]*/g)||[String(t)];
- const v=voices[$("vs").value];let n=parts.length,finished=false;
- const done=()=>{if(finished)return;finished=true;speaking=false;if(listening){recognitionPaused=false;restartDelay=700;scheduleRecognitionRestart()}res()};
- parts.forEach((p,i)=>{if(!p.trim()){if(--n<=0)done();return}
-  const u=new SpeechSynthesisUtterance(p.trim());u.lang="de-DE";if(v)u.voice=v;
+ let finished=false;const done=()=>{if(finished)return;finished=true;speaking=false;if(listening){recognitionPaused=false;restartDelay=900;scheduleRecognitionRestart()}res()};
+ try{
+  synth.cancel();synth.resume();
+  const u=new SpeechSynthesisUtterance(String(t).replace(/[*_`#]/g," ").replace(/\s+/g," ").trim());
+  u.lang="de-DE";const v=voices[Number($("vs").value)];if(v)u.voice=v;
   u.rate=+$("rt").value;u.pitch=+$("pt").value;u.volume=+$("vl").value;
-  if(i===0)u.onstart=()=>{speaking=true;setState("SPRECHE")};
-  u.onend=u.onerror=()=>{if(--n<=0)done()};speechSynthesis.speak(u)});
- if(!parts.length)done();
- setTimeout(()=>{if(speaking&&speechSynthesis.speaking===false)done()},Math.max(5000,parts.join(" ").length*130));
+  u.onstart=()=>{speaking=true;setState("SPRECHE")};
+  u.onend=done;u.onerror=()=>done();
+  synth.speak(u);
+  setTimeout(()=>{if(!finished&&!synth.speaking&&!synth.pending)done()},Math.max(8000,String(t).length*180));
+ }catch(e){done();log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s")}
 })}
-if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices()}
+if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
-$("test").onclick=()=>speak("Alle Systeme laufen. Wie klinge ich?");
+$("test").onclick=()=>{try{speechSynthesis.cancel();speechSynthesis.resume();}catch(e){}loadVoices();speak("Alle Systeme laufen. Wie klinge ich?")};
 
 /* Kamera: nur lokale Vorschau. Es wird kein Bild an einen Server übertragen. */
 let cameraStream=null;
@@ -765,12 +670,12 @@ function frame(){
 frame();
 
 
-setUI(ALL,false);setUI(CH,false);renderPlugins();
+setUI(ALL,false);setUI(CH,false);loadAccountFields();
 document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
  if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
 cv.addEventListener("dblclick",()=>{const show=$("side").classList.contains("hide");setUI(ALL,show);setUI(CH,show)});
-document.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="p"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){$("plugins").classList.toggle("hide");renderPlugins()}});
+document.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="p"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){$("account").classList.toggle("hide");renderTasks()}});
 </script>
 </body>
 </html>
