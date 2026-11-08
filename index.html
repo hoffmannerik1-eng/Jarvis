@@ -72,24 +72,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <h3>KI-VERBINDUNG</h3>
   <div id="kihealth" style="font-size:12px;margin:4px 0 8px;color:var(--g)">AUTOMATISCHE PRÜFUNG AKTIV</div>
   <div id="prov"></div>
-  <h3>KAMERA · LOKAL</h3>
-  <button id="camstart" style="width:100%;margin:4px 0">KAMERA FREIGEBEN</button>
-  <video id="camview" autoplay muted playsinline hidden></video>
-  <div id="camstatus">Kamera bleibt ausgeschaltet, bis du sie freigibst. Das Bild wird nicht hochgeladen.</div>
-  <button id="camstop" style="width:100%;margin-bottom:8px" disabled>KAMERA AUSSCHALTEN</button>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
   <input id="hk" placeholder="Code aus jarvis_hand.py" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:4px;margin:4px 0">
   <button id="nz" style="width:100%;border-color:#ff4d4d;color:#ff4d4d;margin-bottom:8px">NOT-AUS</button>
-  <h3>MODUS</h3>
-  <label><input type="checkbox" id="wake" checked> Aktivierungswort „Jarvis“ nötig</label><br>
-  <label><input type="checkbox" id="vo" checked> Sprachausgabe</label>
-  <h3 style="margin-top:10px">STIMME</h3>
-  <select id="vs"></select>
-  <label>Tempo <input type="range" id="rt" min=".7" max="1.5" step=".05" value="1.05"></label>
-  <label>Tiefe <input type="range" id="pt" min=".5" max="1.5" step=".05" value=".9"></label>
-  <label>Lautstärke <input type="range" id="vl" min=".2" max="1" step=".05" value="1"></label>
-  <button id="test" style="width:100%;margin-top:6px">Stimme testen</button>
   <p id="hint" style="margin-top:8px">JARVIS lädt alle verfügbaren kostenlosen Online-Modelle. Bei Fehlern, Limits oder leeren Antworten wird automatisch das nächste Modell getestet. Der gesamte Gesprächsverlauf wird mitgegeben.</p>
 </div>
 
@@ -106,8 +92,22 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
  <button id="taskadd">DAUERAUFGABE SPEICHERN</button>
  <div id="taskstatus" style="font-size:12px;color:var(--dim);margin:8px 0"></div>
  <div id="tasklist"></div>
- <h3 style="color:var(--c)">KAMERA</h3>
- <p style="font-size:12px;color:var(--dim)">Die Kamera zeigt nur eine lokale Live-Vorschau. Bilder werden nicht hochgeladen. Deshalb kann ein Cloud-KI-Modell das Kamerabild nicht direkt analysieren.</p>
+ <h3 style="color:var(--c)">SPRACHAUSGABE</h3>
+ <h3>MODUS</h3>
+  <label><input type="checkbox" id="wake" checked> Aktivierungswort „Jarvis“ nötig</label><br>
+  <label><input type="checkbox" id="vo" checked> Sprachausgabe</label>
+  <h3 style="margin-top:10px">STIMME</h3>
+  <select id="vs"></select>
+  <label>Tempo <input type="range" id="rt" min=".7" max="1.5" step=".05" value="1.05"></label>
+  <label>Tiefe <input type="range" id="pt" min=".5" max="1.5" step=".05" value=".9"></label>
+  <label>Lautstärke <input type="range" id="vl" min=".2" max="1" step=".05" value="1"></label>
+  <button id="test" style="width:100%;margin-top:6px">Stimme testen</button>
+ <h3 style="color:var(--c)">KAMERA · LOKAL</h3>
+ <h3>KAMERA · LOKAL</h3>
+  <button id="camstart" style="width:100%;margin:4px 0">KAMERA FREIGEBEN</button>
+  <video id="camview" autoplay muted playsinline hidden></video>
+  <div id="camstatus">Kamera bleibt ausgeschaltet, bis du sie freigibst. Das Bild wird nicht hochgeladen.</div>
+  <button id="camstop" style="width:100%;margin-bottom:8px" disabled>KAMERA AUSSCHALTEN</button>
 </section>
 <div class="pan" id="bar">
   <button id="mic" aria-label="Mikrofon">MIKRO</button>
