@@ -53,14 +53,19 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 <div id="hud"><h1>J.A.R.V.I.S.</h1><div id="clock"></div><button id="dl" style="display:none;pointer-events:auto;margin-top:6px;font-size:12px;padding:4px 12px">⬇ VOLLVERSION MIT INTERNET UND FOTOS HERUNTERLADEN</button></div>
 <div id="boot"><h2>J.A.R.V.I.S.</h2><div id="bl"></div><button id="start">SYSTEM STARTEN</button></div>
 <div id="state">BEREIT</div>
-<div class="pan" id="log"><div class="m s">System online. Verbinde dein Konto einmal. JARVIS lädt alle als kostenlos erkennbaren Modelle und wechselt bei Ausfall automatisch weiter.</div></div>
+<div class="pan" id="log"><div class="m s">System online. JARVIS prüft die KI-Verbindung automatisch und wechselt bei Fehlern zum nächsten verfügbaren Modell.</div></div>
 <div class="pan" id="side">
   <button id="th" style="width:100%;margin-bottom:8px">Farbe: Orange / Cyan</button>
   <h3>SYSTEMSTATUS</h3>
   <div>Kernlast</div><div class="bar"><i id="b1"></i></div><div>Speicher</div><div class="bar"><i id="b2"></i></div><div>Netzwerk</div><div class="bar"><i id="b3"></i></div>
   <h3>KI-VERBINDUNG</h3>
-  <button id="login" style="width:100%;margin-bottom:8px">KI-STATUS PRÜFEN</button>
+  <div id="kihealth" style="font-size:12px;margin:4px 0 8px;color:var(--g)">AUTOMATISCHE PRÜFUNG AKTIV</div>
   <div id="prov"></div>
+  <h3>KAMERA · LOKAL</h3>
+  <button id="camstart" style="width:100%;margin:4px 0">KAMERA FREIGEBEN</button>
+  <video id="camview" autoplay muted playsinline hidden></video>
+  <div id="camstatus">Kamera bleibt ausgeschaltet, bis du sie freigibst. Das Bild wird nicht hochgeladen.</div>
+  <button id="camstop" style="width:100%;margin-bottom:8px" disabled>KAMERA AUSSCHALTEN</button>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
   <input id="hk" placeholder="Code aus jarvis_hand.py" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:4px;margin:4px 0">
@@ -156,11 +161,10 @@ async function autoConnectAI(){
  try{
   const ok=await loadPuter();puterReady=ok;
   if(ok){
-   $("login").textContent="KI-STATUS PRÜFEN";
    await refreshModelCatalog(true);
-   log("JARVIS ist ohne Anmeldung gestartet. Prüfe anonyme kostenlose KI-Zugriffe.","s");
+   log("Automatische KI-Verbindungsprüfung gestartet.","s");
   }else{
-   $("login").textContent="KI-SKRIPT NICHT ERREICHBAR";
+   $("kihealth").textContent="KI-SKRIPT NICHT ERREICHBAR";
    log("Online-KI-Skript konnte nicht geladen werden. Internetverbindung prüfen.","s");
   }
  }catch(e){log("Startfehler: "+emsg(e),"s")}
