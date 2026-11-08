@@ -765,11 +765,12 @@ function frame(){
 frame();
 
 
-setUI(ALL,false);
+setUI(ALL,false);setUI(CH,false);renderPlugins();
 document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
  if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
-cv.addEventListener("dblclick",()=>{const show=$("side").classList.contains("hide");setUI(ALL,show);setUI(CH,show)});\ndocument.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="p"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){$("plugins").classList.toggle("hide");renderPlugins()}});
+cv.addEventListener("dblclick",()=>{const show=$("side").classList.contains("hide");setUI(ALL,show);setUI(CH,show)});
+document.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="p"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){$("plugins").classList.toggle("hide");renderPlugins()}});
 </script>
 </body>
 </html>
