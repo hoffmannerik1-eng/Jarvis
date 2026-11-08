@@ -642,7 +642,7 @@ function speak(t){return new Promise(res=>{
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
 $("test").onclick=()=>{const synth=window.speechSynthesis;if(!synth){log("Dieser Browser unterstützt keine Sprachausgabe.","s");return}try{synth.cancel();loadVoices();if(!voices.length){log("Keine deutsche Stimme auf diesem Gerät gefunden. Installiere in macOS unter Systemeinstellungen → Bedienungshilfen → Lesen & Sprechen eine deutsche Stimme.","s");return}const u=germanUtterance("Sprachsystem online. JARVIS spricht jetzt Deutsch.",1);u.onstart=()=>log("Deutsche Stimme aktiv: "+(u.voice?.name||u.lang),"s");synth.resume();synth.speak(u)}catch(e){log("Stimmtest fehlgeschlagen: "+emsg(e),"s")}};
-$("start").addEventListener("click",()=>{try{speechSynthesis?.cancel();speechSynthesis?.resume();loadVoices();if(voices.length){const u=germanUtterance("JARVIS ist online.",1);speechSynthesis?.speak(u)}}catch(e){log("Sprachausgabe konnte nicht gestartet werden: "+emsg(e),"s")}});
+// Entfernt: Ein zweiter Start-Handler hat die Begrüßung direkt wieder abgebrochen.
 
 /* Kamera: nur lokale Vorschau. Es wird kein Bild an einen Server übertragen. */
 let cameraStream=null;
