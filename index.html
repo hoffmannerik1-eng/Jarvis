@@ -107,7 +107,7 @@ function loadPuter(){return new Promise(res=>{
  setTimeout(()=>res(!!window.puter),8000);
 })}
 async function refreshModelCatalog(force=false){
- if(!signed())await ensureFreeSession();
+ if(!signed())return [];
  if(!force&&modelCatalog.length&&Date.now()-catalogAt<60000)return modelCatalog;
  try{
   const rows=await puter.ai.listModels();
