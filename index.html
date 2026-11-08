@@ -57,10 +57,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #tasklist .taskrow{border:1px solid var(--bd);padding:9px;margin:7px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}
 #tasklist button{white-space:nowrap}
 @media(max-width:800px){#account{inset:2%;padding:12px}#accountbtn{right:10px;bottom:84px}}
-#hud,#side,#accountbtn,#account,#state,#boot,#dl{display:none!important}
+#hud,#side,#accountbtn,#account,#state,#boot,#dl,canvas{display:none!important}
 #log{left:50%;top:16px;bottom:82px;transform:translateX(-50%);width:min(900px,calc(100% - 24px));background:rgba(8,10,16,.88);border-radius:16px;clip-path:none}
 #bar{left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(900px,calc(100% - 24px));border-radius:16px;clip-path:none;background:rgba(8,10,16,.96)}
-#bar #go{display:none}body::after{display:none}
+#bar #go{display:none}#mic{min-width:42px;width:42px;height:42px;padding:0;border-radius:50%;font-size:0}#mic::before{content:"MIC";font-size:11px}#bar{min-height:60px}body::after{display:none}
 </style>
 </head>
 <body>
@@ -115,7 +115,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 </section>
 <div class="pan" id="bar">
   <button id="mic" aria-label="Mikrofon">MIKRO</button>
-  <input id="in" placeholder="Auftrag eingeben …" autocomplete="off">
+  <input id="in" placeholder="Mit JARVIS sprechen oder schreiben …" autocomplete="off">
   <button id="go">SENDEN</button>
 </div>
 <script>
@@ -412,8 +412,15 @@ async function ask(msgs,sys,img){
 }
 
 /* ---------- Agent ---------- */
-const SYS=`Du bist J.A.R.V.I.S., ein intelligenter deutschsprachiger KI-Assistent. Antworte natürlich, freundlich und klar. Firebase-Gedächtnis: E-Mail ${JSON.stringify(cloudData.ownerEmail||"")}; gespeicherte Angaben ${JSON.stringify(cloudData.profile||{})}; Daueraufgaben ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. Wenn der Nutzer dich bittet, etwas zu merken, frage nach dem Wert, falls nötig, und verwende dann remember mit JSON {key:"email",value:"..."} für eine E-Mail-Adresse oder einen passenden kurzen key für andere Angaben. Bei Daueraufgaben nutze taskadd. Sage nur nach erfolgreichem Werkzeugergebnis, dass es gespeichert wurde. Antworte ausschließlich als JSON {"say":"Antwort","tool":null} oder {"say":"Antwort","tool":{"name":"remember|taskadd|email|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}. E-Mail öffnet nur einen Entwurf; niemals automatisch versenden. Es gibt keine Posteingangsverbindung. Firebase speichert Aufgaben, führt sie aber nicht aus, wenn die Website geschlossen ist. Nach Werkzeugaufruf erhältst du ERGEBNIS und antwortest dann normal.`;
+const SYS=`Du bist J.A.R.V.I.S., ein intelligenter deutschsprachiger KI-Assistent. Antworte natürlich, freundlich und klar. Firebase-Gedächtnis: E-Mail ${JSON.stringify(cloudData.ownerEmail||"")}; gespeicherte Angaben ${JSON.stringify(cloudData.profile||{})}; Daueraufgaben ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. WICHTIG ZUM SPEICHERN: Wenn du eine E-Mail-Adresse, einen Namen oder eine andere Angabe benötigst, frage kurz danach. Der Nutzer darf ganz normal antworten, auch per Mikrofon und in gesprochener Form. Sobald er die E-Mail nennt, verwende remember mit {"key":"email","value":"EXAKTE_ADRESSE"}. Bei anderen Angaben verwende remember mit passendem key. Interpretiere gesprochene Schreibweisen wie "name at beispiel punkt de" sinnvoll als name@beispiel.de. Frage bei unklarer Adresse nach, statt zu raten. Bei Daueraufgaben nutze taskadd. Sage nur nach erfolgreichem Werkzeugergebnis, dass es gespeichert wurde. Antworte ausschließlich als JSON {"say":"Antwort","tool":null} oder {"say":"Antwort","tool":{"name":"remember|taskadd|email|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}. E-Mail öffnet nur einen Entwurf; niemals automatisch versenden. Es gibt keine Posteingangsverbindung. Firebase speichert Aufgaben, führt sie aber nicht aus, wenn die Website geschlossen ist. Nach Werkzeugaufruf erhältst du ERGEBNIS und antwortest dann normal.`;
 let hist=[];
+let awaitingEmail=false;
+function spokenEmail(value){
+ let v=String(value||"").trim().toLowerCase();
+ v=v.replace(/\s*(?:at|ät|ätt)\s*/g,"@").replace(/\s*(?:punkt|dot)\s*/g,".").replace(/\s*(?:unterstrich|underscore)\s*/g,"_").replace(/\s*(?:minus|bindestrich|dash)\s*/g,"-").replace(/\s+/g,"");
+ const m=v.match(/[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+/i);
+ return m?m[0]:"";
+}
 let NET=true;
 fetch("https://de.wikipedia.org/w/api.php?action=query&meta=siteinfo&format=json&origin=*").then(r=>{if(!r.ok)NET=false}).catch(()=>{NET=false});
 const NOTE="\nWICHTIG: In dieser Umgebung gibt es KEIN Internet. Nutze web, image und file NICHT. Beantworte Fragen aus deinem Wissen und sage kurz ehrlich, dass echte Fotos und Live-Suche nur in der heruntergeladenen Version gehen, und verweise auf den Knopf oben „Vollversion herunterladen“. Das Werkzeug draw geht weiterhin: es zeichnet eine Grafik (arg: Beschreibung des Bildes).";
@@ -469,8 +476,33 @@ let busy=false;
 function parseAssistant(raw){try{return JSON.parse(raw.replace(/^```(?:json)?\s*/i,"").replace(/```$/,"").trim())}catch(e){const m=raw.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(_){}}return {say:raw,tool:null}}}
 async function run(message){
  const q=String(message||"").trim();if(!q||busy)return;busy=true;log(q,"u");hist.push({role:"user",content:q});
- try{let answer="";for(let n=0;n<5;n++){const raw=await ask(hist,SYS+(NET?"":" Antworte ohne Live-Internet."));const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:raw});if(obj.tool&&tools[obj.tool.name]){const result=await tools[obj.tool.name](String(obj.tool.arg||""));hist.push({role:"user",content:"ERGEBNIS: "+result});continue}break}if(!answer)answer="Ich konnte gerade keine Antwort erstellen.";log(answer,"j");await speak(answer);if(cloudReady)await saveCloud({history:hist.slice(-100)})}
- catch(e){const msg="Fehler: "+emsg(e);log(msg,"s");await speak(msg)}finally{busy=false;if(queuedVoice.length)run(queuedVoice.shift())}
+ try{
+  if(awaitingEmail){
+   const email=spokenEmail(q);
+   if(email){
+    const result=await tools.remember(JSON.stringify({key:"email",value:email}));
+    awaitingEmail=false;log(result,"j");hist.push({role:"assistant",content:result});
+    if(cloudReady)await saveCloud({history:hist.slice(-100)});
+    await speak(result);return;
+   }
+  }
+  let answer="";
+  for(let n=0;n<5;n++){
+   const raw=await ask(hist,SYS+(NET?"":" Antworte ohne Live-Internet."));
+   const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:raw});
+   if(obj.tool&&tools[obj.tool.name]){
+    const result=await tools[obj.tool.name](String(obj.tool.arg||""));
+    hist.push({role:"user",content:"ERGEBNIS: "+result});
+    if(obj.tool.name==="remember"&&/erfolgreich|gespeichert/i.test(result))awaitingEmail=false;
+    continue;
+   }
+   break;
+  }
+  if(!answer)answer="Ich konnte gerade keine Antwort erstellen.";
+  if(!cloudData.ownerEmail&&/(e-?mail|email).{0,65}(adresse|address)|(?:adresse|address).{0,65}(e-?mail|email)/i.test(answer))awaitingEmail=true;
+  log(answer,"j");await speak(answer);if(cloudReady)await saveCloud({history:hist.slice(-100)});
+ }catch(e){const msg="Fehler: "+emsg(e);log(msg,"s");await speak(msg)}
+ finally{busy=false;if(queuedVoice.length)run(queuedVoice.shift())}
 }
 
 /* ---------- Einstellungen intern ---------- */
