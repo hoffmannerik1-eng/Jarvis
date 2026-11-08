@@ -50,6 +50,18 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #camview{width:100%;display:block;background:#050505;border:1px solid var(--bd);margin:7px 0;max-height:190px;object-fit:contain}
 #camstatus{font-size:11px;color:var(--dim);margin:4px 0}
 .hide{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+
+#plugbtn{position:fixed;right:16px;bottom:94px;z-index:60;pointer-events:auto}
+#plugins{position:fixed;z-index:80;inset:5% 5%;max-width:900px;margin:auto;overflow:auto;background:rgba(12,7,4,.97);border:1px solid var(--c);padding:18px;box-shadow:0 0 35px rgba(var(--rgb),.2)}
+#plugins h2,#plugins h3{color:var(--c);letter-spacing:.12em;margin:8px 0}
+#plugins input,#plugins textarea{width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:9px;margin:4px 0 9px;font:inherit}
+#plugins textarea{min-height:80px;resize:vertical}
+.plugin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.plugin-card{border:1px solid var(--bd);padding:12px;background:rgba(var(--rgb),.04)}
+.plugin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.code-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#ghpreview{white-space:pre-wrap;overflow-wrap:anywhere;background:#090909;border:1px solid var(--bd);padding:10px;max-height:220px;overflow:auto;font:12px ui-monospace,monospace}
+@media(max-width:800px){#plugins{inset:2%;padding:12px}#plugbtn{right:10px;bottom:84px}}
 </style>
 </head>
 <body>
@@ -85,6 +97,43 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <button id="test" style="width:100%;margin-top:6px">Stimme testen</button>
   <p id="hint" style="margin-top:8px">JARVIS lädt alle verfügbaren kostenlosen Online-Modelle. Bei Fehlern, Limits oder leeren Antworten wird automatisch das nächste Modell getestet. Der gesamte Gesprächsverlauf wird mitgegeben.</p>
 </div>
+
+<button id="plugbtn" type="button">PLUGINS</button>
+<section id="plugins" class="hide" aria-label="JARVIS Plugins">
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>J.A.R.V.I.S. · PLUGIN-ZENTRALE</h2><button id="plugclose">SCHLIESSEN</button></div>
+ <div class="plugin-grid">
+  <div class="plugin-card">
+   <h3>E-MAIL-ASSISTENT</h3>
+   <label>Empfänger</label><input id="mailto" type="email" placeholder="name@beispiel.de">
+   <label>Betreff</label><input id="mailsubject" placeholder="Betreff">
+   <label>Nachricht</label><textarea id="mailbody" placeholder="JARVIS kann den Entwurf vorbereiten …"></textarea>
+   <button id="mailopen">E-MAIL-ENTWURF ÖFFNEN</button>
+   <p id="mailnote" style="font-size:12px;color:var(--dim);margin-top:6px">Öffnet dein Mailprogramm mit einem Entwurf. JARVIS sendet nichts selbstständig.</p>
+  </div>
+  <div class="plugin-card">
+   <h3>GITHUB-VERBINDUNG</h3>
+   <label>Repository (owner/name)</label><input id="ghrepo" value="hoffmannerik1-eng/Jarvis">
+   <label>Dateipfad in GitHub</label><input id="ghpath" value="index.html">
+   <label>GitHub Personal Access Token</label><input id="ghtoken" type="password" autocomplete="off" placeholder="Token nur für diese Sitzung">
+   <p style="font-size:12px;color:var(--dim)">Token bleibt nur im Arbeitsspeicher dieses Tabs und wird nicht in Firebase gespeichert. Verwende nur ein Token mit minimalen Rechten.</p>
+   <div id="ghstatus" style="font-size:12px;color:var(--g)">Noch keine Verbindung</div>
+  </div>
+  <div class="plugin-card">
+   <h3>EIGENES PLUGIN ERSTELLEN</h3>
+   <label>Plugin-Name</label><input id="pname" placeholder="z. B. Schulplaner">
+   <label>Was soll es tun?</label><textarea id="pdesc" placeholder="Beschreibe die Aufgabe und wie JARVIS helfen soll."></textarea>
+   <button id="pcreate">PLUGIN SPEICHERN</button>
+   <div id="pluginlist" style="font-size:12px;margin-top:8px">Noch keine eigenen Plugins.</div>
+  </div>
+ </div>
+ <div id="ghreview" class="plugin-card" style="display:none;margin-top:12px">
+  <h3>GITHUB-ÄNDERUNG PRÜFEN</h3>
+  <div id="ghpreview"></div>
+  <div class="plugin-actions"><button id="ghcommit">ÄNDERUNG JETZT COMMITTEN</button><button id="ghcancel">ABBRECHEN</button></div>
+  <p style="font-size:12px;color:var(--dim);margin-top:6px">Es wird erst nach deinem Klick gespeichert. Vorhandene Dateien werden aktualisiert.</p>
+ </div>
+</section>
+
 <div class="pan" id="bar">
   <button id="mic" aria-label="Mikrofon">MIKRO</button>
   <input id="in" placeholder="Auftrag eingeben …" autocomplete="off">
@@ -104,6 +153,7 @@ const firebaseConfig={
  appId:"1:310550760592:web:43be322f363cab47501c15"
 };
 let db=null,jarvisUid=null,cloudReady=false,cloudDoc=null,cloudData={};
+let githubToken="",pendingGitHub=null;
 async function initCloud(){
  try{
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -371,7 +421,7 @@ async function ask(msgs,sys,img){
 const SYS=`Du bist J.A.R.V.I.S., ein souveräner, trocken-witziger KI-Butler (wie bei Iron Man). Sprich Deutsch, kurz, höflich, nenne den Nutzer "Sir" oder "Boss" gelegentlich.
 Du arbeitest selbstständig: zerlege Aufgaben und nutze Werkzeuge, bis sie gelöst sind. Wähle die Antworttiefe passend zur Frage. Bei Programmieraufgaben liefere korrekten, vollständigen Code; bei komplexen Fragen erkläre nachvollziehbar. Behaupte niemals, ein Werkzeug oder Internet benutzt zu haben, wenn das nicht geschehen ist.
 Antworte IMMER nur mit JSON: {"say":"Text für den Nutzer","tool":null}
-oder {"say":"kurzer Zwischenstand","tool":{"name":"mouse|type|key|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}.
+oder {"say":"kurzer Zwischenstand","tool":{"name":"mouse|type|key|web|image|draw|file|time|calc|open|timer|search|email|github|plugin|runplugin","arg":"..."}}.
 Werkzeuge: web (arg: Suchbegriff; holt echte Infos aus dem Internet, nutze es bei jeder Wissensfrage), image (arg: Suchbegriff; zeigt echte Fotos), draw (arg: englische Bildbeschreibung; erzeugt ein neues Bild), file (arg: "name.ext|Inhalt"; erstellt eine herunterladbare Datei), time (arg leer), calc (arg: Rechenausdruck), open (arg: URL), timer (arg: "Sekunden|Beschreibung"), search (arg: Suchbegriff, öffnet Websuche).
 Nach einem Werkzeug bekommst du "ERGEBNIS: ...". Setze tool auf null, wenn du fertig bist.`;
 let hist=[];
@@ -420,6 +470,44 @@ const tools={
  search:a=>{window.open("https://www.google.com/search?q="+encodeURIComponent(a),"_blank");return"Suche geöffnet: "+a},
  timer:a=>{const[s,t]=a.split("|");const n=parseFloat(s)||10;setTimeout(()=>{log("Timer abgelaufen: "+(t||""),"s");speak("Timer abgelaufen. "+(t||""))},n*1000);return"Timer läuft "+n+" Sekunden"}
 };
+
+/* ---------- Plugin-Zentrale ---------- */
+function renderPlugins(){
+ const root=$("pluginlist");if(!root)return;
+ const list=Array.isArray(cloudData.plugins)?cloudData.plugins:[];
+ root.innerHTML="";
+ if(!list.length){root.textContent="Noch keine eigenen Plugins.";return}
+ list.forEach(p=>{const d=document.createElement("div");d.className="plugin-card";const b=document.createElement("b");b.textContent=p.name;const q=document.createElement("p");q.textContent=p.description;const run=document.createElement("button");run.textContent="PLUGIN AUSFÜHREN";run.onclick=()=>run("PLUGIN "+p.name+": "+p.description);d.append(b,q,run);root.appendChild(d)});
+}
+function stageGitHub(content,path){
+ pendingGitHub={content,path:path||$("ghpath").value.trim()||"index.html",message:"JARVIS: Code eingefügt"};
+ $("ghpreview").textContent="Repository: "+$("ghrepo").value.trim()+"\\nDatei: "+pendingGitHub.path+"\\n\\n"+content.slice(0,5000)+(content.length>5000?"\\n… Vorschau gekürzt":"");
+ $("ghreview").style.display="block";$("plugins").classList.remove("hide");
+}
+$("plugbtn").onclick=()=>{$("plugins").classList.toggle("hide");renderPlugins()};
+$("plugclose").onclick=()=>$("plugins").classList.add("hide");
+$("ghtoken").oninput=()=>{githubToken=$("ghtoken").value.trim();$("ghstatus").textContent=githubToken?"Token nur im Tab gespeichert · noch nicht geprüft":"Noch keine Verbindung"};
+$("mailopen").onclick=()=>{const to=$("mailto").value.trim(),subject=$("mailsubject").value,body=$("mailbody").value;const url="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);location.href=url;$("mailnote").textContent="Dein Mailprogramm sollte den Entwurf geöffnet haben. Bitte selbst prüfen und senden."};
+$("pcreate").onclick=async()=>{const name=$("pname").value.trim(),description=$("pdesc").value.trim();if(!name||!description){log("Bitte Plugin-Name und Beschreibung ausfüllen.","s");return}const res=await tools.plugin(JSON.stringify({name,description}));log(res,"s");$("pname").value="";$("pdesc").value=""};
+$("ghcancel").onclick=()=>{pendingGitHub=null;$("ghreview").style.display="none"};
+$("ghcommit").onclick=async()=>{
+ if(!pendingGitHub){log("Keine Änderung zum Speichern vorhanden.","s");return}
+ const repo=$("ghrepo").value.trim(),token=$("ghtoken").value.trim();
+ if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)||!token){log("Bitte Repository und GitHub-Token eintragen.","s");return}
+ const path=pendingGitHub.path.split("/").filter(Boolean).map(encodeURIComponent).join("/");
+ try{
+  const headers={Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+  const url="https://api.github.com/repos/"+repo+"/contents/"+path;
+  let sha=null;const old=await fetch(url,{headers});
+  if(old.ok){const data=await old.json();sha=data.sha}else if(old.status!==404)throw new Error("GitHub-Lesen fehlgeschlagen: HTTP "+old.status);
+  const payload={message:pendingGitHub.message||"JARVIS: Datei aktualisiert",content:btoa(unescape(encodeURIComponent(pendingGitHub.content))),branch:"main"};if(sha)payload.sha=sha;
+  const saved=await fetch(url,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  if(!saved.ok){const e=await saved.json().catch(()=>({}));throw new Error("GitHub-Commit fehlgeschlagen: HTTP "+saved.status+" "+(e.message||""))}
+  const out=await saved.json();log("GitHub-Datei gespeichert: "+pendingGitHub.path+" · Commit "+out.commit.sha.slice(0,7),"s");
+  pendingGitHub=null;$("ghreview").style.display="none";
+ }catch(e){log(emsg(e),"s")}
+};
+
 let busy=false;
 let TK=false,ABORT=false,SC=null;
 const HNK="\nÜBERNAHME-MODUS: Du steuerst den PC des Nutzers. Werkzeuge: mouse (arg: 'click x y' | 'double x y' | 'right x y' | 'move x y' | 'scroll n'), type (arg: Text), key (arg: Tastenkürzel wie 'win', 'ctrl+l', 'enter'). Du bekommst vor JEDER Antwort einen frischen Screenshot (Größe {iw}x{ih}); alle Koordinaten beziehen sich genau auf dieses Bild. Arbeite präzise: genau EIN Schritt pro Antwort, klicke auf die Mitte des Ziels, prüfe im nächsten Screenshot ob es geklappt hat und korrigiere sonst. Ist die Aufgabe erledigt, setze tool auf null und sage kurz was erledigt ist. Bei Bezahlen, Löschen, Senden oder Unklarheit: tool null und nachfragen.";
@@ -443,7 +531,7 @@ async function run(text){
    if(ABORT)break;
    hist.push({role:"assistant",content:raw});
    let o;try{o=JSON.parse((raw.match(/\{[\s\S]*\}/)||[raw])[0])}catch(e){o={say:raw,tool:null}}
-   if(o.say){beep(880,.07);log(o.say,"j");if(!TK||!o.tool)await speak(o.say)}
+   if(o.say){beep(880,.07);log(o.say,"j");const cm=o.say.match(/```(?:[a-zA-Z0-9_+-]+)?\\s*\\n([\\s\\S]*?)```/);if(cm){const actions=document.createElement("div");actions.className="code-actions";const copy=document.createElement("button");copy.textContent="CODE KOPIEREN";copy.onclick=()=>navigator.clipboard?.writeText(cm[1]).then(()=>log("Code kopiert.","s")).catch(()=>log("Kopieren nicht möglich.","s"));const gh=document.createElement("button");gh.textContent="CODE IN GITHUB ÜBERNEHMEN";gh.onclick=()=>stageGitHub(cm[1]);actions.append(copy,gh);$("log").appendChild(actions)}if(!TK||!o.tool)await speak(o.say)}
    if(!o.tool||!tools[o.tool.name])break;
    setState("ARBEITE …","w");
    const res=await tools[o.tool.name](String(o.tool.arg||""));
@@ -680,7 +768,7 @@ setUI(ALL,false);
 document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
  if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
-cv.addEventListener("dblclick",()=>setUI(ALL,$("side").classList.contains("hide")));
+cv.addEventListener("dblclick",()=>{const show=$("side").classList.contains("hide");setUI(ALL,show);setUI(CH,show)});\ndocument.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="p"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){$("plugins").classList.toggle("hide");renderPlugins()}});
 </script>
 </body>
 </html>
