@@ -203,32 +203,50 @@ function selectModels(text){
   })
   .map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,provider:x.m.provider||null,key:String(x.m.provider||"puter")+":"+String(x.m.id)}));
 }
+let benchmarkPromise=null;
 async function benchmarkModels(){
- if(!modelCatalog.length)return;
- if(cloudData.benchmarkDone===true){
-  log("Erster KI-Kompletttest bereits gespeichert. Verwende die Firebase-Ergebnisse.","s");return;
- }
- log("Erster Start: JARVIS testet jetzt jedes kostenlose Modell einmal. Ergebnisse werden gespeichert.","s");
- const tests={};
- const free=modelCatalog.filter(isFreeModel);
- for(let i=0;i<free.length;i++){
-  const m=free[i],key=String(m.provider||"puter")+":"+String(m.id),start=Date.now();
-  try{
-   const opts={model:m.id,normalize:true};if(m.provider)opts.provider=m.provider;
-   const answer=txt(await puter.ai.chat([{role:"user",content:"Antworte exakt mit: JARVIS-TEST-OK"}],false,opts)).trim();
-   if(!answer)throw new Error("Leere Antwort");
-   tests[key]={ok:true,ms:Date.now()-start,name:m.name||m.id,model:m.id,provider:m.provider||"puter",checkedAt:Date.now(),sample:answer.slice(0,80)};
-   log("KI-Test "+(i+1)+"/"+free.length+": "+(m.name||m.id)+" · "+(Date.now()-start)+" ms · OK","s");
-  }catch(e){
-   tests[key]={ok:false,ms:Date.now()-start,name:m.name||m.id,model:m.id,provider:m.provider||"puter",checkedAt:Date.now(),error:emsg(e).slice(0,250)};
-   log("KI-Test "+(i+1)+"/"+free.length+": "+(m.name||m.id)+" · nicht verfügbar","s");
+ if(benchmarkPromise)return benchmarkPromise;
+ benchmarkPromise=(async()=>{
+  if(!modelCatalog.length||!cloudReady)return;
+  if(cloudData.benchmarkDone===true){
+   log("KI-Kompletttest bereits in Firebase gespeichert. Kein erneuter Test.","s");return;
   }
- }
- const ranked=Object.values(tests).filter(t=>t.ok).sort((a,b)=>a.ms-b.ms);
- const best=ranked.slice(0,5).map(t=>({name:t.name,model:t.model,provider:t.provider,ms:t.ms}));
- await saveCloud({benchmarkDone:true,benchmarkAt:Date.now(),modelTests:tests,bestModels:best,modelCount:free.length});
- if(cloudReady)log("Kompletttest gespeichert. "+ranked.length+" von "+free.length+" Gratis-Modellen haben geantwortet.","s");
- else log("Kompletttest abgeschlossen, aber Firebase-Speicherung fehlt. Ergebnisse bleiben nur bis zum Schließen dieses Tabs erhalten.","s");
+  // Bereits gespeicherte Einzeltests werden niemals erneut ausgeführt.
+  const tests={...(cloudData.modelTests||{})};
+  const free=modelCatalog.filter(isFreeModel);
+  const pending=free.filter(m=>!tests[String(m.provider||"puter")+":"+String(m.id)]);
+  if(!pending.length){
+   const ranked=Object.values(tests).filter(t=>t.ok).sort((a,b)=>a.ms-b.ms);
+   await saveCloud({benchmarkDone:true,benchmarkAt:cloudData.benchmarkAt||Date.now(),
+    bestModels:ranked.slice(0,5).map(t=>({name:t.name,model:t.model,provider:t.provider,ms:t.ms})),
+    modelCount:free.length,modelTests:tests});
+   log("Alle Modelltests sind bereits gespeichert. Kein erneuter Test nötig.","s");return;
+  }
+  log("Einmaliger KI-Kompletttest: "+pending.length+" noch nicht getestete Modelle. Bereits gespeicherte Tests werden übersprungen.","s");
+  await saveCloud({benchmarkStarted:true,benchmarkStartedAt:cloudData.benchmarkStartedAt||Date.now(),modelTests:tests});
+  for(let i=0;i<pending.length;i++){
+   const m=pending[i],key=String(m.provider||"puter")+":"+String(m.id),start=Date.now();
+   if(tests[key])continue;
+   try{
+    const opts={model:m.id,normalize:true};if(m.provider)opts.provider=m.provider;
+    const answer=txt(await puter.ai.chat([{role:"user",content:"Antworte exakt mit: JARVIS-TEST-OK"}],false,opts)).trim();
+    if(!answer)throw new Error("Leere Antwort");
+    tests[key]={ok:true,ms:Date.now()-start,name:m.name||m.id,model:m.id,provider:m.provider||"puter",checkedAt:Date.now()};
+    log("KI-Test "+(i+1)+"/"+pending.length+": "+(m.name||m.id)+" · OK","s");
+   }catch(e){
+    tests[key]={ok:false,ms:Date.now()-start,name:m.name||m.id,model:m.id,provider:m.provider||"puter",checkedAt:Date.now(),error:emsg(e).slice(0,250)};
+    log("KI-Test "+(i+1)+"/"+pending.length+": "+(m.name||m.id)+" · nicht verfügbar","s");
+   }
+   // Nach JEDEM Modell speichern: nach einem Abbruch wird genau dort weitergemacht.
+   await saveCloud({benchmarkStarted:true,modelTests:tests});
+  }
+  const ranked=Object.values(tests).filter(t=>t.ok).sort((a,b)=>a.ms-b.ms);
+  const saved=await saveCloud({benchmarkDone:true,benchmarkStarted:false,benchmarkAt:cloudData.benchmarkAt||Date.now(),
+   modelTests:tests,bestModels:ranked.slice(0,5).map(t=>({name:t.name,model:t.model,provider:t.provider,ms:t.ms})),modelCount:free.length});
+  if(saved)log("Kompletttest dauerhaft in Firebase gespeichert. Künftig wird nichts erneut getestet.","s");
+  else log("Firebase konnte den Testfortschritt nicht speichern. Bitte Firebase-Regeln und Verbindung prüfen.","s");
+ })().finally(()=>{benchmarkPromise=null});
+ return benchmarkPromise;
 }
 /* Browser-only: keine Online-KI, kein lokaler Server und keine BAT-Datei. */
 let puterReady=!!window.puter;
