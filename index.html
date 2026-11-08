@@ -749,10 +749,14 @@ setInterval(()=>{const n=new Date();$("clock").textContent=n.toLocaleDateString(
  const base=st==="think"?70:st==="talk"?55:20;$("b1").style.width=Math.min(98,base+Math.random()*25)+"%";
  $("b2").style.width=(performance.memory?Math.round(performance.memory.usedJSHeapSize/performance.memory.jsHeapSizeLimit*100):40+Math.random()*10)+"%";
  $("b3").style.width=navigator.onLine?(85+Math.random()*14)+"%":"3%"},1000);
-$("start").onclick=()=>{beep(300,.2,"square");$("start").style.display="none";
+$("start").onclick=()=>{
+ // Wichtig: Sprachausgabe direkt im echten Klick starten. Ein Start aus setTimeout
+ // wird von Chrome/Safari teils als Autoplay blockiert.
+ speak("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.");
+ beep(300,.2,"square");$("start").style.display="none";
  const L=["INITIALISIERE KERNREAKTOR ........ OK","LADE SPRACHMODUL ................. OK","VERBINDE KI-KETTE ................ OK","SENSOREN KALIBRIERT .............. OK","ALLE SYSTEME ONLINE"];let i=0;
  const iv=setInterval(()=>{if(i<L.length){$("bl").innerHTML+=L[i]+"<br>";beep(500+i*140,.1);i++}else{clearInterval(iv);beep(1200,.4);$("boot").style.opacity=0;pulse=1;
-  setTimeout(()=>{$("boot").remove();speak("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.");log("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.","j")},900)}},420)};const LB={k:-1,l:[]};const IP=Array.from({length:80},()=>{const u=Math.random()*2-1,a=Math.random()*6.283,r=Math.cbrt(Math.random())*.85,q=Math.sqrt(1-u*u);return{x:q*Math.cos(a)*r,y:u*r,z:q*Math.sin(a)*r,s:Math.random()*6}});
+  setTimeout(()=>{$("boot").remove();log("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.","j")},900)}},420)};const LB={k:-1,l:[]};const IP=Array.from({length:80},()=>{const u=Math.random()*2-1,a=Math.random()*6.283,r=Math.cbrt(Math.random())*.85,q=Math.sqrt(1-u*u);return{x:q*Math.cos(a)*r,y:u*r,z:q*Math.sin(a)*r,s:Math.random()*6}});
 function ring(cx,cy,r,w,a0,n,gap,rot,al){x.lineWidth=w;x.strokeStyle=`rgba(${col},${al})`;
  const seg=6.283/n;for(let i=0;i<n;i++){x.beginPath();x.arc(cx,cy,r,rot+i*seg,rot+i*seg+seg*(1-gap));x.stroke()}}
 function frame(){
