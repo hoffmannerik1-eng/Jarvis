@@ -57,10 +57,27 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #tasklist .taskrow{border:1px solid var(--bd);padding:9px;margin:7px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}
 #tasklist button{white-space:nowrap}
 @media(max-width:800px){#account{inset:2%;padding:12px}#accountbtn{right:10px;bottom:84px}}
-#log{left:16px;right:auto;top:auto;bottom:88px;width:min(340px,calc(100% - 32px));height:250px;max-height:38vh;background:rgba(var(--pan),.88);z-index:30}
-#bar{left:16px;right:auto;transform:none;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(340px,calc(100% - 32px));z-index:40;background:rgba(var(--pan),.94)}
+#log{left:18px;right:auto;top:auto;bottom:94px;width:min(560px,48vw);height:min(440px,52vh);max-height:calc(100vh - 180px);background:rgba(var(--pan),.92);z-index:30;border-color:rgba(var(--rgb),.42);box-shadow:0 12px 42px rgba(0,0,0,.32);display:flex;flex-direction:column;gap:9px}
+#log .m{flex:0 0 auto;line-height:1.55;overflow-wrap:anywhere}
+#log .m.j{color:#f7eadc;border-color:var(--g);font-size:14px}
+#log .m img{display:inline-block;width:calc(50% - 8px);max-width:230px;max-height:180px;object-fit:cover;vertical-align:top;margin:7px 6px 0 0;border-radius:8px;box-shadow:0 4px 18px #0008;transition:transform .2s,border-color .2s}
+#log .m img:hover{transform:translateY(-2px);border-color:var(--c)}
+#bar{left:18px;right:auto;transform:none;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(560px,48vw);z-index:40;background:rgba(var(--pan),.96);box-shadow:0 8px 30px #0008;gap:7px}
+#bar input{min-width:0}
+#bar button{white-space:nowrap}
 #bar #go{display:inline-block}#mic{min-width:58px;padding:6px 10px}#bar{min-height:0}
-@media(max-width:800px){#log{left:12px;bottom:82px;width:min(330px,calc(100% - 24px));height:210px;max-height:32vh}#bar{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(330px,calc(100% - 24px))}}
+#pick{min-width:44px;padding:6px 10px}
+#log .m.j .gallery-title{display:block;color:var(--c);font-weight:700;margin-bottom:5px}
+#imageViewer{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:24px}
+#imageViewer.open{display:flex}
+#imageViewer img{max-width:min(90vw,1200px);max-height:82vh;object-fit:contain;border:1px solid var(--c);border-radius:10px;box-shadow:0 0 40px #000}
+#imageViewer .ivtop{position:absolute;top:18px;left:18px;right:18px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+#imageViewer .ivnav{position:absolute;top:50%;transform:translateY(-50%);font-size:22px}
+#imageViewer #ivprev{left:12px}#imageViewer #ivnext{right:12px}
+#imageViewer .ivbottom{position:absolute;bottom:16px;display:flex;gap:10px;align-items:center}
+#filepick{display:none}
+@media(max-width:900px){#log{left:12px;bottom:92px;width:min(620px,calc(100% - 24px));height:36vh;max-height:42vh}#bar{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:calc(100% - 24px)}#side{display:none}}
+@media(max-width:520px){#log{height:34vh;max-height:40vh}#bar{gap:4px;padding:6px}#bar button{padding:6px 8px;font-size:12px}#mic{min-width:48px}#pick{min-width:38px}}
 
 #bar.speaking #go{position:relative;opacity:.8;cursor:wait;padding-right:20px}
 #bar.speaking #go::after{content:"";position:absolute;right:5px;top:50%;width:11px;height:11px;margin-top:-7px;border:2px solid rgba(var(--rgb),.25);border-top-color:var(--c);border-radius:50%;animation:sendspin .75s linear infinite}
@@ -120,8 +137,17 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 </section>
 <div class="pan" id="bar">
   <button id="mic" aria-label="Mikrofon">MIKRO</button>
+  <button id="pick" type="button" title="Bild auswählen">＋</button>
+  <input id="filepick" type="file" accept="image/*">
   <input id="in" placeholder="Nachricht an J.A.R.V.I.S. …" autocomplete="off">
   <button id="go">SENDEN</button>
+</div>
+<div id="imageViewer" aria-modal="true" role="dialog">
+ <div class="ivtop"><span id="ivcaption">BILDANSICHT</span><button id="ivclose">SCHLIESSEN ✕</button></div>
+ <button class="ivnav" id="ivprev" aria-label="Vorheriges Bild">‹</button>
+ <img id="ivimg" alt="Bildvorschau">
+ <button class="ivnav" id="ivnext" aria-label="Nächstes Bild">›</button>
+ <div class="ivbottom"><span id="ivcount"></span><a id="ivsource" target="_blank" rel="noopener" style="color:var(--c)">Original öffnen</a></div>
 </div>
 <script>
 "use strict";
@@ -417,7 +443,7 @@ async function ask(msgs,sys,img){
 }
 
 /* ---------- Agent ---------- */
-const SYS=`Du bist J.A.R.V.I.S., ein intelligenter deutschsprachiger KI-Assistent. Antworte natürlich, freundlich und klar. Firebase-Gedächtnis: E-Mail ${JSON.stringify(cloudData.ownerEmail||"")}; gespeicherte Angaben ${JSON.stringify(cloudData.profile||{})}; Daueraufgaben ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. WICHTIG ZUM SPEICHERN: Wenn du eine E-Mail-Adresse, einen Namen oder eine andere Angabe benötigst, frage kurz danach. Der Nutzer darf ganz normal antworten, auch per Mikrofon und in gesprochener Form. Sobald er die E-Mail nennt, verwende remember mit {"key":"email","value":"EXAKTE_ADRESSE"}. Bei anderen Angaben verwende remember mit passendem key. Interpretiere gesprochene Schreibweisen wie "name at beispiel punkt de" sinnvoll als name@beispiel.de. Frage bei unklarer Adresse nach, statt zu raten. Bei Daueraufgaben nutze taskadd. Sage nur nach erfolgreichem Werkzeugergebnis, dass es gespeichert wurde. Antworte ausschließlich als JSON {"say":"Antwort","tool":null} oder {"say":"Antwort","tool":{"name":"remember|taskadd|email|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}. E-Mail öffnet nur einen Entwurf; niemals automatisch versenden. Es gibt keine Posteingangsverbindung. Firebase speichert Aufgaben, führt sie aber nicht aus, wenn die Website geschlossen ist. Nach Werkzeugaufruf erhältst du ERGEBNIS und antwortest dann normal.`;
+const SYS=`Du bist J.A.R.V.I.S., ein leistungsfähiger deutschsprachiger KI-Assistent im Stil eines Film-Computerassistenten: ruhig, präzise, vorausschauend, technisch kompetent und natürlich. Antworte auf Deutsch, direkt und verständlich. Bei komplexen Aufgaben plane kurz, führe verfügbare Werkzeuge selbstständig aus und fasse das Ergebnis zusammen. Bei Bildwünschen nutze image für echte gefundene Bilder, draw für neu erzeugte Grafiken; zeige gefundene/erzeugte Bilder direkt im Chat. Wenn der Nutzer ein Bild hochlädt, analysiere es visuell und beschreibe nur Erkennbares. Bei Webfragen nutze web und fasse mehrere relevante Fakten zusammen. Erfinde keine Ergebnisse und behaupte nicht, den Desktop zu sehen oder zu steuern, wenn die Computersteuerung nicht aktiviert ist. Firebase-Gedächtnis: E-Mail ${JSON.stringify(cloudData.ownerEmail||"")}; gespeicherte Angaben ${JSON.stringify(cloudData.profile||{})}; Daueraufgaben ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. WICHTIG ZUM SPEICHERN: Wenn du eine E-Mail-Adresse, einen Namen oder eine andere Angabe benötigst, frage kurz danach. Der Nutzer darf ganz normal antworten, auch per Mikrofon und in gesprochener Form. Sobald er die E-Mail nennt, verwende remember mit {"key":"email","value":"EXAKTE_ADRESSE"}. Bei anderen Angaben verwende remember mit passendem key. Interpretiere gesprochene Schreibweisen wie "name at beispiel punkt de" sinnvoll als name@beispiel.de. Frage bei unklarer Adresse nach, statt zu raten. Bei Daueraufgaben nutze taskadd. Sage nur nach erfolgreichem Werkzeugergebnis, dass es gespeichert wurde. Antworte ausschließlich als JSON {"say":"Antwort","tool":null} oder {"say":"Antwort","tool":{"name":"remember|taskadd|email|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}. E-Mail öffnet nur einen Entwurf; niemals automatisch versenden. Es gibt keine Posteingangsverbindung. Firebase speichert Aufgaben, führt sie aber nicht aus, wenn die Website geschlossen ist. Nach Werkzeugaufruf erhältst du ERGEBNIS und antwortest dann normal.`; Firebase-Gedächtnis: E-Mail ${JSON.stringify(cloudData.ownerEmail||"")}; gespeicherte Angaben ${JSON.stringify(cloudData.profile||{})}; Daueraufgaben ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. WICHTIG ZUM SPEICHERN: Wenn du eine E-Mail-Adresse, einen Namen oder eine andere Angabe benötigst, frage kurz danach. Der Nutzer darf ganz normal antworten, auch per Mikrofon und in gesprochener Form. Sobald er die E-Mail nennt, verwende remember mit {"key":"email","value":"EXAKTE_ADRESSE"}. Bei anderen Angaben verwende remember mit passendem key. Interpretiere gesprochene Schreibweisen wie "name at beispiel punkt de" sinnvoll als name@beispiel.de. Frage bei unklarer Adresse nach, statt zu raten. Bei Daueraufgaben nutze taskadd. Sage nur nach erfolgreichem Werkzeugergebnis, dass es gespeichert wurde. Antworte ausschließlich als JSON {"say":"Antwort","tool":null} oder {"say":"Antwort","tool":{"name":"remember|taskadd|email|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}. E-Mail öffnet nur einen Entwurf; niemals automatisch versenden. Es gibt keine Posteingangsverbindung. Firebase speichert Aufgaben, führt sie aber nicht aus, wenn die Website geschlossen ist. Nach Werkzeugaufruf erhältst du ERGEBNIS und antwortest dann normal.`;
 let hist=[];
 let awaitingEmail=false;
 function spokenEmail(value){
@@ -438,11 +464,25 @@ if(window.JTOKEN){$("hc").checked=true;$("hk").value=window.JTOKEN;log("Computer
 $("nz").onclick=()=>{ABORT=true;TK=false;$("hc").checked=false;try{speechSynthesis.cancel()}catch(e){}log("NOT-AUS: Computersteuerung gesperrt.","s")};
 const enc=encodeURIComponent;
 async function jget(u){const r=await fetch(u);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}
-function logImg(urls,cap){setUI(["log"],true);const d=document.createElement("div");d.className="m j";if(cap)d.textContent=cap;
- urls.forEach(u=>{const i=document.createElement("img");i.src=u;i.loading="lazy";i.alt=cap||"Bild";i.onclick=()=>window.open(u,"_blank");
+let viewerImages=[],viewerIndex=0;
+function showViewer(index){
+ if(!viewerImages.length)return;viewerIndex=(index+viewerImages.length)%viewerImages.length;
+ $("ivimg").src=viewerImages[viewerIndex];$("ivcaption").textContent="BILDANSICHT";
+ $("ivcount").textContent=(viewerIndex+1)+" / "+viewerImages.length;$("ivsource").href=viewerImages[viewerIndex];
+ $("imageViewer").classList.add("open");
+}
+$("ivclose").onclick=()=>$("imageViewer").classList.remove("open");
+$("ivprev").onclick=()=>showViewer(viewerIndex-1);$("ivnext").onclick=()=>showViewer(viewerIndex+1);
+$("imageViewer").addEventListener("click",e=>{if(e.target===$("imageViewer"))$("imageViewer").classList.remove("open")});
+document.addEventListener("keydown",e=>{if(!$("imageViewer").classList.contains("open"))return;if(e.key==="Escape")$("imageViewer").classList.remove("open");if(e.key==="ArrowLeft")showViewer(viewerIndex-1);if(e.key==="ArrowRight")showViewer(viewerIndex+1)});
+function logImg(urls,cap){
+ setUI(["log"],true);viewerImages=urls.slice();const d=document.createElement("div");d.className="m j";
+ if(cap){const h=document.createElement("span");h.className="gallery-title";h.textContent=cap;d.appendChild(h)}
+ urls.forEach((u,index)=>{const i=document.createElement("img");i.src=u;i.loading="lazy";i.alt=cap||"Bild";i.onclick=()=>showViewer(index);
   i.onerror=()=>{if(i.dataset.alt){i.src=i.dataset.alt;i.dataset.alt=""}else i.remove()};
   if(u.includes("image.pollinations.ai"))i.dataset.alt=u.replace("https://image.pollinations.ai/prompt/","https://gen.pollinations.ai/image/");d.appendChild(i)});
- $("log").appendChild(d);$("log").scrollTop=1e9}
+ $("log").appendChild(d);$("log").scrollTop=$("log").scrollHeight;
+}
 const tools={
 
  taskadd:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Bitte die Daueraufgabe als JSON mit description angeben."}const description=String(v.description||"").trim();if(!description)return "Die Beschreibung fehlt.";const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks.slice():[];tasks.push({id:"t"+Date.now(),description,active:true,createdAt:Date.now()});cloudData.tasks=tasks;const saved=await saveCloud({tasks});try{localStorage.setItem("jarvis_tasks",JSON.stringify(tasks))}catch(e){}renderTasks();return saved?"Daueraufgabe wurde in Firebase gespeichert.":"Daueraufgabe wurde lokal gespeichert; Firebase ist nicht verbunden."},
@@ -480,8 +520,21 @@ const tools={
 let busy=false;
 const queuedMessages=[];
 function parseAssistant(raw){try{return JSON.parse(raw.replace(/^```(?:json)?\s*/i,"").replace(/```$/,"").trim())}catch(e){const m=raw.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(_){}}return {say:raw,tool:null}}}
+let pendingVisionImage=null;
+$("pick").onclick=()=>$("filepick").click();
+$("filepick").onchange=async()=>{
+ const f=$("filepick").files?.[0];if(!f)return;
+ if(!f.type.startsWith("image/")){log("Bitte eine Bilddatei auswählen.","s");return}
+ if(f.size>8*1024*1024){log("Das Bild ist größer als 8 MB. Bitte wähle eine kleinere Datei.","s");return}
+ try{
+  const data=await new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>resolve(rd.result);rd.onerror=reject;rd.readAsDataURL(f)});
+  pendingVisionImage=dataBlob(data);logImg([data],"Dein Bild · bereit zur Analyse");
+  $("in").value=$("in").value.trim()||"Beschreibe und analysiere dieses Bild.";
+  log("Bild angehängt. Schreibe deine Frage dazu und drücke Senden.","s");
+ }catch(e){log("Bild konnte nicht geladen werden: "+emsg(e),"s")}
+};
 async function run(message){
- const q=String(message||"").trim();if(!q)return;if(busy){queuedMessages.push(q);log("Nachricht vorgemerkt – JARVIS antwortet nach dem Vorlesen.","s");return}busy=true;log(q,"u");hist.push({role:"user",content:q});
+ const q=String(message||"").trim();if(!q&&!pendingVisionImage)return;if(busy){queuedMessages.push(q);log("Nachricht vorgemerkt – JARVIS antwortet nach dem Vorlesen.","s");return}busy=true;log(q,"u");hist.push({role:"user",content:q});
  try{
   if(awaitingEmail){
    const email=spokenEmail(q);
@@ -494,7 +547,8 @@ async function run(message){
   }
   let answer="";
   for(let n=0;n<5;n++){
-   const raw=await ask(hist,SYS+(NET?"":" Antworte ohne Live-Internet."));
+   const raw=await ask(hist,SYS+(NET?"":" Live-Websuche ist derzeit möglicherweise nicht erreichbar; erfinde keine aktuellen Fakten."),pendingVisionImage);
+   pendingVisionImage=null;
    const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:raw});
    if(obj.tool&&tools[obj.tool.name]){
     const result=await tools[obj.tool.name](String(obj.tool.arg||""));
@@ -527,9 +581,11 @@ function loadAccountFields(){const email=cloudData.ownerEmail||(()=>{try{return 
 let speaking=false,listening=false,rec=null;
 let voices=[];
 function loadVoices(){voices=speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang));
- voices.sort((x,y)=>sc(y)-sc(x));const sel=$("vs");sel.innerHTML="";
- voices.forEach((v,i)=>{const o=document.createElement("option");o.value=i;o.textContent=v.name;sel.appendChild(o)});
- const sv=LS2("jv");const k=voices.findIndex(v=>v.name===sv);if(k>=0)sel.value=k}
+ voices.sort((x,y)=>sc(y)-sc(x));const sel=$("vs");const previous=LS2("jv");sel.innerHTML="";
+ voices.forEach((v,i)=>{const o=document.createElement("option");o.value=i;o.textContent=v.name+" · "+v.lang;sel.appendChild(o)});
+ const k=voices.findIndex(v=>v.name===previous);if(k>=0)sel.value=k;
+ if(!voices.length){const o=document.createElement("option");o.value="";o.textContent="Browser-Standardstimme";sel.appendChild(o)}
+}
 const sc=v=>(/natural|neural|online/i.test(v.name)?4:0)+(/google|microsoft|siri|anna|markus|conrad|katja/i.test(v.name)?2:0)+(v.localService?0:1);
 const LS2=k=>{try{return localStorage.getItem(k)||""}catch(e){return""}};
 function ensureRecognition(){
@@ -567,7 +623,8 @@ function speak(t){return new Promise(res=>{
 })}
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
-$("test").onclick=()=>{try{speechSynthesis.cancel();speechSynthesis.resume();}catch(e){}loadVoices();speak("Alle Systeme laufen. Wie klinge ich?")};
+$("test").onclick=()=>{try{speechSynthesis.cancel();speechSynthesis.resume();}catch(e){}loadVoices();speak("Sprachsystem online. Ich bin bereit und kann dich hören, sobald du das Mikrofon aktivierst.")};
+$("start").addEventListener("click",()=>{try{speechSynthesis?.resume();loadVoices()}catch(e){}});
 
 /* Kamera: nur lokale Vorschau. Es wird kein Bild an einen Server übertragen. */
 let cameraStream=null;
@@ -634,8 +691,8 @@ function startRec(){
    if(e.error==="not-allowed"||e.error==="service-not-allowed"){
     listening=false;$("mic").classList.remove("on");setState("MIKROFON GESPERRT");log("Mikrofonzugriff blockiert. Erlaube den Zugriff einmal in den Browser-Einstellungen.","s");return;
    }
-   if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe das ausgewählte Eingabegerät.","s");
-   else if(e.error==="network")log("Spracherkennung hat keine Verbindung zum Spracherkennungsdienst. Prüfe die Internetverbindung.","s");
+   if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe in Chrome unter Einstellungen → Datenschutz und Sicherheit → Website-Einstellungen → Mikrofon das richtige Eingabegerät.","s");
+   else if(e.error==="network")log("Chrome-Spracherkennung erreicht den Erkennungsdienst nicht. Prüfe Internet, VPN/Firewall und lade die Seite neu.","s");
    else if(e.error!=="no-speech"&&e.error!=="aborted")log("Mikrofonstatus: "+e.error+". Ich versuche es erneut.","s");
    scheduleRecognitionRestart();
   };
@@ -652,8 +709,8 @@ $("mic").onclick=async()=>{
   listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");log("Mikrofon aktiv. Ich warte, bis du fertig gesprochen hast (1,5 Sekunden Sprechpause).","s");
  }catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s");}
 };
-$("go").onclick=()=>{if(speaking)return;const v=$("in").value.trim();if(!v)return;$("in").value="";run(v)};
-$("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();if(speaking)return;const v=$("in").value.trim();if(!v)return;$("in").value="";run(v)}};
+$("go").onclick=()=>{if(speaking)return;const v=$("in").value.trim();if(!v&&!pendingVisionImage)return;$("in").value="";run(v)};
+$("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();if(speaking)return;const v=$("in").value.trim();if(!v&&!pendingVisionImage)return;$("in").value="";run(v)}};
 
 /* ---------- Kern-Animation ---------- */
 const cv=$("cv"),x=cv.getContext("2d");const TH={orange:{c:"255,138,31",think:"255,225,110",listen:"93,255,176",bg:"10,5,3",v:{"--bg":"#0a0503","--rgb":"255,138,31","--c":"#ff8a1f","--c2":"#a84f00","--w":"#ffd36b","--t":"#ffe9d2","--dim":"#b0825a","--bg2":"#1c0d03","--bd":"#6b3300","--pan":"12,5,1"}},
