@@ -57,10 +57,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #tasklist .taskrow{border:1px solid var(--bd);padding:9px;margin:7px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}
 #tasklist button{white-space:nowrap}
 @media(max-width:800px){#account{inset:2%;padding:12px}#accountbtn{right:10px;bottom:84px}}
-#hud,#side,#accountbtn,#account,#state,#boot,#dl,canvas{display:none!important}
-#log{left:50%;top:16px;bottom:82px;transform:translateX(-50%);width:min(900px,calc(100% - 24px));background:rgba(8,10,16,.88);border-radius:16px;clip-path:none}
-#bar{left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(900px,calc(100% - 24px));border-radius:16px;clip-path:none;background:rgba(8,10,16,.96)}
-#bar #go{display:none}#mic{min-width:42px;width:42px;height:42px;padding:0;border-radius:50%;font-size:0}#mic::before{content:"MIC";font-size:11px}#bar{min-height:60px}body::after{display:none}
+#log{left:16px;right:auto;top:auto;bottom:88px;width:min(340px,calc(100% - 32px));height:250px;max-height:38vh;background:rgba(var(--pan),.88);z-index:30}
+#bar{left:16px;right:auto;transform:none;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(340px,calc(100% - 32px));z-index:40;background:rgba(var(--pan),.94)}
+#bar #go{display:inline-block}#mic{min-width:58px;padding:6px 10px}#bar{min-height:0}
+@media(max-width:800px){#log{left:12px;bottom:82px;width:min(330px,calc(100% - 24px));height:210px;max-height:32vh}#bar{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(330px,calc(100% - 24px))}}
+
 </style>
 </head>
 <body>
@@ -115,7 +116,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 </section>
 <div class="pan" id="bar">
   <button id="mic" aria-label="Mikrofon">MIKRO</button>
-  <input id="in" placeholder="Mit JARVIS sprechen oder schreiben …" autocomplete="off">
+  <input id="in" placeholder="Nachricht an J.A.R.V.I.S. …" autocomplete="off">
   <button id="go">SENDEN</button>
 </div>
 <script>
@@ -473,9 +474,10 @@ const tools={
 
 
 let busy=false;
+const queuedMessages=[];
 function parseAssistant(raw){try{return JSON.parse(raw.replace(/^```(?:json)?\s*/i,"").replace(/```$/,"").trim())}catch(e){const m=raw.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(_){}}return {say:raw,tool:null}}}
 async function run(message){
- const q=String(message||"").trim();if(!q||busy)return;busy=true;log(q,"u");hist.push({role:"user",content:q});
+ const q=String(message||"").trim();if(!q)return;if(busy){queuedMessages.push(q);log("Nachricht vorgemerkt – JARVIS antwortet nach dem Vorlesen.","s");return}busy=true;log(q,"u");hist.push({role:"user",content:q});
  try{
   if(awaitingEmail){
    const email=spokenEmail(q);
@@ -502,7 +504,7 @@ async function run(message){
   if(!cloudData.ownerEmail&&/(e-?mail|email).{0,65}(adresse|address)|(?:adresse|address).{0,65}(e-?mail|email)/i.test(answer))awaitingEmail=true;
   log(answer,"j");await speak(answer);if(cloudReady)await saveCloud({history:hist.slice(-100)});
  }catch(e){const msg="Fehler: "+emsg(e);log(msg,"s");await speak(msg)}
- finally{busy=false;if(queuedVoice.length)run(queuedVoice.shift())}
+ finally{busy=false;if(queuedMessages.length)run(queuedMessages.shift());else if(queuedVoice.length)run(queuedVoice.shift())}
 }
 
 /* ---------- Einstellungen intern ---------- */
@@ -539,19 +541,27 @@ function scheduleRecognitionRestart(){
 }
 function speak(t){return new Promise(res=>{
  const synth=window.speechSynthesis;
- if(!$("vo").checked||!synth){res();return}
- if(listening&&rec){recognitionPaused=true;try{rec.stop()}catch(e){}}
- let finished=false;const done=()=>{if(finished)return;finished=true;speaking=false;if(listening){recognitionPaused=false;restartDelay=900;scheduleRecognitionRestart()}res()};
+ if(!$("vo").checked||!synth){speaking=false;res();return}
+ if(listening&&rec){recognitionPaused=true;clearTimeout(restartTimer);try{rec.stop()}catch(e){}}
+ let finished=false,watchdog=0;
+ const done=()=>{if(finished)return;finished=true;clearTimeout(watchdog);speaking=false;
+  if(listening){recognitionPaused=false;restartDelay=900;scheduleRecognitionRestart();setState("HÖRE ZU")}
+  else setState("BEREIT");
+  res();
+ };
  try{
-  synth.cancel();synth.resume();
-  const u=new SpeechSynthesisUtterance(String(t).replace(/[*_`#]/g," ").replace(/\s+/g," ").trim());
+  synth.cancel();synth.resume();loadVoices();
+  const clean=String(t).replace(/[*_`#]/g," ").replace(/\s+/g," ").trim();
+  const u=new SpeechSynthesisUtterance(clean);
   u.lang="de-DE";const v=voices[Number($("vs").value)];if(v)u.voice=v;
-  u.rate=+$("rt").value;u.pitch=+$("pt").value;u.volume=+$("vl").value;
+  u.rate=+$("rt").value||1;u.pitch=+$("pt").value||1;u.volume=Math.max(.1,Math.min(1,+$("vl").value||1));
   u.onstart=()=>{speaking=true;setState("SPRECHE")};
-  u.onend=done;u.onerror=()=>done();
+  u.onend=done;
+  u.onerror=e=>{log("Sprachausgabe-Fehler: "+(e.error||"unbekannt"),"s");done()};
+  watchdog=setTimeout(()=>{if(!finished){log("Sprachausgabe hat zu lange gebraucht und wurde beendet.","s");try{synth.cancel()}catch(e){}done()}},60000);
   synth.speak(u);
-  setTimeout(()=>{if(!finished&&!synth.speaking&&!synth.pending)done()},Math.max(8000,String(t).length*180));
- }catch(e){done();log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s")}
+  setTimeout(()=>{if(!finished&&synth.paused){try{synth.resume()}catch(e){}}},300);
+ }catch(e){log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}
 })}
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
@@ -596,7 +606,7 @@ async function requestMicPermissionOnce(){
  return true;
 }
 function startRec(){
- if(!SR){log("Spracherkennung wird von diesem Browser nicht unterstützt. Bitte die aktuelle Desktop-Version von Chrome oder Edge verwenden.","s");return}
+ if(!SR){log("Dieser Browser stellt keine Spracherkennung bereit. Bitte JARVIS in Google Chrome oder Microsoft Edge öffnen und Mikrofon erlauben.","s");return}
  // Eine einzige Recognition-Instanz wiederverwenden, statt bei jedem Klick eine neue anzulegen.
  if(!rec){
   rec=new SR();rec.lang="de-DE";rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;
@@ -616,7 +626,9 @@ function startRec(){
    if(e.error==="not-allowed"||e.error==="service-not-allowed"){
     listening=false;$("mic").classList.remove("on");setState("MIKROFON GESPERRT");log("Mikrofonzugriff blockiert. Erlaube den Zugriff einmal in den Browser-Einstellungen.","s");return;
    }
-   if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe Windows-Eingabegerät und Verbindung.","s");
+   if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe das ausgewählte Eingabegerät.","s");
+   else if(e.error==="network")log("Spracherkennung hat keine Verbindung zum Spracherkennungsdienst. Prüfe die Internetverbindung.","s");
+   else if(e.error!=="no-speech"&&e.error!=="aborted")log("Mikrofonstatus: "+e.error+". Ich versuche es erneut.","s");
    scheduleRecognitionRestart();
   };
   rec.onend=()=>{recStarting=false;if(listening&&!recognitionPaused){setState("HÖRE ZU");scheduleRecognitionRestart()}};
@@ -627,6 +639,7 @@ const queuedVoice=[];
 $("mic").onclick=async()=>{
  if(listening){listening=false;recognitionPaused=false;clearTimeout(restartTimer);$("mic").classList.remove("on");try{rec&&rec.stop()}catch(e){}setState("BEREIT");log("Mikrofon ausgeschaltet.","s");return}
  try{
+  if(!SR){log("Dein aktueller Browser unterstützt die benötigte Spracherkennung nicht zuverlässig. Bitte öffne die Seite in Google Chrome oder Microsoft Edge.","s");return}
   await requestMicPermissionOnce();
   listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");log("Mikrofon aktiv. Ich höre weiter zu und erkenne eine Äußerung nach einer Sprechpause automatisch.","s");
  }catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s");}
