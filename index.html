@@ -51,14 +51,13 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 <div id="hud"><h1>J.A.R.V.I.S.</h1><div id="clock"></div><button id="dl" style="display:none;pointer-events:auto;margin-top:6px;font-size:12px;padding:4px 12px">⬇ VOLLVERSION MIT INTERNET UND FOTOS HERUNTERLADEN</button></div>
 <div id="boot"><h2>J.A.R.V.I.S.</h2><div id="bl"></div><button id="start">SYSTEM STARTEN</button></div>
 <div id="state">BEREIT</div>
-<div class="pan" id="log"><div class="m s">System online. Verbinde einmal die Online-KI; danach wählt JARVIS automatisch aus bis zu 30 verfügbaren Modellen.</div></div>
+<div class="pan" id="log"><div class="m s">System online. Verbinde dein Konto einmal. JARVIS lädt alle als kostenlos erkennbaren Modelle und wechselt bei Ausfall automatisch weiter.</div></div>
 <div class="pan" id="side">
   <button id="th" style="width:100%;margin-bottom:8px">Farbe: Orange / Cyan</button>
   <h3>SYSTEMSTATUS</h3>
   <div>Kernlast</div><div class="bar"><i id="b1"></i></div><div>Speicher</div><div class="bar"><i id="b2"></i></div><div>Netzwerk</div><div class="bar"><i id="b3"></i></div>
   <h3>KI-VERBINDUNG</h3>
   <button id="login" style="width:100%;margin-bottom:8px">ONLINE-KI VERBINDEN</button>
-  <label style="display:block;margin:6px 0"><input type="checkbox" id="paidAI"> Auch kostenpflichtige Modelle erlauben</label>
   <div id="prov"></div>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
@@ -73,7 +72,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <label>Tiefe <input type="range" id="pt" min=".5" max="1.5" step=".05" value=".9"></label>
   <label>Lautstärke <input type="range" id="vl" min=".2" max="1" step=".05" value="1"></label>
   <button id="test" style="width:100%;margin-top:6px">Stimme testen</button>
-  <p id="hint" style="margin-top:8px">JARVIS prüft bis zu 30 verfügbare Online-Modelle. Bei Fehlern oder leeren Antworten wird automatisch das nächste Modell getestet. Der gesamte Gesprächsverlauf wird mitgegeben.</p>
+  <p id="hint" style="margin-top:8px">JARVIS lädt alle verfügbaren kostenlosen Online-Modelle. Bei Fehlern, Limits oder leeren Antworten wird automatisch das nächste Modell getestet. Der gesamte Gesprächsverlauf wird mitgegeben.</p>
 </div>
 <div class="pan" id="bar">
   <button id="mic" aria-label="Mikrofon">MIKRO</button>
@@ -91,7 +90,7 @@ P.forEach(p=>p.cool=0);
 let active=-1;
 function renderProv(){
  const root=$("prov");root.innerHTML="";
- const items=modelCatalog.slice(0,30).map(m=>({name:m.name||m.id,model:m.id,t:"puter"}));
+ const items=modelCatalog.filter(isFreeModel).map(m=>({name:m.name||m.id,model:m.id,t:"puter"}));
  items.forEach((p,i)=>{
   const d=document.createElement("div");d.className="pr";
   const st=p.cool>Date.now()?"cd":(i===active?"act":"on");
@@ -125,24 +124,27 @@ function classifyRequest(text){
  if(/\b(bild|foto|sehen|kamera|screenshot|was ist darauf)\b/.test(t))return "vision";
  return "general";
 }
-function scoreModel(m,kind,allowPaid){
+function isFreeModel(m){
+ const id=String(m.id||"").toLowerCase(),cost=m.cost||m.pricing||{};
+ const input=Number(cost.input),output=Number(cost.output);
+ return m.free===true||m.is_free===true||/:free$/.test(id)||(Number.isFinite(input)&&Number.isFinite(output)&&input===0&&output===0);
+}
+function scoreModel(m,kind){
  const id=String(m.id||"").toLowerCase(),name=String(m.name||"").toLowerCase();
- const free=/:free$/.test(id)||m.cost?.input===0&&m.cost?.output===0;
- if(!free&&!allowPaid)return -1e6;
- let score=free?1000:0;
+ if(!isFreeModel(m))return -1e6;
+ let score=1000;
  if(kind==="code")score+=/(coder|code|codex|deepseek|qwen|codestral)/.test(id+" "+name)?220:0;
  if(kind==="reason")score+=/(reason|thinking|opus|sonnet|pro|deepseek-r|o[134]|gpt-5)/.test(id+" "+name)?220:0;
  if(kind==="vision")score+=/(vision|vl|gemini|gpt-4o|claude)/.test(id+" "+name)?180:0;
  if(kind==="general")score+=/(sonnet|gpt|gemini|mistral|llama)/.test(id+" "+name)?100:0;
  if(/nano|tiny|mini|flash-lite/.test(id))score-=kind==="reason"?80:10;
  if(/deprecated|legacy|preview-old/.test(id))score-=100;
- const cost=m.cost||{};if(allowPaid&&Number.isFinite(cost.input))score-=Math.min(100,cost.input/5);
  return score;
 }
 function selectModels(text){
- const kind=classifyRequest(text),allowPaid=$("paidAI").checked;
- return modelCatalog.map(m=>({m,score:scoreModel(m,kind,allowPaid)})).filter(x=>x.score>-1e5)
-  .sort((a,b)=>b.score-a.score).slice(0,30).map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,cool:0}));
+ const kind=classifyRequest(text);
+ return modelCatalog.map(m=>({m,score:scoreModel(m,kind)})).filter(x=>x.score>-1e5)
+  .sort((a,b)=>b.score-a.score).map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,cool:0}));
 }
 /* Browser-only: keine Online-KI, kein lokaler Server und keine BAT-Datei. */
 let puterReady=!!window.puter;
@@ -172,7 +174,7 @@ $("login").onclick=async()=>{
   if(!signed()) throw new Error("Anmeldung wurde nicht bestätigt");
   btn.textContent="ONLINE-KI VERBUNDEN ✓";
   await refreshModelCatalog(true);
-  log("Online-KI verbunden. JARVIS kann jetzt bis zu 30 verfügbare Modelle automatisch testen.","s");
+  log("Online-KI verbunden. JARVIS hat alle als kostenlos erkennbaren Modelle geladen und testet sie automatisch.","s");
  }catch(e){btn.textContent="ONLINE-KI VERBINDEN";log("Online-KI-Verbindung fehlgeschlagen: "+emsg(e),"s")}
 };
 addEventListener("DOMContentLoaded",()=>{autoConnectAI()});
@@ -239,7 +241,7 @@ async function ask(msgs,sys,img){
   }
  }
  active=-1;renderProv();
- throw new Error("Keines der "+candidates.length+" geprüften Online-Modelle antwortet gerade. "+errs.slice(0,5).join(" | "));
+ throw new Error("Keines der "+candidates.length+" geprüften kostenlosen Online-Modelle antwortet gerade. "+errs.slice(0,5).join(" | "));
 }
 
 /* ---------- Agent ---------- */
