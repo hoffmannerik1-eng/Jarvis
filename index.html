@@ -604,27 +604,37 @@ function speak(t){return new Promise(res=>{
  const synth=window.speechSynthesis;
  if(!$("vo").checked||!synth){speaking=false;setSpeakingUI(false);res();return}
  if(listening&&rec){recognitionPaused=true;clearTimeout(restartTimer);try{rec.stop()}catch(e){}}
- let finished=false,watchdog=0,resumeTimer=0;setSpeakingUI(true);
+ let finished=false,watchdog=0,resumeTimer=0;
+ setSpeakingUI(true);
  const done=()=>{if(finished)return;finished=true;clearTimeout(watchdog);clearInterval(resumeTimer);speaking=false;setSpeakingUI(false);
   if(listening){recognitionPaused=false;restartDelay=900;scheduleRecognitionRestart();setState("HÖRE ZU")}else setState("BEREIT");res();
  };
  try{
-  synth.cancel();synth.resume();loadVoices();
-  const clean=String(t).replace(/[*_`#]/g," ").replace(/\\s+/g," ").trim();
-  const u=new SpeechSynthesisUtterance(clean);u.lang="de-DE";
-  const v=voices[Number($("vs").value)]||voices[0];if(v)u.voice=v;
-  u.rate=+$("rt").value||1;u.pitch=+$("pt").value||1;u.volume=Math.max(.1,Math.min(1,+$("vl").value||1));
-  u.onstart=()=>{speaking=true;setState("SPRECHE")};u.onend=done;
-  u.onerror=e=>{log("Sprachausgabe-Fehler: "+(e.error||"unbekannt"),"s");done()};
-  watchdog=setTimeout(()=>{if(!finished){log("Sprachausgabe-Zeitüberschreitung.","s");try{synth.cancel()}catch(e){}done()}},90000);
-  resumeTimer=setInterval(()=>{if(!finished&&synth.paused){try{synth.resume()}catch(e){}}},700);
-  setTimeout(()=>{if(!finished)try{synth.resume();synth.speak(u)}catch(e){log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}},120);
+  synth.cancel();
+  loadVoices();
+  const clean=String(t).replace(/[*_`#]/g," ").replace(/\s+/g," ").trim();
+  if(!clean){done();return}
+  const u=new SpeechSynthesisUtterance(clean);
+  u.lang="de-DE";
+  const v=voices[Number($("vs").value)];
+  if(v)u.voice=v;
+  u.rate=+$("rt").value||1;
+  u.pitch=+$("pt").value||1;
+  u.volume=Math.max(.1,Math.min(1,+$("vl").value||1));
+  u.onstart=()=>{speaking=true;setState("SPRECHE")};
+  u.onend=done;
+  u.onerror=e=>{log("Sprachausgabe-Fehler: "+(e.error||"unbekannt")+". Prüfe die Lautstärke und die Browser-Stimme.","s");done()};
+  watchdog=setTimeout(()=>{if(!finished){log("Die Sprachausgabe hat nicht reagiert. Bitte Stimme testen oder Seite neu laden.","s");try{synth.cancel()}catch(e){}done()}},60000);
+  // Direkt sprechen, ohne setTimeout: Browser blockieren Sprachausgabe sonst gelegentlich nach asynchronen Abläufen.
+  synth.resume();
+  synth.speak(u);
+  resumeTimer=setInterval(()=>{if(!finished&&synth.paused)try{synth.resume()}catch(e){}},500);
  }catch(e){log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}
 })}
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
-$("test").onclick=()=>{try{speechSynthesis.cancel();speechSynthesis.resume();}catch(e){}loadVoices();speak("Sprachsystem online. Ich bin bereit und kann dich hören, sobald du das Mikrofon aktivierst.")};
-$("start").addEventListener("click",()=>{try{speechSynthesis?.resume();loadVoices()}catch(e){}});
+$("test").onclick=()=>{const synth=window.speechSynthesis;if(!synth){log("Dieser Browser unterstützt keine Sprachausgabe.","s");return}try{synth.cancel();loadVoices();const u=new SpeechSynthesisUtterance("Sprachsystem online. JARVIS ist bereit.");u.lang="de-DE";const v=voices[Number($("vs").value)];if(v)u.voice=v;u.volume=1;u.rate=1;synth.resume();synth.speak(u);log("Stimmtest gestartet. Wenn du nichts hörst, prüfe die Browser- und Geräte-Lautstärke.","s")}catch(e){log("Stimmtest fehlgeschlagen: "+emsg(e),"s")}};
+$("start").addEventListener("click",()=>{try{speechSynthesis?.cancel();speechSynthesis?.resume();loadVoices();const u=new SpeechSynthesisUtterance("JARVIS online.");u.lang="de-DE";u.volume=1;speechSynthesis?.speak(u)}catch(e){log("Sprachausgabe konnte nicht gestartet werden: "+emsg(e),"s")}});
 
 /* Kamera: nur lokale Vorschau. Es wird kein Bild an einen Server übertragen. */
 let cameraStream=null;
