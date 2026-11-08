@@ -459,7 +459,8 @@ async function run(message){
  try{let answer="";for(let n=0;n<5;n++){const raw=await ask(hist,SYS+(NET?"":" Antworte ohne Live-Internet."));const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:raw});if(obj.tool&&tools[obj.tool.name]){const result=await tools[obj.tool.name](String(obj.tool.arg||""));hist.push({role:"user",content:"ERGEBNIS: "+result});continue}break}if(!answer)answer="Ich konnte gerade keine Antwort erstellen.";log(answer,"j");await speak(answer);if(cloudReady)await saveCloud({history:hist.slice(-100)})}
  catch(e){const msg="Fehler: "+emsg(e);log(msg,"s");await speak(msg)}finally{busy=false;if(queuedVoice.length)run(queuedVoice.shift())}
 }
-\n/* ---------- Einstellungen intern ---------- */
+
+/* ---------- Einstellungen intern ---------- */
 function renderTasks(){
  const root=$("tasklist");if(!root)return;root.innerHTML="";
  const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks:[];
