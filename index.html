@@ -580,14 +580,29 @@ function loadAccountFields(){const email=cloudData.ownerEmail||(()=>{try{return 
 /* ---------- Stimme ---------- */
 let speaking=false,listening=false,rec=null;
 let voices=[];
-function loadVoices(){voices=speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang));
- voices.sort((x,y)=>sc(y)-sc(x));const sel=$("vs");const previous=LS2("jv");sel.innerHTML="";
+function loadVoices(){
+ const all=speechSynthesis.getVoices();
+ voices=all.filter(v=>/^de(?:-|_)/i.test(v.lang));
+ voices.sort((x,y)=>sc(y)-sc(x));
+ const sel=$("vs"),previous=LS2("jv"),old=sel.value;
+ sel.innerHTML="";
  voices.forEach((v,i)=>{const o=document.createElement("option");o.value=i;o.textContent=v.name+" · "+v.lang;sel.appendChild(o)});
- const k=voices.findIndex(v=>v.name===previous);if(k>=0)sel.value=k;
- if(!voices.length){const o=document.createElement("option");o.value="";o.textContent="Browser-Standardstimme";sel.appendChild(o)}
+ const k=voices.findIndex(v=>v.name===previous);
+ if(k>=0)sel.value=String(k);else if(voices.length)sel.value="0";
+ if(!voices.length){const o=document.createElement("option");o.value="";o.textContent="Keine deutsche Stimme installiert";sel.appendChild(o)}
 }
 const sc=v=>(/natural|neural|online/i.test(v.name)?4:0)+(/google|microsoft|siri|anna|markus|conrad|katja/i.test(v.name)?2:0)+(v.localService?0:1);
 const LS2=k=>{try{return localStorage.getItem(k)||""}catch(e){return""}};
+function germanUtterance(text,volume){
+ loadVoices();
+ const u=new SpeechSynthesisUtterance(String(text));
+ u.lang="de-DE";u.locale="de-DE";
+ const v=voices.find(x=>/^de-DE$/i.test(x.lang))||voices[0];
+ if(v){u.voice=v;u.lang=v.lang}
+ u.volume=volume??Math.max(.1,Math.min(1,+$("vl").value||1));
+ u.rate=+$("rt").value||1;u.pitch=+$("pt").value||1;
+ return u;
+}
 function ensureRecognition(){
  if(!SR||!listening||recognitionPaused||!rec||recStarting)return;
  try{recStarting=true;rec.start()}catch(e){recStarting=false;if(e.name!=="InvalidStateError")scheduleRecognitionRestart()}
@@ -611,30 +626,23 @@ function speak(t){return new Promise(res=>{
  };
  try{
   synth.cancel();
-  loadVoices();
   const clean=String(t).replace(/[*_`#]/g," ").replace(/\s+/g," ").trim();
   if(!clean){done();return}
-  const u=new SpeechSynthesisUtterance(clean);
-  u.lang="de-DE";
-  const v=voices[Number($("vs").value)];
-  if(v)u.voice=v;
-  u.rate=+$("rt").value||1;
-  u.pitch=+$("pt").value||1;
-  u.volume=Math.max(.1,Math.min(1,+$("vl").value||1));
+  loadVoices();
+  const u=germanUtterance(clean);
+  if(!voices.length)log("Keine deutsche Systemstimme gefunden. Bitte in macOS/Chrome eine deutsche Sprachausgabe installieren und auswählen.","s");
   u.onstart=()=>{speaking=true;setState("SPRECHE")};
   u.onend=done;
-  u.onerror=e=>{log("Sprachausgabe-Fehler: "+(e.error||"unbekannt")+". Prüfe die Lautstärke und die Browser-Stimme.","s");done()};
-  watchdog=setTimeout(()=>{if(!finished){log("Die Sprachausgabe hat nicht reagiert. Bitte Stimme testen oder Seite neu laden.","s");try{synth.cancel()}catch(e){}done()}},60000);
-  // Direkt sprechen, ohne setTimeout: Browser blockieren Sprachausgabe sonst gelegentlich nach asynchronen Abläufen.
-  synth.resume();
-  synth.speak(u);
+  u.onerror=e=>{log("Sprachausgabe-Fehler: "+(e.error||"unbekannt"),"s");done()};
+  watchdog=setTimeout(()=>{if(!finished){log("Sprachausgabe-Zeitüberschreitung.","s");try{synth.cancel()}catch(e){}done()}},60000);
+  synth.resume();synth.speak(u);
   resumeTimer=setInterval(()=>{if(!finished&&synth.paused)try{synth.resume()}catch(e){}},500);
  }catch(e){log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}
 })}
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
-$("test").onclick=()=>{const synth=window.speechSynthesis;if(!synth){log("Dieser Browser unterstützt keine Sprachausgabe.","s");return}try{synth.cancel();loadVoices();const u=new SpeechSynthesisUtterance("Sprachsystem online. JARVIS ist bereit.");u.lang="de-DE";const v=voices[Number($("vs").value)];if(v)u.voice=v;u.volume=1;u.rate=1;synth.resume();synth.speak(u);log("Stimmtest gestartet. Wenn du nichts hörst, prüfe die Browser- und Geräte-Lautstärke.","s")}catch(e){log("Stimmtest fehlgeschlagen: "+emsg(e),"s")}};
-$("start").addEventListener("click",()=>{try{speechSynthesis?.cancel();speechSynthesis?.resume();loadVoices();const u=new SpeechSynthesisUtterance("JARVIS online.");u.lang="de-DE";u.volume=1;speechSynthesis?.speak(u)}catch(e){log("Sprachausgabe konnte nicht gestartet werden: "+emsg(e),"s")}});
+$("test").onclick=()=>{const synth=window.speechSynthesis;if(!synth){log("Dieser Browser unterstützt keine Sprachausgabe.","s");return}try{synth.cancel();loadVoices();if(!voices.length){log("Keine deutsche Stimme auf diesem Gerät gefunden. Installiere in macOS unter Systemeinstellungen → Bedienungshilfen → Lesen & Sprechen eine deutsche Stimme.","s");return}const u=germanUtterance("Sprachsystem online. JARVIS spricht jetzt Deutsch.",1);u.onstart=()=>log("Deutsche Stimme aktiv: "+(u.voice?.name||u.lang),"s");synth.resume();synth.speak(u)}catch(e){log("Stimmtest fehlgeschlagen: "+emsg(e),"s")}};
+$("start").addEventListener("click",()=>{try{speechSynthesis?.cancel();speechSynthesis?.resume();loadVoices();if(voices.length){const u=germanUtterance("JARVIS ist online.",1);speechSynthesis?.speak(u)}}catch(e){log("Sprachausgabe konnte nicht gestartet werden: "+emsg(e),"s")}});
 
 /* Kamera: nur lokale Vorschau. Es wird kein Bild an einen Server übertragen. */
 let cameraStream=null;
