@@ -57,6 +57,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #tasklist .taskrow{border:1px solid var(--bd);padding:9px;margin:7px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}
 #tasklist button{white-space:nowrap}
 @media(max-width:800px){#account{inset:2%;padding:12px}#accountbtn{right:10px;bottom:84px}}
+#hud,#side,#accountbtn,#account,#state,#boot,#dl{display:none!important}
+#log{left:50%;top:16px;bottom:82px;transform:translateX(-50%);width:min(900px,calc(100% - 24px));background:rgba(8,10,16,.88);border-radius:16px;clip-path:none}
+#bar{left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(900px,calc(100% - 24px));border-radius:16px;clip-path:none;background:rgba(8,10,16,.96)}
+#bar #go{display:none}body::after{display:none}
 </style>
 </head>
 <body>
@@ -94,7 +98,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
  <div id="tasklist"></div>
  <h3 style="color:var(--c)">SPRACHAUSGABE</h3>
  <h3>MODUS</h3>
-  <label><input type="checkbox" id="wake" checked> Aktivierungswort „Jarvis“ nötig</label><br>
+  <label><input type="checkbox" id="wake"> Aktivierungswort „Jarvis“ nötig</label><br>
   <label><input type="checkbox" id="vo" checked> Sprachausgabe</label>
   <h3 style="margin-top:10px">STIMME</h3>
   <select id="vs"></select>
@@ -395,12 +399,7 @@ async function ask(msgs,sys,img){
 }
 
 /* ---------- Agent ---------- */
-const SYS=`Du bist J.A.R.V.I.S., ein souveräner, trocken-witziger KI-Butler (wie bei Iron Man). Sprich Deutsch, kurz, höflich, nenne den Nutzer "Sir" oder "Boss" gelegentlich.
-Du arbeitest selbstständig: zerlege Aufgaben und nutze Werkzeuge, bis sie gelöst sind. Daueraufgaben des Nutzers: ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. Berücksichtige sie bei jeder passenden Unterhaltung, behaupte aber niemals, im Hintergrund zu arbeiten, wenn die Seite geschlossen ist. Wähle die Antworttiefe passend zur Frage. Bei Programmieraufgaben liefere korrekten, vollständigen Code; bei komplexen Fragen erkläre nachvollziehbar. Behaupte niemals, ein Werkzeug oder Internet benutzt zu haben, wenn das nicht geschehen ist.
-Antworte IMMER nur mit JSON: {"say":"Text für den Nutzer","tool":null}
-oder {"say":"kurzer Zwischenstand","tool":{"name":"mouse|type|key|web|image|draw|file|time|calc|open|timer|search|taskadd|email","arg":"..."}}.
-Werkzeuge: web (arg: Suchbegriff; holt echte Infos aus dem Internet), image (arg: Suchbegriff; zeigt echte Fotos), draw (arg: englische Bildbeschreibung; erzeugt ein neues Bild), file (arg: "name.ext|Inhalt"; erstellt eine herunterladbare Datei), time (arg leer), calc (arg: Rechenausdruck), open (arg: URL), timer (arg: "Sekunden|Beschreibung"), search (arg: Suchbegriff, öffnet Websuche), taskadd (JSON mit description; speichert eine Daueraufgabe), email (JSON mit subject und body; öffnet einen E-Mail-Entwurf an die gespeicherte Adresse). Daueraufgaben werden nur berücksichtigt, solange JARVIS geöffnet ist. Sie laufen nicht weiter, wenn Browser oder Gerät ausgeschaltet sind. JARVIS kann ohne eine echte Postfach-Verbindung keine eingehenden E-Mails lesen und darf keine E-Mails automatisch versenden.
-Nach einem Werkzeug bekommst du "ERGEBNIS: ...". Setze tool auf null, wenn du fertig bist.`;
+const SYS=`Du bist J.A.R.V.I.S., ein intelligenter deutschsprachiger KI-Assistent. Antworte natürlich, freundlich und klar. Firebase-Gedächtnis: E-Mail ${JSON.stringify(cloudData.ownerEmail||"")}; gespeicherte Angaben ${JSON.stringify(cloudData.profile||{})}; Daueraufgaben ${JSON.stringify((cloudData.tasks||[]).filter(t=>t.active!==false).map(t=>t.description))}. Wenn der Nutzer dich bittet, etwas zu merken, frage nach dem Wert, falls nötig, und verwende dann remember mit JSON {key:"email",value:"..."} für eine E-Mail-Adresse oder einen passenden kurzen key für andere Angaben. Bei Daueraufgaben nutze taskadd. Sage nur nach erfolgreichem Werkzeugergebnis, dass es gespeichert wurde. Antworte ausschließlich als JSON {"say":"Antwort","tool":null} oder {"say":"Antwort","tool":{"name":"remember|taskadd|email|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}. E-Mail öffnet nur einen Entwurf; niemals automatisch versenden. Es gibt keine Posteingangsverbindung. Firebase speichert Aufgaben, führt sie aber nicht aus, wenn die Website geschlossen ist. Nach Werkzeugaufruf erhältst du ERGEBNIS und antwortest dann normal.`;
 let hist=[];
 let NET=true;
 fetch("https://de.wikipedia.org/w/api.php?action=query&meta=siteinfo&format=json&origin=*").then(r=>{if(!r.ok)NET=false}).catch(()=>{NET=false});
@@ -422,7 +421,8 @@ function logImg(urls,cap){setUI(["log"],true);const d=document.createElement("di
 const tools={
 
  taskadd:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Bitte die Daueraufgabe als JSON mit description angeben."}const description=String(v.description||"").trim();if(!description)return "Die Beschreibung fehlt.";const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks.slice():[];tasks.push({id:"t"+Date.now(),description,active:true,createdAt:Date.now()});cloudData.tasks=tasks;const saved=await saveCloud({tasks});try{localStorage.setItem("jarvis_tasks",JSON.stringify(tasks))}catch(e){}renderTasks();return saved?"Daueraufgabe wurde in Firebase gespeichert.":"Daueraufgabe wurde lokal gespeichert; Firebase ist nicht verbunden."},
- email:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Bitte Betreff und Nachricht als JSON angeben."}const to=String(cloudData.ownerEmail||"");if(!to)return "Bitte zuerst unter MEIN KONTO deine E-Mail-Adresse speichern.";const subject=String(v.subject||""),body=String(v.body||"");const url="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);window.open(url,"_self");return "E-Mail-Entwurf für "+to+" vorbereitet. Bitte selbst prüfen und senden."},
+ email:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Bitte Betreff und Nachricht als JSON angeben."}const to=String(cloudData.ownerEmail||"");if(!to)return "Es ist noch keine E-Mail-Adresse gespeichert. Frage den Nutzer danach und speichere sie mit remember.";const subject=String(v.subject||""),body=String(v.body||"");location.href="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);return "E-Mail-Entwurf geöffnet. Bitte vor dem Senden prüfen."},
+ remember:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Ungültige Daten."}const key=String(v.key||"").trim().toLowerCase(),value=String(v.value||"").trim();if(!value)return "Kein Wert angegeben.";if(key==="email"||key==="owneremail"){if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))return "Bitte eine gültige E-Mail-Adresse erfragen.";cloudData.ownerEmail=value;try{localStorage.setItem("jarvis_email",value)}catch(e){}return await saveCloud({ownerEmail:value})?"E-Mail-Adresse wurde in Firebase gespeichert.":"Firebase-Speicherung fehlgeschlagen."}const profile={...(cloudData.profile||{}),[key]:value};cloudData.profile=profile;return await saveCloud({profile})?"Angabe wurde in Firebase gespeichert.":"Firebase-Speicherung fehlgeschlagen."},
  mouse:a=>{const p=a.trim().split(/\s+/);if(TK&&SC&&/^(move|click|double|right)$/.test(p[0])&&p.length>=3){p[1]=Math.round(p[1]*SC.w/SC.iw);p[2]=Math.round(p[2]*SC.h/SC.ih)}return hand(p[0],p.slice(1))},
  type:a=>hand("type",[a]),
  key:a=>hand("key",[a.trim()]),
@@ -451,7 +451,15 @@ const tools={
  timer:a=>{const[s,t]=a.split("|");const n=parseFloat(s)||10;setTimeout(()=>{log("Timer abgelaufen: "+(t||""),"s");speak("Timer abgelaufen. "+(t||""))},n*1000);return"Timer läuft "+n+" Sekunden"}
 };
 
-/* ---------- Plugin-Zentrale ---------- */
+
+let busy=false;
+function parseAssistant(raw){try{return JSON.parse(raw.replace(/^```(?:json)?\s*/i,"").replace(/```$/,"").trim())}catch(e){const m=raw.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(_){}}return {say:raw,tool:null}}}
+async function run(message){
+ const q=String(message||"").trim();if(!q||busy)return;busy=true;log(q,"u");hist.push({role:"user",content:q});
+ try{let answer="";for(let n=0;n<5;n++){const raw=await ask(hist,SYS+(NET?"":" Antworte ohne Live-Internet."));const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:raw});if(obj.tool&&tools[obj.tool.name]){const result=await tools[obj.tool.name](String(obj.tool.arg||""));hist.push({role:"user",content:"ERGEBNIS: "+result});continue}break}if(!answer)answer="Ich konnte gerade keine Antwort erstellen.";log(answer,"j");await speak(answer);if(cloudReady)await saveCloud({history:hist.slice(-100)})}
+ catch(e){const msg="Fehler: "+emsg(e);log(msg,"s");await speak(msg)}finally{busy=false;if(queuedVoice.length)run(queuedVoice.shift())}
+}
+\n/* ---------- Einstellungen intern ---------- */
 function renderTasks(){
  const root=$("tasklist");if(!root)return;root.innerHTML="";
  const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks:[];
@@ -578,7 +586,7 @@ $("mic").onclick=async()=>{
  }catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s");}
 };
 $("go").onclick=()=>{const v=$("in").value;$("in").value="";run(v)};
-$("in").onkeydown=e=>{if(e.key==="Enter")$("go").click()};
+$("in").onkeydown=e=>{if(e.key==="Enter"){const v=$("in").value;$("in").value="";run(v)}};
 
 /* ---------- Kern-Animation ---------- */
 const cv=$("cv"),x=cv.getContext("2d");const TH={orange:{c:"255,138,31",think:"255,225,110",listen:"93,255,176",bg:"10,5,3",v:{"--bg":"#0a0503","--rgb":"255,138,31","--c":"#ff8a1f","--c2":"#a84f00","--w":"#ffd36b","--t":"#ffe9d2","--dim":"#b0825a","--bg2":"#1c0d03","--bd":"#6b3300","--pan":"12,5,1"}},
@@ -670,12 +678,12 @@ function frame(){
 frame();
 
 
-setUI(ALL,false);setUI(CH,false);loadAccountFields();
+$("boot").remove();setUI(ALL,false);setUI(CH,false);loadAccountFields();
 document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
  if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
-cv.addEventListener("dblclick",()=>{const show=$("side").classList.contains("hide");setUI(ALL,show);setUI(CH,show)});
-document.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="p"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){$("account").classList.toggle("hide");renderTasks()}});
+cv.addEventListener("dblclick",()=> $("in").focus());
+
 </script>
 </body>
 </html>
