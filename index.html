@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>J.A.R.V.I.S.</title>
 <script src="https://js.puter.com/v2/"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
 <style>
 :root{--bg:#0a0503;--rgb:255,138,31;--c:#ff8a1f;--c2:#a84f00;--w:#ffd36b;--g:#5dffb0;--t:#ffe9d2;--dim:#b0825a;--bg2:#1c0d03;--bd:#6b3300;--pan:12,5,1}
 *{box-sizing:border-box;margin:0}
@@ -90,6 +94,40 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 "use strict";
 const $=id=>document.getElementById(id);
 const SRC="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
+/* ---------- Firebase: anonyme Anmeldung, Modellwissen und JARVIS-Memory ---------- */
+const firebaseConfig={
+ apiKey:"AIzaSyAc-zE5Or_VInwTL30dCa1P1MbfeOFeK6k",
+ authDomain:"jarvis-79d65.firebaseapp.com",
+ projectId:"jarvis-79d65",
+ storageBucket:"jarvis-79d65.firebasestorage.app",
+ messagingSenderId:"310550760592",
+ appId:"1:310550760592:web:43be322f363cab47501c15"
+};
+let db=null,jarvisUid=null,cloudReady=false,cloudDoc=null,cloudData={};
+async function initCloud(){
+ try{
+  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+  const auth=firebase.auth();
+  if(!auth.currentUser)await auth.signInAnonymously();
+  jarvisUid=auth.currentUser.uid;db=firebase.firestore();
+  cloudDoc=db.collection("jarvis_users").doc(jarvisUid).collection("memory").doc("main");
+  const snap=await cloudDoc.get();
+  cloudData=snap.exists?snap.data():{};
+  cloudReady=true;
+  if(Array.isArray(cloudData.history)&&!hist.length)hist=cloudData.history.slice(-100);
+  log("Firebase-Gedächtnis verbunden. Gespeicherte Daten geladen.","s");
+  return true;
+ }catch(e){
+  cloudReady=false;
+  log("Firebase nicht erreichbar: "+emsg(e)+". Bitte Anonymous-Login und Firestore-Regeln aktivieren.","s");
+  return false;
+ }
+}
+async function saveCloud(patch){
+ if(!cloudReady||!cloudDoc)return false;
+ try{cloudData={...cloudData,...patch,updatedAt:Date.now()};await cloudDoc.set(cloudData,{merge:true});return true}
+ catch(e){log("Firebase-Speicherung fehlgeschlagen: "+emsg(e),"s");return false}
+}
 /* ---------- Dynamische KI-Auswahl über den aktuellen Puter-Modellkatalog ---------- */
 const P=[];
 let modelCatalog=[],catalogAt=0;
@@ -154,21 +192,55 @@ function scoreModel(m,kind){
  return score;
 }
 function selectModels(text){
- const kind=classifyRequest(text);
- return modelCatalog.map(m=>({m,score:scoreModel(m,kind)})).filter(x=>x.score>-1e5)
-  .sort((a,b)=>b.score-a.score)
-  // Ein Modell pro Anbieter wird separat getestet. So kann JARVIS bei einem Ausfall
-  // auch einen anderen Anbieter mit demselben Modellnamen probieren.
+ const kind=classifyRequest(text),bench=cloudData.modelTests||{};
+ return modelCatalog.map(m=>({m,score:scoreModel(m,kind),test:bench[String(m.provider||"puter")+":"+String(m.id)]}))
+  .filter(x=>x.score>-1e5)
+  .sort((a,b)=>{
+   const av=a.test?.ok?1:0,bv=b.test?.ok?1:0;
+   if(av!==bv)return bv-av;
+   const at=Number(a.test?.ms)||999999,bt=Number(b.test?.ms)||999999;
+   return (b.score-a.score)||(at-bt);
+  })
   .map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,provider:x.m.provider||null,key:String(x.m.provider||"puter")+":"+String(x.m.id)}));
+}
+async function benchmarkModels(){
+ if(!modelCatalog.length)return;
+ if(cloudData.benchmarkDone===true){
+  log("Erster KI-Kompletttest bereits gespeichert. Verwende die Firebase-Ergebnisse.","s");return;
+ }
+ log("Erster Start: JARVIS testet jetzt jedes kostenlose Modell einmal. Ergebnisse werden gespeichert.","s");
+ const tests={};
+ const free=modelCatalog.filter(isFreeModel);
+ for(let i=0;i<free.length;i++){
+  const m=free[i],key=String(m.provider||"puter")+":"+String(m.id),start=Date.now();
+  try{
+   const opts={model:m.id,normalize:true};if(m.provider)opts.provider=m.provider;
+   const answer=txt(await puter.ai.chat([{role:"user",content:"Antworte exakt mit: JARVIS-TEST-OK"}],false,opts)).trim();
+   if(!answer)throw new Error("Leere Antwort");
+   tests[key]={ok:true,ms:Date.now()-start,name:m.name||m.id,model:m.id,provider:m.provider||"puter",checkedAt:Date.now(),sample:answer.slice(0,80)};
+   log("KI-Test "+(i+1)+"/"+free.length+": "+(m.name||m.id)+" · "+(Date.now()-start)+" ms · OK","s");
+  }catch(e){
+   tests[key]={ok:false,ms:Date.now()-start,name:m.name||m.id,model:m.id,provider:m.provider||"puter",checkedAt:Date.now(),error:emsg(e).slice(0,250)};
+   log("KI-Test "+(i+1)+"/"+free.length+": "+(m.name||m.id)+" · nicht verfügbar","s");
+  }
+ }
+ const ranked=Object.values(tests).filter(t=>t.ok).sort((a,b)=>a.ms-b.ms);
+ const best=ranked.slice(0,5).map(t=>({name:t.name,model:t.model,provider:t.provider,ms:t.ms}));
+ await saveCloud({benchmarkDone:true,benchmarkAt:Date.now(),modelTests:tests,bestModels:best,modelCount:free.length});
+ if(cloudReady)log("Kompletttest gespeichert. "+ranked.length+" von "+free.length+" Gratis-Modellen haben geantwortet.","s");
+ else log("Kompletttest abgeschlossen, aber Firebase-Speicherung fehlt. Ergebnisse bleiben nur bis zum Schließen dieses Tabs erhalten.","s");
 }
 /* Browser-only: keine Online-KI, kein lokaler Server und keine BAT-Datei. */
 let puterReady=!!window.puter;
 async function autoConnectAI(){
  try{
+  await initCloud();
   const ok=await loadPuter();puterReady=ok;
   if(ok){
    await refreshModelCatalog(true);
-   log("Automatische KI-Verbindungsprüfung gestartet.","s");
+   if(cloudReady)await benchmarkModels();
+   else log("KI-Katalog geladen. Für dauerhafte Testergebnisse muss Firebase korrekt eingerichtet sein.","s");
+   log("Automatische KI-Auswahl ist bereit.","s");
   }else{
    $("kihealth").textContent="KI-SKRIPT NICHT ERREICHBAR";
    log("Online-KI-Skript konnte nicht geladen werden. Internetverbindung prüfen.","s");
@@ -363,6 +435,8 @@ async function run(text){
   }
  }catch(e){setUI(["log"],true);log(e.message,"s");}
  busy=false;setState(listening?"HÖRE ZU":"BEREIT");
+ // Gesprächsverlauf als privates, anonymes Firebase-Gedächtnis sichern.
+ if(cloudReady)await saveCloud({history:hist.slice(-100)});
  if(listening&&queuedVoice.length){const next=queuedVoice.shift();setTimeout(()=>run(next),250)}
 }
 const UIN={log:"log",side:"side",bar:"bar",hud:"hud",state:"state"},ALL=["side","hud","state"],CH=["log","bar"];
