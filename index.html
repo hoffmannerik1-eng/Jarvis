@@ -163,8 +163,10 @@ async function initCloud(){
   cloudDoc=db.collection("jarvis_users").doc(jarvisUid).collection("memory").doc("main");
   const snap=await cloudDoc.get();
   cloudData=snap.exists?snap.data():{};
+  try{const local=JSON.parse(localStorage.getItem("jarvis_plugins")||"[]");if(!Array.isArray(cloudData.plugins))cloudData.plugins=local}catch(e){}
   cloudReady=true;
   if(Array.isArray(cloudData.history)&&!hist.length)hist=cloudData.history.slice(-100);
+  renderPlugins();
   log("Firebase-Gedächtnis verbunden. Gespeicherte Daten geladen.","s");
   return true;
  }catch(e){
@@ -443,6 +445,12 @@ function logImg(urls,cap){setUI(["log"],true);const d=document.createElement("di
   if(u.includes("image.pollinations.ai"))i.dataset.alt=u.replace("https://image.pollinations.ai/prompt/","https://gen.pollinations.ai/image/");d.appendChild(i)});
  $("log").appendChild(d);$("log").scrollTop=1e9}
 const tools={
+
+ email:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "E-Mail-Daten fehlen. Nutze JSON mit to, subject und body."} $("mailto").value=String(v.to||"");$("mailsubject").value=String(v.subject||"");$("mailbody").value=String(v.body||"");$("plugins").classList.remove("hide");return "E-Mail-Entwurf vorbereitet. Bitte im Plugin-Fenster prüfen und selbst öffnen/senden."},
+ github:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "GitHub-Auftrag braucht JSON mit path, content und message."}if(!v.path||typeof v.content!=="string")return "Dateipfad oder Code fehlt.";stageGitHub(v.content,String(v.path));pendingGitHub.message=String(v.message||"JARVIS: Datei aktualisiert");return "GitHub-Vorschau geöffnet. Erst nach deiner Bestätigung wird gespeichert."},
+ plugin:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Plugin bitte als JSON mit name und description angeben."}const name=String(v.name||"").trim(),description=String(v.description||"").trim();if(!name||!description)return "Name und Beschreibung fehlen.";const list=Array.isArray(cloudData.plugins)?cloudData.plugins.slice():[];const item={name,description,createdAt:Date.now()};const ix=list.findIndex(x=>String(x.name).toLowerCase()===name.toLowerCase());if(ix>=0)list[ix]=item;else list.push(item);cloudData.plugins=list;try{localStorage.setItem("jarvis_plugins",JSON.stringify(list))}catch(e){}const saved=await saveCloud({plugins:list});renderPlugins();return "Plugin "+name+" erstellt. "+(saved?"In Firebase gespeichert.":"Lokal in diesem Browser gespeichert; Firebase ist nicht verbunden.")+" Es ist ein sicheres Prompt-Plugin, kein beliebiger JavaScript-Code."},
+ runplugin:async a=>{const list=Array.isArray(cloudData.plugins)?cloudData.plugins:[];const p=list.find(x=>String(x.name).toLowerCase()===String(a).trim().toLowerCase());if(!p)return "Plugin nicht gefunden.";return "PLUGIN-AUFTRAG: "+p.name+"\n"+p.description+"\nBearbeite diesen Auftrag jetzt. Nutze verfügbare Werkzeuge nur wenn passend."},
+
  mouse:a=>{const p=a.trim().split(/\s+/);if(TK&&SC&&/^(move|click|double|right)$/.test(p[0])&&p.length>=3){p[1]=Math.round(p[1]*SC.w/SC.iw);p[2]=Math.round(p[2]*SC.h/SC.ih)}return hand(p[0],p.slice(1))},
  type:a=>hand("type",[a]),
  key:a=>hand("key",[a.trim()]),
@@ -477,7 +485,7 @@ function renderPlugins(){
  const list=Array.isArray(cloudData.plugins)?cloudData.plugins:[];
  root.innerHTML="";
  if(!list.length){root.textContent="Noch keine eigenen Plugins.";return}
- list.forEach(p=>{const d=document.createElement("div");d.className="plugin-card";const b=document.createElement("b");b.textContent=p.name;const q=document.createElement("p");q.textContent=p.description;const run=document.createElement("button");run.textContent="PLUGIN AUSFÜHREN";run.onclick=()=>run("PLUGIN "+p.name+": "+p.description);d.append(b,q,run);root.appendChild(d)});
+ list.forEach(p=>{const d=document.createElement("div");d.className="plugin-card";const b=document.createElement("b");b.textContent=p.name;const q=document.createElement("p");q.textContent=p.description;const btn=document.createElement("button");btn.textContent="PLUGIN AUSFÜHREN";btn.onclick=()=>run("PLUGIN "+p.name+": "+p.description);d.append(b,q,btn);root.appendChild(d)});
 }
 function stageGitHub(content,path){
  pendingGitHub={content,path:path||$("ghpath").value.trim()||"index.html",message:"JARVIS: Code eingefügt"};
