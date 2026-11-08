@@ -43,6 +43,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 @media(max-width:800px){#hud h1{font-size:17px}}
 @media(prefers-reduced-motion:reduce){#hud h1{animation:none}}
 .pan,#hud,#state{transition:opacity .45s,visibility .45s}
+#camview{width:100%;display:block;background:#050505;border:1px solid var(--bd);margin:7px 0;max-height:190px;object-fit:contain}
+#camstatus{font-size:11px;color:var(--dim);margin:4px 0}
 .hide{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 </style>
 </head>
@@ -163,20 +165,14 @@ async function autoConnectAI(){
   }
  }catch(e){log("Startfehler: "+emsg(e),"s")}
 }
-$("login").onclick=async()=>{
- const btn=$("login");
- btn.textContent="PRÜFE …";
- puterReady=await loadPuter();
- if(!puterReady){btn.textContent="KI-SKRIPT NICHT ERREICHBAR";return}
- await refreshModelCatalog(true);
- btn.textContent="KI-STATUS PRÜFEN";
- log("Prüfung abgeschlossen. Es wurde kein Anmeldefenster geöffnet.","s");
-};
+// KI-Prüfung läuft automatisch im Hintergrund; kein manueller Testmodus.
+setInterval(()=>{if(document.visibilityState==="visible"&&puterReady)refreshModelCatalog(true)},60000);
+
 addEventListener("DOMContentLoaded",()=>{autoConnectAI()});
 (async()=>{try{const dlc=(window.claude&&typeof window.claude.use==="function")?await window.claude.use("downloads"):null;
  if(dlc){$("dl").style.display="inline-block";$("dl").onclick=async()=>{try{await dlc.save({filename:"index.html",data:SRC});log("Gespeichert. Öffne index.html aus Downloads per Doppelklick in Chrome oder Edge.","s")}catch(e){log("Speichern abgebrochen.","s")}}}}catch(e){}})();
 
-addEventListener("load",()=>{try{if(signed()){$("login").textContent="ONLINE-KI VERBUNDEN ✓";refreshModelCatalog(true)}}catch(e){}});
+addEventListener("load",()=>{if(puterReady)refreshModelCatalog(true)});
 
 async function getSample(){try{return(window.claude&&typeof window.claude.use==="function")?await window.claude.use("sample"):null}catch(e){return null}}
 function txt(r){
@@ -410,6 +406,27 @@ function speak(t){return new Promise(res=>{
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices()}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
 $("test").onclick=()=>speak("Alle Systeme laufen. Wie klinge ich?");
+
+/* Kamera: nur lokale Vorschau. Es wird kein Bild an einen Server übertragen. */
+let cameraStream=null;
+$("camstart").onclick=async()=>{
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error("Kamera benötigt HTTPS und einen unterstützten Browser.");
+  cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+  $("camview").srcObject=cameraStream;$("camview").hidden=false;
+  $("camstop").disabled=false;$("camstart").disabled=true;
+  $("camstatus").textContent="KAMERA AKTIV · Bild bleibt auf diesem Gerät und wird nicht hochgeladen.";
+  log("Kamera lokal aktiviert. Keine Bildübertragung.","s");
+ }catch(e){$("camstatus").textContent="Kamera nicht verfügbar: "+emsg(e);log("Kamerazugriff nicht möglich: "+emsg(e),"s")}
+};
+function stopCamera(){
+ if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+ $("camview").srcObject=null;$("camview").hidden=true;
+ $("camstop").disabled=true;$("camstart").disabled=false;
+ $("camstatus").textContent="Kamera ausgeschaltet. Es werden keine Bilder übertragen.";
+}
+$("camstop").onclick=stopCamera;
+addEventListener("pagehide",stopCamera);
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let micPermissionGranted=false;
 async function requestMicPermissionOnce(){
