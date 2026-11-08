@@ -62,6 +62,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #bar #go{display:inline-block}#mic{min-width:58px;padding:6px 10px}#bar{min-height:0}
 @media(max-width:800px){#log{left:12px;bottom:82px;width:min(330px,calc(100% - 24px));height:210px;max-height:32vh}#bar{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(330px,calc(100% - 24px))}}
 
+#bar.speaking #go{position:relative;opacity:.8;cursor:wait;padding-right:20px}
+#bar.speaking #go::after{content:"";position:absolute;right:5px;top:50%;width:11px;height:11px;margin-top:-7px;border:2px solid rgba(var(--rgb),.25);border-top-color:var(--c);border-radius:50%;animation:sendspin .75s linear infinite}
+#bar.speaking #go:disabled{color:var(--c);border-color:var(--c);opacity:.9}
+@keyframes sendspin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -539,12 +543,13 @@ function scheduleRecognitionRestart(){
  restartTimer=setTimeout(()=>{recStarting=false;ensureRecognition()},restartDelay);
  restartDelay=Math.min(5000,Math.round(restartDelay*1.5));
 }
+function setSpeakingUI(on){$("bar").classList.toggle("speaking",!!on);$("go").disabled=!!on;$("go").title=on?"Warte, bis JARVIS fertig gesprochen hat":"Nachricht senden"}
 function speak(t){return new Promise(res=>{
  const synth=window.speechSynthesis;
- if(!$("vo").checked||!synth){speaking=false;res();return}
+ if(!$("vo").checked||!synth){speaking=false;setSpeakingUI(false);res();return}
  if(listening&&rec){recognitionPaused=true;clearTimeout(restartTimer);try{rec.stop()}catch(e){}}
- let finished=false,watchdog=0,resumeTimer=0;
- const done=()=>{if(finished)return;finished=true;clearTimeout(watchdog);clearInterval(resumeTimer);speaking=false;
+ let finished=false,watchdog=0,resumeTimer=0;setSpeakingUI(true);
+ const done=()=>{if(finished)return;finished=true;clearTimeout(watchdog);clearInterval(resumeTimer);speaking=false;setSpeakingUI(false);
   if(listening){recognitionPaused=false;restartDelay=900;scheduleRecognitionRestart();setState("HÖRE ZU")}else setState("BEREIT");res();
  };
  try{
