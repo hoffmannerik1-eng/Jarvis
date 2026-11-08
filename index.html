@@ -1,3431 +1,538 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>JOVS AI</title>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>J.A.R.V.I.S.</title>
+<script src="https://js.puter.com/v2/"></script>
 <style>
-:root{
-  --bg:#030303;
-  --panel:#080808;
-  --panel2:#0d0d0d;
-  --panel3:#121212;
-  --red:#ff1e3c;
-  --red2:#ff0033;
-  --red3:#ff5269;
-  --text:#f5f5f5;
-  --muted:#858585;
-  --line:rgba(255,30,60,.18);
-  --green:#35ff91;
-  --blue:#38a7ff;
-  --shadow:0 0 35px rgba(255,0,45,.13);
-}
-
-*{
-  box-sizing:border-box;
-}
-
-html,body{
-  width:100%;
-  height:100%;
-  margin:0;
-  overflow:hidden;
-  background:#000;
-  color:var(--text);
-  font-family:Inter,Arial,Helvetica,sans-serif;
-}
-
-body{
-  position:relative;
-}
-
-/* BACKGROUND */
-
-.background{
-  position:fixed;
-  inset:0;
-  overflow:hidden;
-  pointer-events:none;
-  z-index:0;
-  background:
-    radial-gradient(circle at 50% 40%,rgba(255,0,45,.09),transparent 35%),
-    radial-gradient(circle at 10% 90%,rgba(255,0,45,.06),transparent 30%),
-    #020202;
-}
-
-.grid{
-  position:absolute;
-  inset:-50%;
-  background-image:
-    linear-gradient(rgba(255,0,45,.045) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,0,45,.045) 1px,transparent 1px);
-  background-size:60px 60px;
-  transform:perspective(500px) rotateX(60deg);
-  animation:gridMove 18s linear infinite;
-  opacity:.45;
-}
-
-@keyframes gridMove{
-  from{transform:perspective(500px) rotateX(60deg) translateY(0)}
-  to{transform:perspective(500px) rotateX(60deg) translateY(60px)}
-}
-
-.orb{
-  position:absolute;
-  border-radius:50%;
-  filter:blur(70px);
-  opacity:.17;
-  animation:float 12s ease-in-out infinite alternate;
-}
-
-.orb.a{
-  width:400px;
-  height:400px;
-  background:#ff0033;
-  left:-150px;
-  top:-150px;
-}
-
-.orb.b{
-  width:300px;
-  height:300px;
-  background:#ff1744;
-  right:-100px;
-  bottom:-100px;
-  animation-delay:-4s;
-}
-
-@keyframes float{
-  from{transform:translate(0,0) scale(1)}
-  to{transform:translate(100px,60px) scale(1.15)}
-}
-
-#particles{
-  position:absolute;
-  inset:0;
-}
-
-/* APP */
-
-.app{
-  position:relative;
-  z-index:2;
-  display:grid;
-  grid-template-columns:240px minmax(400px,1fr) 370px;
-  height:100vh;
-  width:100%;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-  height:100vh;
-  background:rgba(5,5,5,.88);
-  backdrop-filter:blur(20px);
-  border-right:1px solid var(--line);
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-
-.logo{
-  height:72px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:0 20px;
-  border-bottom:1px solid var(--line);
-}
-
-.logoMark{
-  width:38px;
-  height:38px;
-  border:2px solid var(--red);
-  border-radius:12px;
-  display:grid;
-  place-items:center;
-  color:var(--red);
-  font-weight:900;
-  box-shadow:
-    0 0 12px rgba(255,0,50,.5),
-    inset 0 0 12px rgba(255,0,50,.12);
-  animation:logoPulse 2s ease-in-out infinite;
-}
-
-@keyframes logoPulse{
-  50%{box-shadow:0 0 28px rgba(255,0,50,.65)}
-}
-
-.logoText{
-  font-weight:900;
-  letter-spacing:3px;
-  font-size:18px;
-}
-
-.logoText span{
-  color:var(--red);
-}
-
-.sidebarContent{
-  flex:1;
-  overflow:auto;
-  padding:14px;
-}
-
-.sectionTitle{
-  color:#666;
-  font-size:10px;
-  text-transform:uppercase;
-  letter-spacing:2px;
-  margin:13px 8px 8px;
-}
-
-.navBtn{
-  width:100%;
-  border:1px solid transparent;
-  background:transparent;
-  color:#bbb;
-  border-radius:11px;
-  padding:11px 12px;
-  margin:3px 0;
-  display:flex;
-  align-items:center;
-  gap:11px;
-  cursor:pointer;
-  text-align:left;
-  transition:.2s;
-}
-
-.navBtn:hover{
-  background:rgba(255,0,50,.08);
-  color:white;
-  border-color:rgba(255,0,50,.15);
-  transform:translateX(3px);
-}
-
-.navBtn.active{
-  background:linear-gradient(90deg,rgba(255,0,50,.17),rgba(255,0,50,.04));
-  color:#fff;
-  border-color:rgba(255,0,50,.3);
-  box-shadow:inset 3px 0 var(--red);
-}
-
-.navIcon{
-  width:20px;
-  text-align:center;
-}
-
-.projectList{
-  margin-top:5px;
-}
-
-.projectItem{
-  padding:9px 10px;
-  border-radius:9px;
-  color:#999;
-  font-size:12px;
-  cursor:pointer;
-  margin:2px 0;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.projectItem:hover{
-  background:#111;
-  color:#fff;
-}
-
-.sidebarBottom{
-  padding:13px;
-  border-top:1px solid var(--line);
-}
-
-.status{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:11px;
-  color:#999;
-  margin-bottom:10px;
-}
-
-.statusDot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:var(--green);
-  box-shadow:0 0 12px var(--green);
-}
-
-.settingsBtn{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #202020;
-  background:#0c0c0c;
-  color:#aaa;
-  cursor:pointer;
-}
-
-/* CENTER */
-
-.center{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  background:rgba(3,3,3,.72);
-  backdrop-filter:blur(10px);
-}
-
-.topbar{
-  height:72px;
-  flex-shrink:0;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 20px;
-}
-
-.pageTitle{
-  font-weight:800;
-  font-size:15px;
-}
-
-.pageSub{
-  color:#666;
-  font-size:11px;
-  margin-top:3px;
-}
-
-.topActions{
-  display:flex;
-  gap:7px;
-}
-
-.topBtn{
-  border:1px solid #242424;
-  background:#0b0b0b;
-  color:#aaa;
-  border-radius:9px;
-  padding:8px 11px;
-  cursor:pointer;
-  transition:.2s;
-}
-
-.topBtn:hover{
-  color:#fff;
-  border-color:var(--red);
-  box-shadow:0 0 15px rgba(255,0,50,.13);
-}
-
-/* WORKSPACE */
-
-.workspace{
-  flex:1;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  padding:14px;
-  gap:12px;
-  overflow:hidden;
-}
-
-.modeBar{
-  display:flex;
-  gap:7px;
-  flex-shrink:0;
-}
-
-.modeBtn{
-  border:1px solid #1d1d1d;
-  background:#090909;
-  color:#888;
-  padding:8px 12px;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:12px;
-}
-
-.modeBtn.active,
-.modeBtn:hover{
-  color:#fff;
-  border-color:rgba(255,0,50,.45);
-  background:rgba(255,0,50,.08);
-}
-
-/* EDITOR */
-
-.editorWrap{
-  flex:1;
-  min-height:0;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.editorPanel,
-.previewPanel{
-  min-width:0;
-  min-height:0;
-  background:#060606;
-  border:1px solid #1b1b1b;
-  border-radius:13px;
-  overflow:hidden;
-  box-shadow:var(--shadow);
-}
-
-.panelHeader{
-  height:38px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 11px;
-  background:#090909;
-  border-bottom:1px solid #181818;
-  color:#aaa;
-  font-size:11px;
-}
-
-.panelTools{
-  display:flex;
-  gap:5px;
-}
-
-.smallBtn{
-  border:1px solid #202020;
-  background:#101010;
-  color:#888;
-  border-radius:6px;
-  padding:5px 8px;
-  cursor:pointer;
-}
-
-.smallBtn:hover{
-  color:white;
-  border-color:var(--red);
-}
-
-textarea#editor{
-  width:100%;
-  height:calc(100% - 38px);
-  resize:none;
-  border:0;
-  outline:0;
-  background:#050505;
-  color:#eee;
-  padding:16px;
-  font-family:"SFMono-Regular",Consolas,monospace;
-  font-size:12px;
-  line-height:1.65;
-  tab-size:2;
-}
-
-#preview{
-  width:100%;
-  height:calc(100% - 38px);
-  border:0;
-  background:white;
-}
-
-/* BOTTOM */
-
-.bottomBar{
-  height:48px;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  gap:7px;
-  border:1px solid #191919;
-  background:#070707;
-  border-radius:11px;
-  padding:7px;
-}
-
-.actionBtn{
-  border:1px solid #242424;
-  background:#0c0c0c;
-  color:#aaa;
-  border-radius:8px;
-  padding:8px 12px;
-  cursor:pointer;
-  font-size:11px;
-}
-
-.actionBtn:hover{
-  color:#fff;
-  border-color:var(--red);
-}
-
-.actionBtn.primary{
-  background:linear-gradient(135deg,#ff0038,#b60028);
-  border-color:#ff3156;
-  color:#fff;
-  box-shadow:0 0 18px rgba(255,0,50,.2);
-}
-
-/* CHAT */
-
-.chat{
-  height:100vh;
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  background:rgba(6,6,6,.92);
-  border-left:1px solid var(--line);
-  backdrop-filter:blur(20px);
-}
-
-.chatHeader{
-  height:72px;
-  flex-shrink:0;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 15px;
-}
-
-.aiIdentity{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.aiOrb{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  border:1px solid var(--red);
-  background:
-    radial-gradient(circle,#ff3450 0,#800018 35%,#090909 70%);
-  box-shadow:
-    0 0 20px rgba(255,0,50,.4),
-    inset 0 0 20px rgba(255,0,50,.4);
-  animation:aiOrb 2.4s ease-in-out infinite;
-}
-
-@keyframes aiOrb{
-  50%{
-    transform:scale(1.08);
-    box-shadow:0 0 40px rgba(255,0,50,.6);
-  }
-}
-
-.aiName{
-  font-weight:800;
-}
-
-.aiStatus{
-  color:#666;
-  font-size:10px;
-  margin-top:2px;
-}
-
-.chatTools{
-  display:flex;
-  gap:5px;
-}
-
-.iconBtn{
-  width:31px;
-  height:31px;
-  border:1px solid #222;
-  background:#0c0c0c;
-  color:#999;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-.iconBtn:hover{
-  color:#fff;
-  border-color:var(--red);
-}
-
-/* THIS IS THE SCROLLABLE CHAT */
-
-.messages{
-  flex:1;
-  min-height:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding:15px;
-  scroll-behavior:smooth;
-}
-
-.messages::-webkit-scrollbar{
-  width:7px;
-}
-
-.messages::-webkit-scrollbar-track{
-  background:#050505;
-}
-
-.messages::-webkit-scrollbar-thumb{
-  background:#351019;
-  border-radius:20px;
-}
-
-.messages::-webkit-scrollbar-thumb:hover{
-  background:#ff1744;
-}
-
-.message{
-  display:flex;
-  margin:9px 0;
-  animation:messageIn .25s ease;
-}
-
-@keyframes messageIn{
-  from{
-    opacity:0;
-    transform:translateY(8px) scale(.98);
-  }
-  to{
-    opacity:1;
-    transform:none;
-  }
-}
-
-.message.user{
-  justify-content:flex-end;
-}
-
-.bubble{
-  max-width:88%;
-  padding:11px 13px;
-  border-radius:13px;
-  font-size:12px;
-  line-height:1.55;
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-
-.message.ai .bubble{
-  background:#0c0c0c;
-  border:1px solid #1b1b1b;
-  color:#ddd;
-  border-top-left-radius:4px;
-}
-
-.message.user .bubble{
-  background:linear-gradient(135deg,#4e0715,#25040b);
-  border:1px solid rgba(255,0,50,.3);
-  color:#fff;
-  border-top-right-radius:4px;
-}
-
-.message.system .bubble{
-  color:#777;
-  background:#080808;
-  border:1px dashed #222;
-  font-size:10px;
-}
-
-.actionLine{
-  color:#ff516a;
-  font-family:monospace;
-  font-size:10px;
-  margin:3px 0;
-  opacity:.9;
-}
-
-.chatInputArea{
-  flex-shrink:0;
-  border-top:1px solid var(--line);
-  padding:10px;
-  background:#050505;
-}
-
-.quickActions{
-  display:flex;
-  gap:5px;
-  overflow-x:auto;
-  padding-bottom:7px;
-}
-
-.quickActions::-webkit-scrollbar{
-  display:none;
-}
-
-.quick{
-  white-space:nowrap;
-  border:1px solid #222;
-  background:#0c0c0c;
-  color:#999;
-  border-radius:7px;
-  padding:6px 8px;
-  font-size:10px;
-  cursor:pointer;
-}
-
-.quick:hover{
-  color:white;
-  border-color:var(--red);
-}
-
-.inputRow{
-  display:flex;
-  gap:7px;
-  align-items:flex-end;
-}
-
-#chatInput{
-  flex:1;
-  min-width:0;
-  min-height:42px;
-  max-height:130px;
-  resize:none;
-  outline:none;
-  border:1px solid #222;
-  background:#0b0b0b;
-  color:#fff;
-  border-radius:11px;
-  padding:11px;
-  font-family:inherit;
-  font-size:12px;
-}
-
-#chatInput:focus{
-  border-color:rgba(255,0,50,.55);
-  box-shadow:0 0 15px rgba(255,0,50,.08);
-}
-
-.sendBtn{
-  width:43px;
-  height:43px;
-  border:0;
-  border-radius:11px;
-  background:linear-gradient(135deg,#ff1744,#a80027);
-  color:#fff;
-  cursor:pointer;
-  font-size:17px;
-  box-shadow:0 0 20px rgba(255,0,50,.2);
-}
-
-.sendBtn:hover{
-  transform:translateY(-2px);
-}
-
-/* IMAGE RESULT */
-
-.generatedImage{
-  max-width:100%;
-  border-radius:10px;
-  margin-top:8px;
-  border:1px solid #2b2b2b;
-  display:block;
-}
-
-/* LOADER */
-
-.typing{
-  display:flex;
-  gap:4px;
-  align-items:center;
-  height:16px;
-}
-
-.typing span{
-  width:5px;
-  height:5px;
-  background:var(--red);
-  border-radius:50%;
-  animation:typing 1s infinite;
-}
-
-.typing span:nth-child(2){animation-delay:.15s}
-.typing span:nth-child(3){animation-delay:.3s}
-
-@keyframes typing{
-  0%,80%,100%{transform:scale(.5);opacity:.3}
-  40%{transform:scale(1);opacity:1}
-}
-
-/* MODAL */
-
-.modal{
-  position:fixed;
-  inset:0;
-  z-index:100;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,.75);
-  backdrop-filter:blur(12px);
-}
-
-.modal.show{
-  display:flex;
-}
-
-.modalBox{
-  width:min(540px,92vw);
-  background:#090909;
-  border:1px solid rgba(255,0,50,.3);
-  border-radius:17px;
-  box-shadow:0 0 60px rgba(255,0,50,.15);
-  padding:20px;
-  animation:modalIn .25s ease;
-}
-
-@keyframes modalIn{
-  from{opacity:0;transform:scale(.94)}
-  to{opacity:1;transform:none}
-}
-
-.modalTitle{
-  font-weight:800;
-  margin-bottom:16px;
-}
-
-.formGroup{
-  margin:12px 0;
-}
-
-.formGroup label{
-  display:block;
-  color:#888;
-  font-size:11px;
-  margin-bottom:6px;
-}
-
-.formGroup input,
-.formGroup select{
-  width:100%;
-  border:1px solid #222;
-  background:#050505;
-  color:white;
-  padding:10px;
-  border-radius:9px;
-  outline:none;
-}
-
-.modalActions{
-  display:flex;
-  justify-content:flex-end;
-  gap:7px;
-  margin-top:18px;
-}
-
-/* MOBILE */
-
-@media(max-width:1100px){
-  .app{
-    grid-template-columns:200px minmax(350px,1fr);
-  }
-
-  .chat{
-    position:fixed;
-    right:0;
-    top:0;
-    width:min(380px,90vw);
-    z-index:20;
-    transform:translateX(100%);
-    transition:.3s;
-    box-shadow:-20px 0 60px #000;
-  }
-
-  .chat.open{
-    transform:translateX(0);
-  }
-}
-
-@media(max-width:750px){
-  .app{
-    grid-template-columns:1fr;
-  }
-
-  .sidebar{
-    position:fixed;
-    left:0;
-    top:0;
-    width:250px;
-    z-index:30;
-    transform:translateX(-100%);
-    transition:.3s;
-  }
-
-  .sidebar.open{
-    transform:translateX(0);
-  }
-
-  .editorWrap{
-    grid-template-columns:1fr;
-  }
-
-  .editorPanel{
-    display:none;
-  }
-
-  .topActions .topBtn:nth-child(n+3){
-    display:none;
-  }
-}
+:root{--bg:#0a0503;--rgb:255,138,31;--c:#ff8a1f;--c2:#a84f00;--w:#ffd36b;--g:#5dffb0;--t:#ffe9d2;--dim:#b0825a;--bg2:#1c0d03;--bd:#6b3300;--pan:12,5,1}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--t);font:14px/1.5 "Rajdhani","Segoe UI",system-ui,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+.pan{position:fixed;background:rgba(var(--pan),.62);border:1px solid rgba(var(--rgb),.28);backdrop-filter:blur(6px);padding:12px 14px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+#log{left:16px;top:16px;bottom:92px;width:min(360px,34vw);overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.m{padding:6px 9px;border-left:2px solid var(--c2);font-size:14px}
+.m.u{border-color:var(--w);color:#fff0c8}.m.s{border-color:var(--g);color:var(--g);font-size:12px;opacity:.85}
+#side{right:16px;top:16px;width:min(300px,30vw);max-height:calc(100% - 108px);overflow-y:auto}
+#side h3{font-weight:600;letter-spacing:.12em;color:var(--c);margin:0 0 6px;font-size:13px}
+.pr{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin-bottom:4px;align-items:center}
+.pr b{font-weight:600}
+select{width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:4px;font:inherit;margin-bottom:4px}input[type=range]{width:100%;accent-color:var(--c)}.m img{max-width:100%;border:1px solid var(--c2);margin-top:6px;cursor:zoom-in;display:block}.m a{color:var(--c)}
+.dot{width:9px;height:9px;border-radius:50%;background:#444;display:inline-block}
+.dot.on{background:var(--g);box-shadow:0 0 8px var(--g)}.dot.cd{background:var(--w)}.dot.act{background:var(--c);box-shadow:0 0 10px var(--c)}
+#bar{left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));display:flex;gap:8px;padding:8px}
+#bar input{flex:1;background:transparent;border:0;border-bottom:1px solid var(--c2);color:var(--t);font:inherit;font-size:16px;padding:6px;outline:0}
+#bar input:focus-visible,button:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+button{background:rgba(var(--rgb),.1);border:1px solid var(--c);color:var(--c);padding:6px 14px;font:inherit;font-weight:600;cursor:pointer}
+button:hover{background:rgba(var(--rgb),.28)}button.on{background:var(--g);color:#001;border-color:var(--g)}
+#state{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);letter-spacing:.35em;color:var(--c);font-size:13px;text-align:center;pointer-events:none}
+#hint{font-size:12px;color:var(--dim)}
+@media(max-width:800px){#log{width:calc(100% - 32px);bottom:auto;height:24%}#side{display:none}}
+@media(prefers-reduced-motion:reduce){canvas{opacity:.9}}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px)}
+#hud{position:fixed;top:12px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:5}
+#hud h1{font:700 26px "Rajdhani","Segoe UI",sans-serif;letter-spacing:.55em;margin-right:-.55em;color:var(--c);text-shadow:0 0 16px var(--c);animation:gl 6s infinite}
+#clock{font-size:13px;color:var(--dim);letter-spacing:.2em}
+@keyframes gl{0%,92%,100%{text-shadow:0 0 16px var(--c);transform:none}93%{text-shadow:3px 0 #f0f,-3px 0 #0ff;transform:translateX(2px)}95%{text-shadow:-3px 0 #f0f,3px 0 #0ff;transform:translateX(-2px)}}
+.bar{height:5px;background:var(--bg2);margin:2px 0 8px;position:relative}.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--c);box-shadow:0 0 8px var(--c);transition:width .8s}
+#boot{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity .9s}
+#boot h2{font-size:34px;letter-spacing:.5em;color:var(--c);text-shadow:0 0 20px var(--c)}
+#bl{min-height:110px;color:var(--g);font:13px/1.7 ui-monospace,Consolas,monospace}
+#boot button{font-size:18px;padding:12px 34px;letter-spacing:.3em;box-shadow:0 0 22px rgba(var(--rgb),.5)}
+@media(max-width:800px){#hud h1{font-size:17px}}
+@media(prefers-reduced-motion:reduce){#hud h1{animation:none}}
+.pan,#hud,#state{transition:opacity .45s,visibility .45s}
+.hide{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 </style>
 </head>
-
 <body>
-
-<div class="background">
-  <div class="grid"></div>
-  <div class="orb a"></div>
-  <div class="orb b"></div>
-  <canvas id="particles"></canvas>
+<canvas id="cv"></canvas>
+<div id="hud"><h1>J.A.R.V.I.S.</h1><div id="clock"></div><button id="dl" style="display:none;pointer-events:auto;margin-top:6px;font-size:12px;padding:4px 12px">⬇ VOLLVERSION MIT INTERNET UND FOTOS HERUNTERLADEN</button></div>
+<div id="boot"><h2>J.A.R.V.I.S.</h2><div id="bl"></div><button id="start">SYSTEM STARTEN</button></div>
+<div id="state">BEREIT</div>
+<div class="pan" id="log"><div class="m s">System online. Verbinde einmal die Online-KI; danach wählt JARVIS automatisch aus bis zu 30 verfügbaren Modellen.</div></div>
+<div class="pan" id="side">
+  <button id="th" style="width:100%;margin-bottom:8px">Farbe: Orange / Cyan</button>
+  <h3>SYSTEMSTATUS</h3>
+  <div>Kernlast</div><div class="bar"><i id="b1"></i></div><div>Speicher</div><div class="bar"><i id="b2"></i></div><div>Netzwerk</div><div class="bar"><i id="b3"></i></div>
+  <h3>KI-VERBINDUNG</h3>
+  <button id="login" style="width:100%;margin-bottom:8px">ONLINE-KI VERBINDEN</button>
+  <label style="display:block;margin:6px 0"><input type="checkbox" id="paidAI"> Auch kostenpflichtige Modelle erlauben</label>
+  <div id="prov"></div>
+  <h3>COMPUTERSTEUERUNG</h3>
+  <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
+  <input id="hk" placeholder="Code aus jarvis_hand.py" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:4px;margin:4px 0">
+  <button id="nz" style="width:100%;border-color:#ff4d4d;color:#ff4d4d;margin-bottom:8px">NOT-AUS</button>
+  <h3>MODUS</h3>
+  <label><input type="checkbox" id="wake" checked> Aktivierungswort „Jarvis“ nötig</label><br>
+  <label><input type="checkbox" id="vo" checked> Sprachausgabe</label>
+  <h3 style="margin-top:10px">STIMME</h3>
+  <select id="vs"></select>
+  <label>Tempo <input type="range" id="rt" min=".7" max="1.5" step=".05" value="1.05"></label>
+  <label>Tiefe <input type="range" id="pt" min=".5" max="1.5" step=".05" value=".9"></label>
+  <label>Lautstärke <input type="range" id="vl" min=".2" max="1" step=".05" value="1"></label>
+  <button id="test" style="width:100%;margin-top:6px">Stimme testen</button>
+  <p id="hint" style="margin-top:8px">JARVIS prüft bis zu 30 verfügbare Online-Modelle. Bei Fehlern oder leeren Antworten wird automatisch das nächste Modell getestet. Der gesamte Gesprächsverlauf wird mitgegeben.</p>
 </div>
-
-<div class="app">
-
-<!-- SIDEBAR -->
-
-<aside class="sidebar" id="sidebar">
-
-  <div class="logo">
-    <div class="logoMark">J</div>
-    <div class="logoText">JOV<span>S</span></div>
-  </div>
-
-  <div class="sidebarContent">
-
-    <div class="sectionTitle">Agent</div>
-
-    <button class="navBtn active" data-mode="agent">
-      <span class="navIcon">◉</span>
-      <span>JOVS Agent</span>
-    </button>
-
-    <button class="navBtn" data-mode="builder">
-      <span class="navIcon">◆</span>
-      <span>Builder</span>
-    </button>
-
-    <button class="navBtn" data-mode="image">
-      <span class="navIcon">▣</span>
-      <span>Bildstudio</span>
-    </button>
-
-    <button class="navBtn" data-mode="3d">
-      <span class="navIcon">◇</span>
-      <span>3D Studio</span>
-    </button>
-
-    <button class="navBtn" data-mode="preview">
-      <span class="navIcon">◌</span>
-      <span>Live Preview</span>
-    </button>
-
-    <div class="sectionTitle">Browser</div>
-
-    <button class="navBtn" id="googleBtn">
-      <span class="navIcon">G</span>
-      <span>Google</span>
-    </button>
-
-    <button class="navBtn" id="youtubeBtn">
-      <span class="navIcon">▶</span>
-      <span>YouTube</span>
-    </button>
-
-    <button class="navBtn" id="mapsBtn">
-      <span class="navIcon">⌖</span>
-      <span>Google Maps</span>
-    </button>
-
-    <div class="sectionTitle">Projekte</div>
-
-    <div class="projectList" id="projectList"></div>
-
-    <button class="navBtn" id="newProjectBtn">
-      <span class="navIcon">＋</span>
-      <span>Neues Projekt</span>
-    </button>
-
-  </div>
-
-  <div class="sidebarBottom">
-    <div class="status">
-      <span class="statusDot"></span>
-      <span id="modelStatus">JOVS ONLINE</span>
-    </div>
-
-    <button class="settingsBtn" id="settingsBtn">
-      ⚙ Einstellungen
-    </button>
-  </div>
-
-</aside>
-
-<!-- CENTER -->
-
-<main class="center">
-
-  <header class="topbar">
-
-    <div>
-      <div class="pageTitle" id="pageTitle">JOVS Agent</div>
-      <div class="pageSub" id="pageSub">
-        Dein Browser-AI-Arbeitsplatz
-      </div>
-    </div>
-
-    <div class="topActions">
-
-      <button class="topBtn" id="openChatBtn">
-        💬 Chat
-      </button>
-
-      <button class="topBtn" id="runBtn">
-        ▶ Ausführen
-      </button>
-
-      <button class="topBtn" id="saveBtn">
-        💾 Speichern
-      </button>
-
-    </div>
-
-  </header>
-
-  <section class="workspace">
-
-    <div class="modeBar">
-
-      <button class="modeBtn active" data-mode="agent">
-        Agent
-      </button>
-
-      <button class="modeBtn" data-mode="builder">
-        Builder
-      </button>
-
-      <button class="modeBtn" data-mode="image">
-        Bilder
-      </button>
-
-      <button class="modeBtn" data-mode="3d">
-        3D
-      </button>
-
-      <button class="modeBtn" data-mode="preview">
-        Preview
-      </button>
-
-    </div>
-
-    <div class="editorWrap">
-
-      <section class="editorPanel">
-
-        <div class="panelHeader">
-          <span id="fileName">index.html</span>
-
-          <div class="panelTools">
-
-            <button class="smallBtn" id="newFileBtn">
-              + Datei
-            </button>
-
-            <button class="smallBtn" id="formatBtn">
-              Format
-            </button>
-
-            <button class="smallBtn" id="clearEditorBtn">
-              Leeren
-            </button>
-
-          </div>
-        </div>
-
-        <textarea id="editor" spellcheck="false"></textarea>
-
-      </section>
-
-      <section class="previewPanel">
-
-        <div class="panelHeader">
-
-          <span>LIVE PREVIEW</span>
-
-          <div class="panelTools">
-
-            <button class="smallBtn" id="refreshPreview">
-              ↻
-            </button>
-
-            <button class="smallBtn" id="fullscreenPreview">
-              ⛶
-            </button>
-
-          </div>
-
-        </div>
-
-        <iframe
-          id="preview"
-          sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin">
-        </iframe>
-
-      </section>
-
-    </div>
-
-    <div class="bottomBar">
-
-      <button class="actionBtn primary" id="previewBtn">
-        ▶ Preview
-      </button>
-
-      <button class="actionBtn" id="downloadBtn">
-        ↓ HTML
-      </button>
-
-      <button class="actionBtn" id="duplicateBtn">
-        ⧉ Duplizieren
-      </button>
-
-      <button class="actionBtn" id="deleteProjectBtn">
-        × Projekt löschen
-      </button>
-
-      <div style="flex:1"></div>
-
-      <span id="projectInfo" style="font-size:10px;color:#555">
-        Lokal gespeichert
-      </span>
-
-    </div>
-
-  </section>
-
-</main>
-
-<!-- CHAT -->
-
-<aside class="chat" id="chat">
-
-  <header class="chatHeader">
-
-    <div class="aiIdentity">
-
-      <div class="aiOrb"></div>
-
-      <div>
-        <div class="aiName">JOVS</div>
-        <div class="aiStatus" id="aiStatus">
-          Bereit
-        </div>
-      </div>
-
-    </div>
-
-    <div class="chatTools">
-
-      <button class="iconBtn" id="voiceBtn" title="Mikrofon">
-        🎙
-      </button>
-
-      <button class="iconBtn" id="speakBtn" title="Sprache">
-        🔊
-      </button>
-
-      <button class="iconBtn" id="clearChatBtn" title="Chat löschen">
-        ×
-      </button>
-
-    </div>
-
-  </header>
-
-  <!-- SCROLLBAR -->
-
-  <div class="messages" id="messages">
-
-    <div class="message ai">
-
-      <div class="bubble">
-        <b>JOVS online.</b><br><br>
-        Ich kann hier Projekte erstellen, Dateien bearbeiten,
-        Code schreiben, Preview starten, Bilder erzeugen,
-        3D-Szenen bauen und Webseiten öffnen.
-        <br><br>
-        Sag zum Beispiel:<br>
-        „Baue mir eine moderne 3D-Rennspiel-Webseite.“
-      </div>
-
-    </div>
-
-  </div>
-
-  <div class="chatInputArea">
-
-    <div class="quickActions">
-
-      <button class="quick" data-prompt="Baue mir eine moderne Webseite">🌐 Webseite</button>
-
-      <button class="quick" data-prompt="Erstelle ein cooles 3D Modell">🧊 3D</button>
-
-      <button class="quick" data-prompt="Erstelle ein futuristisches Bild">🎨 Bild</button>
-
-      <button class="quick" data-prompt="Verbessere mein aktuelles Projekt">⚡ Verbessern</button>
-
-      <button class="quick" data-prompt="Zeige mir Google Maps">📍 Maps</button>
-
-      <button class="quick" data-prompt="Öffne YouTube">▶ YouTube</button>
-
-    </div>
-
-    <div class="inputRow">
-
-      <textarea
-        id="chatInput"
-        placeholder="Schreib JOVS etwas..."
-        rows="1"></textarea>
-
-      <button class="sendBtn" id="sendBtn">
-        ↑
-      </button>
-
-    </div>
-
-  </div>
-
-</aside>
-
+<div class="pan" id="bar">
+  <button id="mic" aria-label="Mikrofon">MIKRO</button>
+  <input id="in" placeholder="Auftrag eingeben …" autocomplete="off">
+  <button id="go">SENDEN</button>
 </div>
-
-<!-- SETTINGS -->
-
-<div class="modal" id="settingsModal">
-
-  <div class="modalBox">
-
-    <div class="modalTitle">
-      ⚙ JOVS Einstellungen
-    </div>
-
-    <div class="formGroup">
-
-      <label>Gemini API Key</label>
-
-      <input
-        id="apiKeyInput"
-        type="password"
-        placeholder="AIza...">
-
-    </div>
-
-    <div class="formGroup">
-
-      <label>Bildauflösung</label>
-
-      <select id="imageSize">
-        <option value="1K">1K</option>
-        <option value="2K">2K</option>
-        <option value="4K">4K</option>
-      </select>
-
-    </div>
-
-    <div class="formGroup">
-
-      <label>Bild-Seitenverhältnis</label>
-
-      <select id="aspectRatio">
-        <option value="1:1">1:1</option>
-        <option value="16:9">16:9</option>
-        <option value="9:16">9:16</option>
-        <option value="4:3">4:3</option>
-        <option value="3:4">3:4</option>
-        <option value="21:9">21:9</option>
-      </select>
-
-    </div>
-
-    <div style="
-      color:#666;
-      font-size:10px;
-      line-height:1.5;
-      margin-top:12px;
-    ">
-      Der API-Key wird nur lokal in diesem Browser gespeichert.
-      Veröffentliche ihn nicht in einem öffentlichen Repository.
-    </div>
-
-    <div class="modalActions">
-
-      <button class="actionBtn" id="closeSettings">
-        Abbrechen
-      </button>
-
-      <button class="actionBtn primary" id="saveSettings">
-        Speichern
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-
 <script>
-
-/* =========================================================
-   JOVS CORE
-========================================================= */
-
-const TEXT_MODELS = [
-  "gemini-3.8-flash",
-  "gemini-3.7-flash",
-  "gemini-3.6-flash",
-  "gemini-3.5-flash-lite"
-];
-
-const IMAGE_MODEL = "gemini-3.1-flash-image";
-
-let apiKey = localStorage.getItem("jovs_gemini_key") || "";
-
-let currentProject = null;
-let currentFile = "index.html";
-let currentMode = "agent";
-let speaking = true;
-
-let projects =
-  JSON.parse(localStorage.getItem("jovs_projects") || "null") || {
-    JOVS: {
-      name:"JOVS",
-      files:{
-        "index.html": defaultHTML()
-      }
-    }
-  };
-
-/* =========================================================
-   DEFAULT PROJECT
-========================================================= */
-
-function defaultHTML(){
-
-return `<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>JOVS Project</title>
-
-<style>
-*{
-box-sizing:border-box;
+"use strict";
+const $=id=>document.getElementById(id);
+const SRC="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
+/* ---------- Dynamische KI-Auswahl über den aktuellen Puter-Modellkatalog ---------- */
+const P=[];
+let modelCatalog=[],catalogAt=0;
+P.forEach(p=>p.cool=0);
+let active=-1;
+function renderProv(){
+ const root=$("prov");root.innerHTML="";
+ const items=modelCatalog.slice(0,30).map(m=>({name:m.name||m.id,model:m.id,t:"puter"}));
+ items.forEach((p,i)=>{
+  const d=document.createElement("div");d.className="pr";
+  const st=p.cool>Date.now()?"cd":(i===active?"act":"on");
+  const b=document.createElement("b");b.textContent=(i+1)+". "+p.name;
+  const dot=document.createElement("span");dot.className="dot "+st;
+  d.append(b,dot);root.appendChild(d);
+ });
 }
-
-body{
-margin:0;
-min-height:100vh;
-display:grid;
-place-items:center;
-background:
-radial-gradient(circle at center,#35101a,#050505 55%);
-color:white;
-font-family:Arial,sans-serif;
+renderProv();
+function loadPuter(){return new Promise(res=>{
+ if(window.puter)return res(true);
+ const e=document.createElement("script");e.src="https://js.puter.com/v2/";
+ e.onload=()=>res(!!window.puter);e.onerror=()=>res(false);document.head.appendChild(e);
+ setTimeout(()=>res(!!window.puter),8000);
+})}
+async function refreshModelCatalog(force=false){
+ if(!signed())return [];
+ if(!force&&modelCatalog.length&&Date.now()-catalogAt<60000)return modelCatalog;
+ try{
+  const rows=await puter.ai.listModels();
+  modelCatalog=Array.isArray(rows)?rows.filter(m=>m&&m.id):[];
+  catalogAt=Date.now();renderProv();
+  if(!modelCatalog.length) log("Puter ist angemeldet, hat aber gerade keine Modelle geliefert.","s");
+  return modelCatalog;
+ }catch(e){log("KI-Modellliste konnte nicht geladen werden: "+emsg(e),"s");return modelCatalog}
 }
-
-.card{
-width:min(700px,90%);
-padding:50px;
-border:1px solid rgba(255,40,70,.35);
-border-radius:30px;
-background:rgba(255,255,255,.04);
-backdrop-filter:blur(20px);
-text-align:center;
-box-shadow:0 0 80px rgba(255,0,40,.15);
+function classifyRequest(text){
+ const t=String(text||"").toLowerCase();
+ if(/\b(code|coding|programm|javascript|python|html|css|debug|fehler|script|api|sql|github|software)\b/.test(t))return "code";
+ if(/\b(beweis|mathe|mathematik|logik|analys|vergleiche|strategie|warum|schritt für schritt|berechne|wissenschaft)\b/.test(t))return "reason";
+ if(/\b(bild|foto|sehen|kamera|screenshot|was ist darauf)\b/.test(t))return "vision";
+ return "general";
 }
-
-h1{
-font-size:60px;
-margin:0 0 15px;
+function scoreModel(m,kind,allowPaid){
+ const id=String(m.id||"").toLowerCase(),name=String(m.name||"").toLowerCase();
+ const free=/:free$/.test(id)||m.cost?.input===0&&m.cost?.output===0;
+ if(!free&&!allowPaid)return -1e6;
+ let score=free?1000:0;
+ if(kind==="code")score+=/(coder|code|codex|deepseek|qwen|codestral)/.test(id+" "+name)?220:0;
+ if(kind==="reason")score+=/(reason|thinking|opus|sonnet|pro|deepseek-r|o[134]|gpt-5)/.test(id+" "+name)?220:0;
+ if(kind==="vision")score+=/(vision|vl|gemini|gpt-4o|claude)/.test(id+" "+name)?180:0;
+ if(kind==="general")score+=/(sonnet|gpt|gemini|mistral|llama)/.test(id+" "+name)?100:0;
+ if(/nano|tiny|mini|flash-lite/.test(id))score-=kind==="reason"?80:10;
+ if(/deprecated|legacy|preview-old/.test(id))score-=100;
+ const cost=m.cost||{};if(allowPaid&&Number.isFinite(cost.input))score-=Math.min(100,cost.input/5);
+ return score;
 }
-
-.red{
-color:#ff2147;
+function selectModels(text){
+ const kind=classifyRequest(text),allowPaid=$("paidAI").checked;
+ return modelCatalog.map(m=>({m,score:scoreModel(m,kind,allowPaid)})).filter(x=>x.score>-1e5)
+  .sort((a,b)=>b.score-a.score).slice(0,30).map(x=>({t:"puter",name:x.m.name||x.m.id,model:x.m.id,cool:0}));
 }
-
-button{
-padding:13px 22px;
-border:0;
-border-radius:12px;
-background:#ff1744;
-color:white;
-cursor:pointer;
-font-weight:bold;
-}
-
-button:hover{
-transform:translateY(-2px);
-}
-</style>
-</head>
-
-<body>
-
-<div class="card">
-
-<h1>JOV<span class="red">S</span></h1>
-
-<p>
-Dein neues Projekt läuft.
-</p>
-
-<button onclick="alert('JOVS läuft!')">
-TEST
-</button>
-
-</div>
-
-</body>
-</html>`;
-
-}
-
-/* =========================================================
-   DOM
-========================================================= */
-
-const editor = document.getElementById("editor");
-const preview = document.getElementById("preview");
-const messages = document.getElementById("messages");
-const chatInput = document.getElementById("chatInput");
-const modelStatus = document.getElementById("modelStatus");
-const aiStatus = document.getElementById("aiStatus");
-const pageTitle = document.getElementById("pageTitle");
-const pageSub = document.getElementById("pageSub");
-
-/* =========================================================
-   PROJECTS
-========================================================= */
-
-function saveProjects(){
-
-  localStorage.setItem(
-    "jovs_projects",
-    JSON.stringify(projects)
-  );
-
-}
-
-function ensureProject(){
-
-  if(!currentProject){
-
-    currentProject = "JOVS";
-
+/* Browser-only: keine Online-KI, kein lokaler Server und keine BAT-Datei. */
+let puterReady=!!window.puter;
+async function autoConnectAI(){
+ try{
+  const ok=await loadPuter();puterReady=ok;
+  if(ok&&signed()){
+   $("login").textContent="ONLINE-KI VERBUNDEN ✓";
+   await refreshModelCatalog(true);
+   log("Online-KI-Sitzung erkannt. Verfügbare Modelle wurden geladen.","s");
+  } else if(ok) {
+   $("login").textContent="ONLINE-KI VERBINDEN";
+   log("Bitte einmal auf ONLINE-KI VERBINDEN klicken und den Zugang bestätigen.","s");
+  } else {
+   $("login").textContent="KI-SKRIPT NICHT ERREICHBAR";
+   log("Online-KI konnte nicht geladen werden. Prüfe deine Internetverbindung oder einen Skriptblocker.","s");
   }
-
-  if(!projects[currentProject]){
-
-    projects[currentProject] = {
-      name:currentProject,
-      files:{
-        "index.html":defaultHTML()
-      }
-    };
-
-  }
-
+ }catch(e){}
 }
+$("login").onclick=async()=>{
+ const btn=$("login");
+ if(!window.puter){btn.textContent="KI-SKRIPT LÄDT …";puterReady=await loadPuter();}
+ if(!puterReady){btn.textContent="KI-SKRIPT NICHT ERREICHBAR";log("Puter konnte nicht geladen werden. Internetverbindung prüfen.","s");return}
+ try{
+  btn.textContent="VERBINDUNG …";
+  if(!signed()) await puter.auth.signIn();
+  if(!signed()) throw new Error("Anmeldung wurde nicht bestätigt");
+  btn.textContent="ONLINE-KI VERBUNDEN ✓";
+  await refreshModelCatalog(true);
+  log("Online-KI verbunden. JARVIS kann jetzt bis zu 30 verfügbare Modelle automatisch testen.","s");
+ }catch(e){btn.textContent="ONLINE-KI VERBINDEN";log("Online-KI-Verbindung fehlgeschlagen: "+emsg(e),"s")}
+};
+addEventListener("DOMContentLoaded",()=>{autoConnectAI()});
+(async()=>{try{const dlc=(window.claude&&typeof window.claude.use==="function")?await window.claude.use("downloads"):null;
+ if(dlc){$("dl").style.display="inline-block";$("dl").onclick=async()=>{try{await dlc.save({filename:"index.html",data:SRC});log("Gespeichert. Öffne index.html aus Downloads per Doppelklick in Chrome oder Edge.","s")}catch(e){log("Speichern abgebrochen.","s")}}}}catch(e){}})();
 
-function loadProject(name){
+addEventListener("load",()=>{try{if(signed()){$("login").textContent="ONLINE-KI VERBUNDEN ✓";refreshModelCatalog(true)}}catch(e){}});
 
-  if(!projects[name]) return;
-
-  currentProject = name;
-
-  const files = projects[name].files || {};
-
-  currentFile =
-    files["index.html"]
-      ? "index.html"
-      : Object.keys(files)[0];
-
-  editor.value = files[currentFile] || "";
-
-  document.getElementById("fileName").textContent =
-    currentFile;
-
-  updatePreview();
-
-  renderProjects();
-
-  addSystem(
-    "Projekt geöffnet: " + name
-  );
-
+async function getSample(){try{return(window.claude&&typeof window.claude.use==="function")?await window.claude.use("sample"):null}catch(e){return null}}
+function txt(r){
+ const c=r&&r.message?r.message.content:r;
+ if(Array.isArray(c))return c.map(x=>x.text||"").join("");
+ return typeof c==="string"?c:(c&&c.text)||"";
 }
-
-function renderProjects(){
-
-  const list = document.getElementById("projectList");
-
-  list.innerHTML = "";
-
-  Object.keys(projects).forEach(name => {
-
-    const div = document.createElement("div");
-
-    div.className = "projectItem";
-
-    div.innerHTML = `
-      <span>▣</span>
-      <span>${escapeHTML(name)}</span>
-    `;
-
-    div.onclick = () => loadProject(name);
-
-    list.appendChild(div);
-
-  });
-
+const emsg=e=>{try{return (e&&(e.message||(e.error&&(e.error.message||e.error))||e.code))||JSON.stringify(e)}catch(_){return String(e)}};
+const signed=()=>{try{return !!(window.puter&&puter.auth.isSignedIn())}catch(e){return false}};
+async function post(url,model,all){
+ const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),30000);
+ try{
+  const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({model,messages:all}),signal:ctl.signal});
+  const t=await r.text();if(!r.ok)throw new Error("HTTP "+r.status+" "+t.slice(0,80));
+  let o;try{const j=JSON.parse(t);o=j.choices?j.choices[0].message.content:(j.text||t)}catch(_){o=t}
+  if(!o)throw new Error("leer");return o;
+ }finally{clearTimeout(to)}
 }
-
-function createProject(name){
-
-  name =
-    (name || "Projekt")
-    .trim()
-    .replace(/[^\wäöüÄÖÜß\- ]/g,"")
-    .replace(/\s+/g,"-");
-
-  if(!name) name = "Projekt";
-
-  let base = name;
-  let i = 2;
-
-  while(projects[name]){
-
-    name = base + "-" + i;
-    i++;
-
-  }
-
-  projects[name] = {
-    name,
-    files:{
-      "index.html":defaultHTML()
-    }
-  };
-
-  saveProjects();
-
-  loadProject(name);
-
+function dataBlob(u){const m=u.split(","),b=atob(m[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:"image/jpeg"})}
+async function call(p,msgs,sys,img){
+ if(p.t!=="puter"||!signed())throw {skip:1};
+ // Jeder Anbieter erhält die vollständige Systemanweisung und den gesamten bisherigen Chatverlauf.
+ const history=[{role:"system",content:sys},...msgs];
+ let r;
+ if(img){
+  const prompt=history.map(m=>m.role.toUpperCase()+": "+m.content).join("\n\n");
+  r=await puter.ai.chat(prompt,img,false,{model:p.model,normalize:true});
+ } else {
+  r=await puter.ai.chat(history,false,{model:p.model,normalize:true});
+ }
+ if(r&&r.success===false)throw r;
+ const out=txt(r).trim();
+ if(!out)throw new Error("Modell hat eine leere Antwort geliefert");
+ return out;
 }
-
-/* =========================================================
-   ESCAPE
-========================================================= */
-
-function escapeHTML(str){
-
-  return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;");
-
-}
-
-/* =========================================================
-   CHAT
-========================================================= */
-
-function addMessage(text,type="ai",html=false){
-
-  const row = document.createElement("div");
-
-  row.className =
-    "message " + type;
-
-  const bubble = document.createElement("div");
-
-  bubble.className = "bubble";
-
-  if(html){
-    bubble.innerHTML = text;
-  }else{
-    bubble.textContent = text;
-  }
-
-  row.appendChild(bubble);
-
-  messages.appendChild(row);
-
-  scrollChat();
-
-  return row;
-
-}
-
-function addSystem(text){
-
-  return addMessage(text,"system");
-
-}
-
-function addAction(text){
-
-  const row = document.createElement("div");
-
-  row.className = "message ai";
-
-  row.innerHTML = `
-    <div class="bubble">
-      <div class="actionLine">⚡ ${escapeHTML(text)}</div>
-    </div>
-  `;
-
-  messages.appendChild(row);
-
-  scrollChat();
-
-}
-
-function addTyping(){
-
-  const row = document.createElement("div");
-
-  row.className = "message ai";
-
-  row.id = "typingMessage";
-
-  row.innerHTML = `
-    <div class="bubble">
-      <div class="typing">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-  `;
-
-  messages.appendChild(row);
-
-  scrollChat();
-
-}
-
-function removeTyping(){
-
-  document
-    .getElementById("typingMessage")
-    ?.remove();
-
-}
-
-function scrollChat(){
-
-  requestAnimationFrame(() => {
-
-    messages.scrollTop =
-      messages.scrollHeight;
-
-  });
-
-}
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-function setStatus(text){
-
-  modelStatus.textContent = text;
-  aiStatus.textContent = text;
-
-}
-
-/* =========================================================
-   GEMINI REQUEST
-========================================================= */
-
-async function requestGemini(prompt,options={}){
-
-  if(!apiKey){
-
-    throw new Error(
-      "Kein Gemini API-Key gespeichert. Öffne Einstellungen und trage deinen API-Key ein."
-    );
-
-  }
-
-  let lastError = null;
-
-  for(const model of TEXT_MODELS){
-
-    setStatus(
-      model
-        .replace("gemini-","")
-        .toUpperCase()
-    );
-
-    try{
-
-      const body = {
-
-        contents:[
-          {
-            role:"user",
-            parts:[
-              {
-                text:prompt
-              }
-            ]
-          }
-        ],
-
-        generationConfig:{
-          temperature:
-            options.temperature ?? .25
-        }
-
-      };
-
-      if(options.json){
-
-        body.generationConfig.responseMimeType =
-          "application/json";
-
-      }
-
-      const response = await fetch(
-
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-
-        {
-          method:"POST",
-
-          headers:{
-            "Content-Type":"application/json",
-            "x-goog-api-key":apiKey
-          },
-
-          body:JSON.stringify(body)
-
-        }
-
-      );
-
-      const data = await response.json();
-
-      if(response.ok){
-
-        const text =
-          data?.candidates?.[0]?.content?.parts
-            ?.map(p => p.text || "")
-            .join("") || "";
-
-        if(text){
-
-          return text;
-
-        }
-
-      }
-
-      const errorMessage =
-        data?.error?.message ||
-        `HTTP ${response.status}`;
-
-      lastError =
-        new Error(errorMessage);
-
-      const retryable =
-        response.status === 429 ||
-        response.status === 503 ||
-        /high demand|overload|unavailable|temporar|capacity/i
-          .test(errorMessage);
-
-      if(!retryable){
-
-        throw lastError;
-
-      }
-
-    }catch(error){
-
-      lastError = error;
-
-      const retryable =
-        /high demand|overload|unavailable|temporar|capacity/i
-          .test(error.message || "");
-
-      if(!retryable){
-
-        throw error;
-
-      }
-
-    }
-
-    await sleep(450);
-
-  }
-
-  throw new Error(
-    "Gemini ist momentan stark ausgelastet. JOVS hat alle verfügbaren Textmodelle versucht."
-  );
-
-}
-
-/* =========================================================
-   IMAGE GENERATION
-========================================================= */
-
-async function generateImage(prompt){
-
-  if(!apiKey){
-
-    throw new Error(
-      "Bitte zuerst deinen Gemini API-Key in den Einstellungen speichern."
-    );
-
-  }
-
-  addAction(
-    "Bildgenerator wird gestartet..."
-  );
-
-  const size =
-    localStorage.getItem("jovs_image_size") || "1K";
-
-  const aspect =
-    localStorage.getItem("jovs_aspect") || "16:9";
-
-  const response = await fetch(
-
-    `https://generativelanguage.googleapis.com/v1/models/${IMAGE_MODEL}:generateContent`,
-
-    {
-      method:"POST",
-
-      headers:{
-        "Content-Type":"application/json",
-        "x-goog-api-key":apiKey
-      },
-
-      body:JSON.stringify({
-
-        contents:[
-          {
-            parts:[
-              {
-                text:prompt
-              }
-            ]
-          }
-        ],
-
-        generationConfig:{
-          responseModalities:["IMAGE"],
-
-          responseFormat:{
-            image:{
-              aspectRatio:aspect,
-              imageSize:size
-            }
-          }
-
-        }
-
-      })
-
-    }
-
-  );
-
-  const data = await response.json();
-
-  if(!response.ok){
-
-    throw new Error(
-      data?.error?.message ||
-      "Bildgenerierung fehlgeschlagen."
-    );
-
-  }
-
-  const parts =
-    data?.candidates?.[0]?.content?.parts || [];
-
-  const imagePart =
-    parts.find(
-      p => p.inlineData?.data
-    );
-
-  if(!imagePart){
-
-    throw new Error(
-      "Gemini hat kein Bild zurückgegeben."
-    );
-
-  }
-
-  return {
-    data:imagePart.inlineData.data,
-    mime:imagePart.inlineData.mimeType || "image/png"
-  };
-
-}
-
-/* =========================================================
-   AGENT
-========================================================= */
-
-async function runAgent(userText){
-
-  ensureProject();
-
-  const fileNames =
-    Object.keys(
-      projects[currentProject].files
-    );
-
-  const currentContent =
-    projects[currentProject].files[currentFile] || "";
-
-  const prompt = `Du bist JOVS, ein Browser-Agent für Webentwicklung.
-
-Antworte ausschließlich als gültiges JSON.
-
-Mögliche Aktionen:
-- chat
-- create_file
-- edit_file
-- delete_file
-- build_project
-- preview
-- save_project
-- open_google
-- open_youtube
-- open_maps
-- open_website
-- generate_image
-- generate_3d
-
-JSON-Format:
-
-{
-  "message":"Antwort an den Benutzer",
-  "actions":[
-    {
-      "type":"chat|create_file|edit_file|delete_file|build_project|preview|save_project|open_google|open_youtube|open_maps|open_website|generate_image|generate_3d",
-      "name":"Dateiname oder Projektname",
-      "content":"Dateiinhalt falls nötig",
-      "url":"URL falls nötig",
-      "prompt":"Prompt falls nötig"
-    }
-  ]
-}
-
-Regeln:
-
-1. Wenn der Benutzer eine Webseite bauen möchte, erstelle vollständigen funktionierenden Code.
-2. Wenn eine Datei geändert werden soll, liefere den kompletten neuen Dateiinhalt.
-3. Niemals API Keys in generierten Dateien ausgeben.
-4. Für 3D-Webseiten darf Three.js über CDN verwendet werden.
-5. Verwende moderne HTML/CSS/JS-Techniken.
-6. Erkläre nicht unnötig lange.
-7. Wenn eine Webseite geöffnet werden soll, benutze die passende open-Aktion.
-8. Wenn der Benutzer ausdrücklich ein Bild möchte, benutze generate_image.
-9. Wenn der Benutzer ausdrücklich 3D möchte, benutze generate_3d.
-10. Bei normalen Fragen nur chat verwenden.
-
-AKTUELLES PROJEKT:
-${currentProject}
-
-DATEIEN:
-${fileNames.join(", ")}
-
-AKTUELLE DATEI:
-${currentFile}
-
-AKTUELLER CODE:
-${currentContent}
-
-BENUTZER:
-${userText}`;
-
-  const raw =
-    await requestGemini(prompt,{
-      json:true,
-      temperature:.15
-    });
-
-  let parsed;
-
+/* Aufgabe erkennen, passende Modelle zuerst testen, bei Ausfall automatisch weiterschalten. */
+async function ask(msgs,sys,img){
+ if(!puterReady)puterReady=await loadPuter();
+ if(!puterReady)throw new Error("Online-KI-Skript konnte nicht geladen werden. Bitte Internetverbindung prüfen.");
+ if(!signed())throw new Error("Bitte einmal auf ONLINE-KI VERBINDEN klicken und den Zugang bestätigen.");
+ await refreshModelCatalog();
+ const lastUser=[...msgs].reverse().find(m=>m.role==="user")?.content||"";
+ const candidates=selectModels(lastUser);
+ if(!candidates.length)throw new Error("Der Anbieter hat keine verfügbaren Modelle geliefert. Bitte Verbindung prüfen oder später erneut versuchen.");
+ const errs=[];
+ for(let i=0;i<candidates.length;i++){
+  const p=candidates[i];if(p.cool>Date.now())continue;
   try{
-
-    parsed = JSON.parse(raw);
-
-  }catch{
-
-    return {
-      message:raw,
-      actions:[]
-    };
-
+   active=i;renderProv();
+   const answer=await call(p,msgs,sys,img);
+   if(!answer||!answer.trim())throw new Error("leere Antwort");
+   log("Antwort von "+p.name+" erhalten.","s");return answer;
+  }catch(e){
+   const m=String(emsg(e));errs.push(p.name+": "+m.slice(0,90));
+   p.cool=Date.now()+(e&&e.code==="not_granted"?3600e3:/limit|quota|credit|insufficient|429|402|rate/i.test(m)?300e3:45000);
+   renderProv();log(p.name+" nicht verfügbar – nächstes Modell wird getestet.","s");
   }
-
-  return parsed;
-
+ }
+ active=-1;renderProv();
+ throw new Error("Keines der "+candidates.length+" geprüften Online-Modelle antwortet gerade. "+errs.slice(0,5).join(" | "));
 }
 
-/* =========================================================
-   AGENT ACTION EXECUTION
-========================================================= */
-
-async function executeAgent(result){
-
-  if(result.message){
-
-    addMessage(
-      result.message,
-      "ai"
-    );
-
-    speakText(result.message);
-
+/* ---------- Agent ---------- */
+const SYS=`Du bist J.A.R.V.I.S., ein souveräner, trocken-witziger KI-Butler (wie bei Iron Man). Sprich Deutsch, kurz, höflich, nenne den Nutzer "Sir" oder "Boss" gelegentlich.
+Du arbeitest selbstständig: zerlege Aufgaben und nutze Werkzeuge, bis sie gelöst sind. Wähle die Antworttiefe passend zur Frage. Bei Programmieraufgaben liefere korrekten, vollständigen Code; bei komplexen Fragen erkläre nachvollziehbar. Behaupte niemals, ein Werkzeug oder Internet benutzt zu haben, wenn das nicht geschehen ist.
+Antworte IMMER nur mit JSON: {"say":"Text für den Nutzer","tool":null}
+oder {"say":"kurzer Zwischenstand","tool":{"name":"mouse|type|key|web|image|draw|file|time|calc|open|timer|search","arg":"..."}}.
+Werkzeuge: web (arg: Suchbegriff; holt echte Infos aus dem Internet, nutze es bei jeder Wissensfrage), image (arg: Suchbegriff; zeigt echte Fotos), draw (arg: englische Bildbeschreibung; erzeugt ein neues Bild), file (arg: "name.ext|Inhalt"; erstellt eine herunterladbare Datei), time (arg leer), calc (arg: Rechenausdruck), open (arg: URL), timer (arg: "Sekunden|Beschreibung"), search (arg: Suchbegriff, öffnet Websuche).
+Nach einem Werkzeug bekommst du "ERGEBNIS: ...". Setze tool auf null, wenn du fertig bist.`;
+let hist=[];
+let NET=true;
+fetch("https://de.wikipedia.org/w/api.php?action=query&meta=siteinfo&format=json&origin=*").then(r=>{if(!r.ok)NET=false}).catch(()=>{NET=false});
+const NOTE="\nWICHTIG: In dieser Umgebung gibt es KEIN Internet. Nutze web, image und file NICHT. Beantworte Fragen aus deinem Wissen und sage kurz ehrlich, dass echte Fotos und Live-Suche nur in der heruntergeladenen Version gehen, und verweise auf den Knopf oben „Vollversion herunterladen“. Das Werkzeug draw geht weiterhin: es zeichnet eine Grafik (arg: Beschreibung des Bildes).";
+const HN="\nComputersteuerung ist AN. Zusätzliche Werkzeuge: mouse (arg: 'pos' | 'move x y' | 'click x y' | 'double x y' | 'right x y' | 'scroll n'), type (arg: Text, der getippt wird), key (arg: Tastenkürzel wie 'win', 'ctrl+l', 'enter'). Du siehst den Bildschirm NICHT. Frage zuerst mit mouse 'pos' nach der Bildschirmgröße und bevorzuge Tastenkürzel statt Klicks ins Blaue. Mache nichts Zerstörerisches (Löschen, Bezahlen, Senden) ohne ausdrückliche Bestätigung des Nutzers. Immer nur ein Schritt pro Antwort.";
+async function hand(cmd,args){
+ if(!$("hc").checked)return"Computersteuerung ist aus (Schalter rechts).";
+ try{const r=await fetch((location.protocol==="http:"&&window.JTOKEN)?"/do":"http://127.0.0.1:8765/do",{method:"POST",headers:{"content-type":"application/json","x-token":(window.JTOKEN||$("hk").value.trim())},body:JSON.stringify({cmd,args})});
+  const t=await r.text();return r.ok?t:(r.status===403?"Falscher Code.":t)}catch(e){return"jarvis_hand.py läuft nicht (oder blockiert)."}}
+if(window.JTOKEN){$("hc").checked=true;$("hk").value=window.JTOKEN;log("Computersteuerung verbunden. Sag einfach, was ich tun soll.","s")}
+$("nz").onclick=()=>{ABORT=true;TK=false;$("hc").checked=false;try{speechSynthesis.cancel()}catch(e){}log("NOT-AUS: Computersteuerung gesperrt.","s")};
+const enc=encodeURIComponent;
+async function jget(u){const r=await fetch(u);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}
+function logImg(urls,cap){setUI(["log"],true);const d=document.createElement("div");d.className="m j";if(cap)d.textContent=cap;
+ urls.forEach(u=>{const i=document.createElement("img");i.src=u;i.loading="lazy";i.alt=cap||"Bild";i.onclick=()=>window.open(u,"_blank");
+  i.onerror=()=>{if(i.dataset.alt){i.src=i.dataset.alt;i.dataset.alt=""}else i.remove()};
+  if(u.includes("image.pollinations.ai"))i.dataset.alt=u.replace("https://image.pollinations.ai/prompt/","https://gen.pollinations.ai/image/");d.appendChild(i)});
+ $("log").appendChild(d);$("log").scrollTop=1e9}
+const tools={
+ mouse:a=>{const p=a.trim().split(/\s+/);if(TK&&SC&&/^(move|click|double|right)$/.test(p[0])&&p.length>=3){p[1]=Math.round(p[1]*SC.w/SC.iw);p[2]=Math.round(p[2]*SC.h/SC.ih)}return hand(p[0],p.slice(1))},
+ type:a=>hand("type",[a]),
+ key:a=>hand("key",[a.trim()]),
+ web:async q=>{try{
+  const s=await jget(`https://de.wikipedia.org/w/api.php?action=query&list=search&srsearch=${enc(q)}&srlimit=1&format=json&origin=*`);
+  const t=s.query.search[0]&&s.query.search[0].title;if(!t)return"Nichts gefunden";
+  const e=await jget(`https://de.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${enc(t)}&format=json&origin=*`);
+  return t+": "+Object.values(e.query.pages)[0].extract.slice(0,1400);
+ }catch(e){return"Internet nicht erreichbar: "+e.message}},
+ image:async q=>{try{
+  const r=await jget(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${enc(q+" filetype:bitmap")}&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url&iiurlwidth=600&format=json&origin=*`);
+  const u=Object.values((r.query||{}).pages||{}).map(p=>p.imageinfo&&p.imageinfo[0].thumburl).filter(Boolean).slice(0,4);
+  if(!u.length)return"Keine Bilder gefunden";logImg(u,q);return u.length+" Bilder angezeigt";
+ }catch(e){return"Bildsuche fehlgeschlagen: "+e.message}},
+ draw:async q=>{if(!NET){const r=await ask([{role:"user",content:"Zeichne als einzelnes SVG (viewBox 0 0 400 400, kräftige Farben, dunkler Hintergrund, detailreich, keine Texte außer Beschriftung): "+q}],"Du bist ein SVG-Künstler. Antworte ausschließlich mit dem SVG-Code, ohne Erklärung.");
+   const m=r.match(/<svg[\s\S]*<\/svg>/i);if(!m)return"Zeichnen fehlgeschlagen";
+   logImg(["data:image/svg+xml;charset=utf-8,"+encodeURIComponent(m[0].replace(/<script[\s\S]*?<\/script>/gi,""))],q);return"Grafik gezeichnet und angezeigt"}
+  logImg(["https://image.pollinations.ai/prompt/"+enc(q)+"?width=768&height=768&nologo=true&seed="+Date.now()%99999],q);return"Bild wird erzeugt und angezeigt"},
+ file:a=>{setUI(["log"],true);const i=a.indexOf("|"),n=(i>0?a.slice(0,i):"datei.txt").replace(/[^\w.\-]/g,"_"),c=i>0?a.slice(i+1):a;
+  const l=document.createElement("a");l.href=URL.createObjectURL(new Blob([c],{type:"text/plain"}));l.download=n;l.textContent="⬇ "+n;
+  const d=document.createElement("div");d.className="m j";d.appendChild(l);$("log").appendChild(d);$("log").scrollTop=1e9;return"Datei bereit: "+n},
+ time:()=>new Date().toLocaleString("de-DE"),
+ calc:a=>{if(!/^[\d\s+\-*/().,%^]+$/.test(a))return"Ungültiger Ausdruck";try{return String(Function('"use strict";return ('+a.replace(/,/g,".").replace(/\^/g,"**")+')')())}catch(e){return"Fehler"}},
+ open:a=>{window.open(/^https?:/.test(a)?a:"https://"+a,"_blank");return"Geöffnet: "+a},
+ search:a=>{window.open("https://www.google.com/search?q="+encodeURIComponent(a),"_blank");return"Suche geöffnet: "+a},
+ timer:a=>{const[s,t]=a.split("|");const n=parseFloat(s)||10;setTimeout(()=>{log("Timer abgelaufen: "+(t||""),"s");speak("Timer abgelaufen. "+(t||""))},n*1000);return"Timer läuft "+n+" Sekunden"}
+};
+let busy=false;
+let TK=false,ABORT=false,SC=null;
+const HNK="\nÜBERNAHME-MODUS: Du steuerst den PC des Nutzers. Werkzeuge: mouse (arg: 'click x y' | 'double x y' | 'right x y' | 'move x y' | 'scroll n'), type (arg: Text), key (arg: Tastenkürzel wie 'win', 'ctrl+l', 'enter'). Du bekommst vor JEDER Antwort einen frischen Screenshot (Größe {iw}x{ih}); alle Koordinaten beziehen sich genau auf dieses Bild. Arbeite präzise: genau EIN Schritt pro Antwort, klicke auf die Mitte des Ziels, prüfe im nächsten Screenshot ob es geklappt hat und korrigiere sonst. Ist die Aufgabe erledigt, setze tool auf null und sage kurz was erledigt ist. Bei Bezahlen, Löschen, Senden oder Unklarheit: tool null und nachfragen.";
+async function shot(){const r=await hand("shot",[]);try{SC=JSON.parse(r);return SC.data}catch(e){throw new Error("Screenshot fehlgeschlagen: "+r.slice(0,80))}}
+async function run(text){
+ if(busy||!text.trim())return;
+ {const u=uiCmd(text);if(u){beep(900,.06);await speak(u);return}}
+ if(/(gib|geb).{0,12}(pc|computer|rechner).{0,8}zurück|übernahme beenden|steuerung beenden|stopp.{0,10}(pc|computer)/i.test(text)){TK=false;ABORT=true;await speak("Übernahme beendet. Der Computer gehört wieder Ihnen.");return}
+ if(/übernimm|übernehm|übernahme|take ?over/i.test(text)&&/(pc|computer|rechner|maus)/i.test(text)){
+  if(!window.JTOKEN&&!$("hk").value.trim()){setUI(CH,true);log("Für die Übernahme muss einmal das Hilfsprogramm installiert sein (install_autostart.bat). Danach öffnest du Jarvis über http://127.0.0.1:8765.","s");await speak("Dafür muss einmal das Hilfsprogramm installiert sein. Details stehen im Verlauf.");return}
+  TK=true;$("hc").checked=true;text+=" (Übernahme-Modus aktiv. Falls keine konkrete Aufgabe genannt wurde, frage kurz nach.)"}
+ busy=true;ABORT=false;log(text,"u");pulse=1;beep(660,.08);setState("DENKE …","w");
+ hist.push({role:"user",content:text});
+ try{
+  const max=TK?25:6;
+  for(let step=0;step<max&&!ABORT;step++){
+   let img=null;if(TK){setState("SEHE ZU …","w");img=await shot()}
+   const sys=SYS+(NET?"":NOTE)+(TK?HNK.replace("{iw}",SC.iw).replace("{ih}",SC.ih):($("hc").checked?HN:""));
+   setState("DENKE …","w");
+   const raw=await ask(hist.slice(-20),sys,img);
+   if(ABORT)break;
+   hist.push({role:"assistant",content:raw});
+   let o;try{o=JSON.parse((raw.match(/\{[\s\S]*\}/)||[raw])[0])}catch(e){o={say:raw,tool:null}}
+   if(o.say){beep(880,.07);log(o.say,"j");if(!TK||!o.tool)await speak(o.say)}
+   if(!o.tool||!tools[o.tool.name])break;
+   setState("ARBEITE …","w");
+   const res=await tools[o.tool.name](String(o.tool.arg||""));
+   log("⚙ "+o.tool.name+" "+(o.tool.arg||"")+": "+res,"s");
+   hist.push({role:"user",content:"ERGEBNIS: "+res});
+   if(TK)await new Promise(r=>setTimeout(r,700));
   }
-
-  const actions =
-    Array.isArray(result.actions)
-      ? result.actions
-      : [];
-
-  for(const action of actions){
-
-    await executeAction(action);
-
-  }
-
+ }catch(e){setUI(["log"],true);log(e.message,"s");}
+ busy=false;setState(listening?"HÖRE ZU":"BEREIT");
+ if(listening&&queuedVoice.length){const next=queuedVoice.shift();setTimeout(()=>run(next),250)}
 }
-
-async function executeAction(action){
-
-  const type = action.type;
-
-  if(type === "chat"){
-
-    return;
-
-  }
-
-  if(type === "create_file"){
-
-    ensureProject();
-
-    const name =
-      action.name || "new.html";
-
-    projects[currentProject].files[name] =
-      action.content || "";
-
-    saveProjects();
-
-    addAction(
-      `Datei erstellt: ${name}`
-    );
-
-    loadFile(name);
-
-    return;
-
-  }
-
-  if(type === "edit_file"){
-
-    ensureProject();
-
-    const name =
-      action.name || currentFile;
-
-    projects[currentProject].files[name] =
-      action.content || "";
-
-    saveProjects();
-
-    addAction(
-      `Datei geändert: ${name}`
-    );
-
-    loadFile(name);
-
-    return;
-
-  }
-
-  if(type === "delete_file"){
-
-    ensureProject();
-
-    const name =
-      action.name || currentFile;
-
-    delete projects[currentProject].files[name];
-
-    saveProjects();
-
-    addAction(
-      `Datei gelöscht: ${name}`
-    );
-
-    const files =
-      Object.keys(
-        projects[currentProject].files
-      );
-
-    if(files.length){
-
-      loadFile(files[0]);
-
-    }
-
-    return;
-
-  }
-
-  if(type === "build_project"){
-
-    addAction(
-      "Projekt wird gebaut..."
-    );
-
-    const buildPrompt =
-      `Erstelle ein vollständiges modernes Webprojekt.
-
-Benutzerwunsch:
-${action.prompt || action.content || ""}
-
-Gib ausschließlich den kompletten HTML-Code zurück.
-Alles soll in einer einzigen HTML-Datei funktionieren.
-Nutze CSS und JavaScript direkt in der Datei.
-Keine Erklärungen.`;
-
-    const html =
-      await requestGemini(
-        buildPrompt,
-        {
-          temperature:.2
-        }
-      );
-
-    projects[currentProject].files["index.html"] =
-      cleanCode(html);
-
-    currentFile = "index.html";
-
-    saveProjects();
-
-    loadFile("index.html");
-
-    addAction(
-      "Projekt fertig gebaut."
-    );
-
-    updatePreview();
-
-    return;
-
-  }
-
-  if(type === "preview"){
-
-    addAction(
-      "Live Preview wird aktualisiert."
-    );
-
-    updatePreview();
-
-    return;
-
-  }
-
-  if(type === "save_project"){
-
-    saveProjects();
-
-    addAction(
-      "Projekt lokal gespeichert."
-    );
-
-    return;
-
-  }
-
-  if(type === "open_google"){
-
-    window.location.href =
-      "https://www.google.com/";
-
-    return;
-
-  }
-
-  if(type === "open_youtube"){
-
-    window.location.href =
-      "https://www.youtube.com/";
-
-    return;
-
-  }
-
-  if(type === "open_maps"){
-
-    window.location.href =
-      "https://www.google.com/maps/";
-
-    return;
-
-  }
-
-  if(type === "open_website"){
-
-    let url =
-      action.url || "";
-
-    if(!url){
-
-      addSystem(
-        "Keine URL angegeben."
-      );
-
-      return;
-
-    }
-
-    if(!/^https?:\/\//i.test(url)){
-
-      url = "https://" + url;
-
-    }
-
-    window.location.href = url;
-
-    return;
-
-  }
-
-  if(type === "generate_image"){
-
-    const image =
-      await generateImage(
-        action.prompt || action.content || ""
-      );
-
-    const src =
-      `data:${image.mime};base64,${image.data}`;
-
-    addMessage(
-      `
-      <div>
-        <div>Bild wurde generiert.</div>
-        <img
-          class="generatedImage"
-          src="${src}"
-          alt="KI-generiertes Bild">
-      </div>
-      `,
-      "ai",
-      true
-    );
-
-    return;
-
-  }
-
-  if(type === "generate_3d"){
-
-    await generate3D(
-      action.prompt ||
-      action.content ||
-      "Erstelle eine futuristische 3D Szene"
-    );
-
-    return;
-
-  }
-
+const UIN={log:"log",side:"side",bar:"bar",hud:"hud",state:"state"},ALL=["side","hud","state"],CH=["log","bar"];
+function setUI(n,on){n.forEach(k=>$(UIN[k]).classList.toggle("hide",!on))}
+function uiCmd(t){const l=t.toLowerCase();
+ if(/(verstecke|verberge|blende|mach).{0,12}(alles|alle|das).{0,10}(aus|weg)|nur die kugel|alles (weg|aus)|alles ausblenden|alles verstecken/.test(l)){setUI(ALL,false);return"Alles ausgeblendet, Sir. Der Chat bleibt."}
+ if(/(zeig|zeige|blende|öffne).{0,10}(alles|alle|die oberfläche|das menü|das interface)|alles (anzeigen|einblenden|zeigen)/.test(l)){setUI(ALL,true);return"Bitte sehr, Sir."}
+ if(/(verstecke|verberge|blende|mach).{0,14}(chat|verlauf).{0,10}(aus|weg)|chat (ausblenden|verstecken)/.test(l)){setUI(CH,false);return"Chat ausgeblendet."}
+ if(/(zeig|zeige|öffne|blende).{0,14}(verlauf|chat|protokoll)/.test(l)){setUI(CH,true);return"Chat eingeblendet."}
+ if(/(zeig|zeige|öffne|blende).{0,14}(einstellungen|status|stimme|computersteuerung|menü)/.test(l)){setUI(["side"],true);return"Einstellungen eingeblendet."}
+ if(/(zeig|zeige|öffne|blende).{0,14}(eingabe|textfeld|tastatur)/.test(l)){setUI(["bar"],true);$("in").focus();return"Eingabefeld eingeblendet."}
+ if(/(zeig|zeige|blende).{0,14}(uhr|zeit|titel)/.test(l)){setUI(["hud","state"],true);return"Bitte sehr."}
+ return""}
+function log(t,c){const d=document.createElement("div");d.className="m "+(c||"");$("log").appendChild(d);if(c==="j"){let i=0;const iv=setInterval(()=>{d.textContent=t.slice(0,++i);$("log").scrollTop=1e9;if(i>=t.length)clearInterval(iv)},16)}else d.textContent=t;$("log").scrollTop=1e9}
+
+/* ---------- Stimme ---------- */
+let speaking=false,listening=false,rec=null;
+let voices=[];
+function loadVoices(){voices=speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang));
+ voices.sort((x,y)=>sc(y)-sc(x));const sel=$("vs");sel.innerHTML="";
+ voices.forEach((v,i)=>{const o=document.createElement("option");o.value=i;o.textContent=v.name;sel.appendChild(o)});
+ const sv=LS2("jv");const k=voices.findIndex(v=>v.name===sv);if(k>=0)sel.value=k}
+const sc=v=>(/natural|neural|online/i.test(v.name)?4:0)+(/google|microsoft|siri|anna|markus|conrad|katja/i.test(v.name)?2:0)+(v.localService?0:1);
+const LS2=k=>{try{return localStorage.getItem(k)||""}catch(e){return""}};
+function ensureRecognition(){
+ if(!SR||!listening||recognitionPaused||!rec||recStarting)return;
+ try{recStarting=true;rec.start()}catch(e){recStarting=false;if(e.name!=="InvalidStateError")scheduleRecognitionRestart()}
 }
-
-/* =========================================================
-   3D GENERATOR
-========================================================= */
-
-async function generate3D(prompt){
-
-  addAction(
-    "3D Studio wird gestartet..."
-  );
-
-  const request =
-`Erstelle eine vollständige eigenständige HTML-Datei für diese 3D-Szene:
-
-${prompt}
-
-Anforderungen:
-
-- Three.js per CDN verwenden.
-- Vollbild-3D.
-- OrbitControls.
-- moderne Beleuchtung.
-- schöne Materialien.
-- Animation.
-- Responsive.
-- keine Erklärungen.
-- nur vollständiger HTML-Code.
-- alles in einer Datei.`;
-
-  const html =
-    await requestGemini(
-      request,
-      {
-        temperature:.2
-      }
-    );
-
-  const cleaned =
-    cleanCode(html);
-
-  const fileName =
-    "3d-" +
-    Date.now() +
-    ".html";
-
-  projects[currentProject].files[fileName] =
-    cleaned;
-
-  saveProjects();
-
-  loadFile(fileName);
-
-  addAction(
-    `3D-Szene erstellt: ${fileName}`
-  );
-
-  updatePreview();
-
+let recognitionPaused=false,recStarting=false,restartTimer=0,restartDelay=700;
+function scheduleRecognitionRestart(){
+ if(!listening||recognitionPaused||!SR)return;
+ clearTimeout(restartTimer);
+ restartTimer=setTimeout(()=>{recStarting=false;ensureRecognition()},restartDelay);
+ restartDelay=Math.min(5000,Math.round(restartDelay*1.5));
 }
-
-/* =========================================================
-   LOAD FILE
-========================================================= */
-
-function loadFile(name){
-
-  ensureProject();
-
-  if(!projects[currentProject].files[name]){
-
-    return;
-
+function speak(t){return new Promise(res=>{
+ if(!$("vo").checked||!window.speechSynthesis){res();return}
+ if(listening&&rec){recognitionPaused=true;try{rec.stop()}catch(e){}}
+ speechSynthesis.cancel();
+ const parts=String(t).replace(/[*_`#]/g," ").match(/[^.!?\n]+[.!?]*/g)||[String(t)];
+ const v=voices[$("vs").value];let n=parts.length,finished=false;
+ const done=()=>{if(finished)return;finished=true;speaking=false;if(listening){recognitionPaused=false;restartDelay=700;scheduleRecognitionRestart()}res()};
+ parts.forEach((p,i)=>{if(!p.trim()){if(--n<=0)done();return}
+  const u=new SpeechSynthesisUtterance(p.trim());u.lang="de-DE";if(v)u.voice=v;
+  u.rate=+$("rt").value;u.pitch=+$("pt").value;u.volume=+$("vl").value;
+  if(i===0)u.onstart=()=>{speaking=true;setState("SPRECHE")};
+  u.onend=u.onerror=()=>{if(--n<=0)done()};speechSynthesis.speak(u)});
+ if(!parts.length)done();
+ setTimeout(()=>{if(speaking&&speechSynthesis.speaking===false)done()},Math.max(5000,parts.join(" ").length*130));
+})}
+if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices()}
+$("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
+$("test").onclick=()=>speak("Alle Systeme laufen. Wie klinge ich?");
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let micPermissionGranted=false;
+async function requestMicPermissionOnce(){
+ // Bereits erteilte Browser-Berechtigung erkennen und nicht erneut anfragen.
+ try{
+  if(navigator.permissions?.query){
+   const p=await navigator.permissions.query({name:"microphone"});
+   if(p.state==="granted"){micPermissionGranted=true;return true}
+   if(p.state==="denied")throw new Error("Mikrofon ist in den Website-Einstellungen gesperrt. Bitte dort auf Zulassen stellen.");
   }
-
-  currentFile = name;
-
-  editor.value =
-    projects[currentProject].files[name];
-
-  document.getElementById("fileName")
-    .textContent = name;
-
-  updatePreview();
-
+ }catch(e){if(e.message&&e.message.includes("gesperrt"))throw e}
+ if(micPermissionGranted)return true;
+ if(!navigator.mediaDevices?.getUserMedia)throw new Error("Bitte JARVIS über HTTPS oder localhost in Edge/Chrome öffnen.");
+ const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+ stream.getTracks().forEach(t=>t.stop());
+ micPermissionGranted=true;
+ return true;
 }
-
-/* =========================================================
-   EDITOR
-========================================================= */
-
-editor.addEventListener("input",() => {
-
-  ensureProject();
-
-  projects[currentProject].files[currentFile] =
-    editor.value;
-
-  saveProjects();
-
-});
-
-/* =========================================================
-   PREVIEW
-========================================================= */
-
-function updatePreview(){
-
-  preview.srcdoc =
-    editor.value;
-
+function startRec(){
+ if(!SR){log("Spracherkennung wird von diesem Browser nicht unterstützt. Bitte die aktuelle Desktop-Version von Chrome oder Edge verwenden.","s");return}
+ // Eine einzige Recognition-Instanz wiederverwenden, statt bei jedem Klick eine neue anzulegen.
+ if(!rec){
+  rec=new SR();rec.lang="de-DE";rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;
+  rec.onstart=()=>{recStarting=false;restartDelay=700;setState("HÖRE ZU")};
+  rec.onresult=e=>{
+   for(let i=e.resultIndex;i<e.results.length;i++){
+    if(!e.results[i].isFinal)continue;
+    let t=e.results[i][0].transcript.trim();if(!t)continue;
+    if(speaking)continue;
+    if($("wake").checked){const m=t.match(/(?:jarvis|jarwis|charvis|dscharvis|jarvas|dschar\w*)[,.!]?\s*(.*)/i);if(!m)continue;t=m[1]||"ja?"}
+    if(busy){queuedVoice.push(t);continue}
+    run(t);
+   }
+  };
+  rec.onerror=e=>{
+   recStarting=false;
+   if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+    listening=false;$("mic").classList.remove("on");setState("MIKROFON GESPERRT");log("Mikrofonzugriff blockiert. Erlaube den Zugriff einmal in den Browser-Einstellungen.","s");return;
+   }
+   if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe Windows-Eingabegerät und Verbindung.","s");
+   scheduleRecognitionRestart();
+  };
+  rec.onend=()=>{recStarting=false;if(listening&&!recognitionPaused)scheduleRecognitionRestart()};
+ }
+ try{ensureRecognition()}catch(e){scheduleRecognitionRestart()}
 }
-
-document
-  .getElementById("previewBtn")
-  .onclick = updatePreview;
-
-document
-  .getElementById("refreshPreview")
-  .onclick = updatePreview;
-
-document
-  .getElementById("runBtn")
-  .onclick = updatePreview;
-
-/* =========================================================
-   FULLSCREEN
-========================================================= */
-
-document
-  .getElementById("fullscreenPreview")
-  .onclick = () => {
-
-    if(preview.requestFullscreen){
-
-      preview.requestFullscreen();
-
-    }
-
-  };
-
-/* =========================================================
-   SAVE
-========================================================= */
-
-document
-  .getElementById("saveBtn")
-  .onclick = () => {
-
-    ensureProject();
-
-    projects[currentProject].files[currentFile] =
-      editor.value;
-
-    saveProjects();
-
-    addSystem(
-      "Projekt gespeichert."
-    );
-
-  };
-
-/* =========================================================
-   DOWNLOAD
-========================================================= */
-
-document
-  .getElementById("downloadBtn")
-  .onclick = () => {
-
-    const blob =
-      new Blob(
-        [editor.value],
-        {type:"text/html"}
-      );
-
-    const url =
-      URL.createObjectURL(blob);
-
-    const a =
-      document.createElement("a");
-
-    a.href = url;
-
-    a.download =
-      currentFile.endsWith(".html")
-        ? currentFile
-        : "index.html";
-
-    a.click();
-
-    URL.revokeObjectURL(url);
-
-  };
-
-/* =========================================================
-   DUPLICATE
-========================================================= */
-
-document
-  .getElementById("duplicateBtn")
-  .onclick = () => {
-
-    ensureProject();
-
-    const newName =
-      currentProject + "-copy";
-
-    projects[newName] = {
-      name:newName,
-      files:{
-        ...projects[currentProject].files
-      }
-    };
-
-    saveProjects();
-
-    loadProject(newName);
-
-  };
-
-/* =========================================================
-   DELETE PROJECT
-========================================================= */
-
-document
-  .getElementById("deleteProjectBtn")
-  .onclick = () => {
-
-    ensureProject();
-
-    if(
-      !confirm(
-        `Projekt "${currentProject}" wirklich löschen?`
-      )
-    ){
-
-      return;
-
-    }
-
-    delete projects[currentProject];
-
-    const remaining =
-      Object.keys(projects);
-
-    if(!remaining.length){
-
-      createProject("JOVS");
-
-    }else{
-
-      saveProjects();
-
-      loadProject(
-        remaining[0]
-      );
-
-    }
-
-  };
-
-/* =========================================================
-   NEW PROJECT
-========================================================= */
-
-document
-  .getElementById("newProjectBtn")
-  .onclick = () => {
-
-    const name =
-      prompt(
-        "Name des neuen Projekts:"
-      );
-
-    if(name){
-
-      createProject(name);
-
-    }
-
-  };
-
-/* =========================================================
-   NEW FILE
-========================================================= */
-
-document
-  .getElementById("newFileBtn")
-  .onclick = () => {
-
-    const name =
-      prompt(
-        "Dateiname, z.B. style.css oder app.js:"
-      );
-
-    if(!name) return;
-
-    ensureProject();
-
-    projects[currentProject].files[name] =
-      "";
-
-    saveProjects();
-
-    loadFile(name);
-
-  };
-
-/* =========================================================
-   CLEAR
-========================================================= */
-
-document
-  .getElementById("clearEditorBtn")
-  .onclick = () => {
-
-    if(
-      confirm(
-        "Aktuelle Datei leeren?"
-      )
-    ){
-
-      editor.value = "";
-
-      projects[currentProject].files[currentFile] =
-        "";
-
-      saveProjects();
-
-      updatePreview();
-
-    }
-
-  };
-
-/* =========================================================
-   FORMAT
-========================================================= */
-
-document
-  .getElementById("formatBtn")
-  .onclick = () => {
-
-    let code =
-      editor.value.trim();
-
-    code =
-      code
-        .replace(/>\s+</g,"><")
-        .replace(/\n\s*\n+/g,"\n\n");
-
-    editor.value = code;
-
-    projects[currentProject].files[currentFile] =
-      code;
-
-    saveProjects();
-
-    updatePreview();
-
-  };
-
-/* =========================================================
-   CHAT SEND
-========================================================= */
-
-async function sendMessage(text){
-
-  text =
-    (text || "").trim();
-
-  if(!text) return;
-
-  addMessage(
-    text,
-    "user"
-  );
-
-  chatInput.value = "";
-
-  autoResize();
-
-  addTyping();
-
-  aiStatus.textContent =
-    "Denkt...";
-
-  try{
-
-    const lower =
-      text.toLowerCase();
-
-    /* DIRECT COMMANDS */
-
-    if(
-      lower.includes("öffne google") ||
-      lower === "google"
-    ){
-
-      removeTyping();
-
-      addAction(
-        "Google wird geöffnet."
-      );
-
-      window.location.href =
-        "https://www.google.com/";
-
-      return;
-
-    }
-
-    if(
-      lower.includes("öffne youtube") ||
-      lower === "youtube"
-    ){
-
-      removeTyping();
-
-      addAction(
-        "YouTube wird geöffnet."
-      );
-
-      window.location.href =
-        "https://www.youtube.com/";
-
-      return;
-
-    }
-
-    if(
-      lower.includes("öffne maps") ||
-      lower.includes("google maps")
-    ){
-
-      removeTyping();
-
-      addAction(
-        "Google Maps wird geöffnet."
-      );
-
-      window.location.href =
-        "https://www.google.com/maps/";
-
-      return;
-
-    }
-
-    /* IMAGE */
-
-    const wantsImage =
-      /erstelle.*bild|generiere.*bild|mach.*bild|generiere ein bild|bild von/i
-        .test(text);
-
-    if(wantsImage){
-
-      removeTyping();
-
-      addAction(
-        "Bildwunsch erkannt."
-      );
-
-      const image =
-        await generateImage(text);
-
-      const src =
-        `data:${image.mime};base64,${image.data}`;
-
-      addMessage(
-        `
-        <div>
-          <div>Fertig.</div>
-          <img
-            class="generatedImage"
-            src="${src}"
-            alt="Generiertes Bild">
-        </div>
-        `,
-        "ai",
-        true
-      );
-
-      speakText("Das Bild ist fertig.");
-
-      return;
-
-    }
-
-    /* 3D */
-
-    const wants3D =
-      /3d|dreidimensional|three\.js|3d modell|3d szene/i
-        .test(text);
-
-    if(
-      wants3D &&
-      /erstell|mach|bau|generier/i.test(text)
-    ){
-
-      removeTyping();
-
-      await generate3D(text);
-
-      addMessage(
-        "Die 3D-Szene wurde erstellt und im Preview geöffnet.",
-        "ai"
-      );
-
-      return;
-
-    }
-
-    /* NORMAL AGENT */
-
-    removeTyping();
-
-    addAction(
-      "JOVS analysiert die Aufgabe..."
-    );
-
-    const result =
-      await runAgent(text);
-
-    await executeAgent(result);
-
-  }catch(error){
-
-    removeTyping();
-
-    addMessage(
-      "Fehler: " +
-      error.message,
-      "ai"
-    );
-
-    speakText(
-      "Es ist ein Fehler aufgetreten."
-    );
-
-  }finally{
-
-    setStatus(
-      apiKey
-        ? "JOVS ONLINE"
-        : "API KEY FEHLT"
-    );
-
-  }
-
+const queuedVoice=[];
+$("mic").onclick=async()=>{
+ if(listening){listening=false;recognitionPaused=false;clearTimeout(restartTimer);$("mic").classList.remove("on");try{rec&&rec.stop()}catch(e){}setState("BEREIT");return}
+ try{
+  await requestMicPermissionOnce();
+  listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");
+ }catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s");}
+};
+$("go").onclick=()=>{const v=$("in").value;$("in").value="";run(v)};
+$("in").onkeydown=e=>{if(e.key==="Enter")$("go").click()};
+
+/* ---------- Kern-Animation ---------- */
+const cv=$("cv"),x=cv.getContext("2d");const TH={orange:{c:"255,138,31",think:"255,225,110",listen:"93,255,176",bg:"10,5,3",v:{"--bg":"#0a0503","--rgb":"255,138,31","--c":"#ff8a1f","--c2":"#a84f00","--w":"#ffd36b","--t":"#ffe9d2","--dim":"#b0825a","--bg2":"#1c0d03","--bd":"#6b3300","--pan":"12,5,1"}},
+ cyan:{c:"54,230,255",think:"255,179,71",listen:"93,255,176",bg:"2,7,13",v:{"--bg":"#02070d","--rgb":"54,230,255","--c":"#36e6ff","--c2":"#0a7fa0","--w":"#ffb347","--t":"#cfefff","--dim":"#6a98aa","--bg2":"#031923","--bd":"#0e4a5e","--pan":"3,18,28"}}};
+let cur=(function(){try{return localStorage.getItem("jth")}catch(e){return""}})()==="cyan"?"cyan":"orange";
+let W,H,st="idle",col=TH[cur].c,sp=1;
+function applyTheme(){const t=TH[cur];for(const k in t.v)document.documentElement.style.setProperty(k,t.v[k]);col=st==="think"?t.think:st==="listen"?t.listen:t.c;try{localStorage.setItem("jth",cur)}catch(e){}}
+applyTheme();
+$("th").onclick=()=>{cur=cur==="orange"?"cyan":"orange";applyTheme()};
+function setState(t,k){$("state").textContent=t;st=t.startsWith("DENK")||t.startsWith("ARB")?"think":t==="SPRECHE"?"talk":t.startsWith("HÖRE")?"listen":"idle";
+ col=st==="think"?TH[cur].think:st==="listen"?TH[cur].listen:TH[cur].c;sp=st==="think"?3:st==="talk"?1.6:1}
+function rs(){const d=devicePixelRatio||1;W=cv.width=innerWidth*d;H=cv.height=innerHeight*d;x.setTransform(1,0,0,1,0,0)}
+addEventListener("resize",rs);rs();
+const pts=Array.from({length:90},()=>({a:Math.random()*6.283,r:.3+Math.random()*.9,v:(Math.random()-.5)*.003}));
+let pulse=0;let T=0;
+let AC=null;function beep(f,d,ty){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=ty||"sine";o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}}
+setInterval(()=>{const n=new Date();$("clock").textContent=n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"}).toUpperCase()+"  ·  "+n.toLocaleTimeString("de-DE");
+ const base=st==="think"?70:st==="talk"?55:20;$("b1").style.width=Math.min(98,base+Math.random()*25)+"%";
+ $("b2").style.width=(performance.memory?Math.round(performance.memory.usedJSHeapSize/performance.memory.jsHeapSizeLimit*100):40+Math.random()*10)+"%";
+ $("b3").style.width=navigator.onLine?(85+Math.random()*14)+"%":"3%"},1000);
+$("start").onclick=()=>{beep(300,.2,"square");$("start").style.display="none";
+ const L=["INITIALISIERE KERNREAKTOR ........ OK","LADE SPRACHMODUL ................. OK","VERBINDE KI-KETTE ................ OK","SENSOREN KALIBRIERT .............. OK","ALLE SYSTEME ONLINE"];let i=0;
+ const iv=setInterval(()=>{if(i<L.length){$("bl").innerHTML+=L[i]+"<br>";beep(500+i*140,.1);i++}else{clearInterval(iv);beep(1200,.4);$("boot").style.opacity=0;pulse=1;
+  setTimeout(()=>{$("boot").remove();speak("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.");log("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.","j")},900)}},420)};const LB={k:-1,l:[]};const IP=Array.from({length:80},()=>{const u=Math.random()*2-1,a=Math.random()*6.283,r=Math.cbrt(Math.random())*.85,q=Math.sqrt(1-u*u);return{x:q*Math.cos(a)*r,y:u*r,z:q*Math.sin(a)*r,s:Math.random()*6}});
+function ring(cx,cy,r,w,a0,n,gap,rot,al){x.lineWidth=w;x.strokeStyle=`rgba(${col},${al})`;
+ const seg=6.283/n;for(let i=0;i<n;i++){x.beginPath();x.arc(cx,cy,r,rot+i*seg,rot+i*seg+seg*(1-gap));x.stroke()}}
+function frame(){
+ T+=.016*sp;const d=devicePixelRatio||1,cx=W/2,cy=H/2,R=Math.min(W,H)*.205;
+ x.fillStyle=`rgba(${TH[cur].bg},.28)`;x.fillRect(0,0,W,H);
+ x.lineCap="butt";
+ // Hintergrundgitter
+ x.strokeStyle=`rgba(${TH[cur].c},.05)`;x.lineWidth=1;
+ for(let g=0;g<W;g+=60*d){x.beginPath();x.moveTo(g,0);x.lineTo(g,H);x.stroke()}
+ for(let g=0;g<H;g+=60*d){x.beginPath();x.moveTo(0,g);x.lineTo(W,g);x.stroke()}
+ // Partikel
+ pts.forEach(p=>{p.a+=p.v*sp;const rr=R*(1.5+p.r*2.2);x.fillStyle=`rgba(${col},.45)`;x.fillRect(cx+Math.cos(p.a)*rr,cy+Math.sin(p.a)*rr,2*d,2*d)});
+ // Ringe
+ ring(cx,cy,R*2.05,2*d,0,60,.55,T*.15,.35);
+ ring(cx,cy,R*1.8,5*d,0,4,.35,-T*.4,.7);
+ ring(cx,cy,R*1.55,2*d,0,24,.3,T*.6,.6);
+ ring(cx,cy,R*1.3,10*d,0,3,.25,T*.9,.8);
+ ring(cx,cy,R*1.1,1.5*d,0,90,.5,-T*.3,.8);
+ // Skalenstriche
+ for(let i=0;i<120;i++){const a=i/120*6.283+T*.05,l=i%10===0?14:6;x.strokeStyle=`rgba(${col},.5)`;x.lineWidth=d;x.beginPath();x.moveTo(cx+Math.cos(a)*R*2.2,cy+Math.sin(a)*R*2.2);x.lineTo(cx+Math.cos(a)*(R*2.2+l*d),cy+Math.sin(a)*(R*2.2+l*d));x.stroke()}
+ // Radar
+ if(x.createConicGradient){const cg=x.createConicGradient(T*.9,cx,cy);cg.addColorStop(0,`rgba(${col},.28)`);cg.addColorStop(.1,`rgba(${col},0)`);cg.addColorStop(1,`rgba(${col},0)`);x.fillStyle=cg;x.beginPath();x.arc(cx,cy,R*2.05,0,6.283);x.fill()}
+ // Spektrum
+ {const lv=st==="talk"?1:st==="listen"?.45:st==="think"?.6:.14;x.lineWidth=2.5*d;x.strokeStyle=`rgba(${col},.85)`;
+  for(let i=0;i<96;i++){const a=i/96*6.283-T*.2,h=(4+lv*R*.16*(.5+.5*Math.sin(i*1.7+T*9)*Math.sin(i*.6-T*5)))*1,r0=R*1.2;
+   x.beginPath();x.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);x.lineTo(cx+Math.cos(a)*(r0+h),cy+Math.sin(a)*(r0+h));x.stroke()}}
+ // Schockwelle
+ if(pulse>0){x.strokeStyle=`rgba(255,255,255,${pulse*.8})`;x.lineWidth=3*d;x.beginPath();x.arc(cx,cy,R*(.9+(1-pulse)*2.6),0,6.283);x.stroke();pulse-=.018}
+ // Kugel
+ const S=R*.95,amp=st==="talk"?.08+.05*Math.sin(T*11):st==="think"?.05:.02,ry=T*.45,rx=.4+Math.sin(T*.2)*.15;
+ const dsp=(a,b2,c)=>1+amp*Math.sin(a*5+T*3)*Math.sin(b2*4+T*2.3)*Math.cos(c*5-T*2.7)*2;
+ const P3=(u,v,w)=>{const m=dsp(u,v,w);let c=Math.cos(ry),s=Math.sin(ry);let X=u*c+w*s,Z=-u*s+w*c,Y=v;c=Math.cos(rx);s=Math.sin(rx);const Y2=Y*c-Z*s,Z2=Y*s+Z*c;const k=S*m/(1-Z2*.18);return[cx+X*k,cy+Y2*k,Z2]};
+ // Aura
+ let g=x.createRadialGradient(cx,cy,S*.3,cx,cy,S*2.1);g.addColorStop(0,`rgba(${col},.45)`);g.addColorStop(.5,`rgba(${col},.1)`);g.addColorStop(1,`rgba(${col},0)`);
+ x.fillStyle=g;x.beginPath();x.arc(cx,cy,S*2.1,0,6.283);x.fill();
+ // Glaskörper
+ g=x.createRadialGradient(cx-S*.35,cy-S*.4,S*.05,cx,cy,S*1.05);g.addColorStop(0,`rgba(255,255,255,.35)`);g.addColorStop(.35,`rgba(${col},.22)`);g.addColorStop(1,`rgba(${col},.05)`);
+ x.fillStyle=g;x.beginPath();x.arc(cx,cy,S*1.02,0,6.283);x.fill();
+ // Gitter (Breiten- und Längengrade)
+ x.lineWidth=1.2*d;
+ const seg=(pa,pb)=>{const z=(pa[2]+pb[2])/2;x.strokeStyle=`rgba(${col},${.12+.7*(z+1)/2})`;x.beginPath();x.moveTo(pa[0],pa[1]);x.lineTo(pb[0],pb[1]);x.stroke()};
+ for(let k=1;k<9;k++){const ph=k/9*Math.PI;let prev=null;for(let t=0;t<=6.35;t+=.16){const p=P3(Math.sin(ph)*Math.cos(t),Math.cos(ph),Math.sin(ph)*Math.sin(t));if(prev)seg(prev,p);prev=p}}
+ for(let m=0;m<14;m++){const th=m/14*6.283;let prev=null;for(let ph=0;ph<=3.2;ph+=.13){const p=P3(Math.sin(ph)*Math.cos(th),Math.cos(ph),Math.sin(ph)*Math.sin(th));if(prev)seg(prev,p);prev=p}}
+ // Plasma-Partikel im Inneren
+ IP.forEach(q=>{q.s+=.02*sp;const p=P3(q.x*Math.cos(q.s*.3)-q.z*Math.sin(q.s*.3),q.y,q.x*Math.sin(q.s*.3)+q.z*Math.cos(q.s*.3));
+  x.fillStyle=`rgba(${col},${.3+.6*(p[2]+1)/2})`;x.beginPath();x.arc(p[0],p[1],(1.2+1.6*(p[2]+1)/2)*d,0,6.283);x.fill()});
+ // Blitze
+ const nb=st==="talk"?6:st==="think"?5:st==="listen"?3:2;
+ if(Math.floor(T*9)!==LB.k||LB.l.length!==nb){LB.k=Math.floor(T*9);LB.l=Array.from({length:nb},()=>({a:Math.random()*6.283,b:Math.acos(Math.random()*2-1)}))}
+ x.lineWidth=1.6*d;x.strokeStyle=`rgba(255,255,255,.8)`;x.shadowColor=`rgb(${col})`;x.shadowBlur=14*d;
+ LB.l.forEach(l=>{const tx=Math.sin(l.b)*Math.cos(l.a),ty=Math.cos(l.b),tz=Math.sin(l.b)*Math.sin(l.a);x.beginPath();x.moveTo(cx,cy);
+  for(let i=1;i<=7;i++){const f=i/7,j=(i<7?.16:0),p=P3(tx*f*.95+(Math.random()-.5)*j,ty*f*.95+(Math.random()-.5)*j,tz*f*.95+(Math.random()-.5)*j);x.lineTo(p[0],p[1])}x.stroke()});
+ x.shadowBlur=0;
+ // Heller Kern
+ const kr=S*(.34+(st==="talk"?.07*Math.sin(T*10):.03*Math.sin(T*2)));
+ g=x.createRadialGradient(cx,cy,0,cx,cy,kr*2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(.3,`rgba(${col},.95)`);g.addColorStop(1,`rgba(${col},0)`);
+ x.fillStyle=g;x.beginPath();x.arc(cx,cy,kr*2,0,6.283);x.fill();
+ // Rand
+ x.strokeStyle=`rgba(${col},.95)`;x.lineWidth=2.5*d;x.shadowColor=`rgb(${col})`;x.shadowBlur=20*d;x.beginPath();x.arc(cx,cy,S*1.02,0,6.283);x.stroke();x.shadowBlur=0;
+ // Sprach-Wellen
+ if(st==="talk"||st==="listen"){x.strokeStyle=`rgba(${col},.5)`;x.lineWidth=1.5*d;
+  for(let k=0;k<3;k++){const ph=(T*.7+k/3)%1;x.globalAlpha=1-ph;x.beginPath();x.arc(cx,cy,R*(.7+ph*1.5),0,6.283);x.stroke()}x.globalAlpha=1}
+ requestAnimationFrame(frame);
 }
+frame();
 
-document
-  .getElementById("sendBtn")
-  .onclick = () => {
 
-    sendMessage(
-      chatInput.value
-    );
-
-  };
-
-chatInput.addEventListener(
-  "keydown",
-  event => {
-
-    if(
-      event.key === "Enter" &&
-      !event.shiftKey
-    ){
-
-      event.preventDefault();
-
-      sendMessage(
-        chatInput.value
-      );
-
-    }
-
-  }
-);
-
-/* =========================================================
-   QUICK BUTTONS
-========================================================= */
-
-document
-  .querySelectorAll(".quick")
-  .forEach(button => {
-
-    button.onclick = () => {
-
-      sendMessage(
-        button.dataset.prompt
-      );
-
-    };
-
-  });
-
-/* =========================================================
-   SPEECH
-========================================================= */
-
-let recognition = null;
-
-if(
-  "SpeechRecognition" in window ||
-  "webkitSpeechRecognition" in window
-){
-
-  const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
-
-  recognition =
-    new SpeechRecognition();
-
-  recognition.lang = "de-DE";
-
-  recognition.continuous = false;
-
-  recognition.interimResults = false;
-
-  recognition.onstart = () => {
-
-    aiStatus.textContent =
-      "Hört zu...";
-
-  };
-
-  recognition.onresult = event => {
-
-    const text =
-      event.results[0][0].transcript;
-
-    chatInput.value = text;
-
-    autoResize();
-
-    sendMessage(text);
-
-  };
-
-  recognition.onerror = () => {
-
-    aiStatus.textContent =
-      "Bereit";
-
-  };
-
-  recognition.onend = () => {
-
-    aiStatus.textContent =
-      "Bereit";
-
-  };
-
-}
-
-document
-  .getElementById("voiceBtn")
-  .onclick = () => {
-
-    if(!recognition){
-
-      addSystem(
-        "Spracherkennung wird von diesem Browser nicht unterstützt."
-      );
-
-      return;
-
-    }
-
-    recognition.start();
-
-  };
-
-/* =========================================================
-   TEXT TO SPEECH
-========================================================= */
-
-function speakText(text){
-
-  if(!speaking) return;
-
-  if(!("speechSynthesis" in window))
-    return;
-
-  speechSynthesis.cancel();
-
-  const utterance =
-    new SpeechSynthesisUtterance(
-      text
-    );
-
-  utterance.lang = "de-DE";
-
-  utterance.rate = .93;
-
-  utterance.pitch = .75;
-
-  utterance.volume = 1;
-
-  speechSynthesis.speak(
-    utterance
-  );
-
-}
-
-document
-  .getElementById("speakBtn")
-  .onclick = () => {
-
-    speaking = !speaking;
-
-    document
-      .getElementById("speakBtn")
-      .textContent =
-        speaking ? "🔊" : "🔇";
-
-  };
-
-/* =========================================================
-   CLEAR CHAT
-========================================================= */
-
-document
-  .getElementById("clearChatBtn")
-  .onclick = () => {
-
-    messages.innerHTML = "";
-
-    addMessage(
-      "Chat wurde geleert. JOVS ist bereit.",
-      "ai"
-    );
-
-  };
-
-/* =========================================================
-   AUTO RESIZE
-========================================================= */
-
-function autoResize(){
-
-  chatInput.style.height =
-    "auto";
-
-  chatInput.style.height =
-    Math.min(
-      chatInput.scrollHeight,
-      130
-    ) + "px";
-
-}
-
-chatInput.addEventListener(
-  "input",
-  autoResize
-);
-
-/* =========================================================
-   MODES
-========================================================= */
-
-function setMode(mode){
-
-  currentMode = mode;
-
-  document
-    .querySelectorAll("[data-mode]")
-    .forEach(btn => {
-
-      if(btn.dataset.mode === mode){
-
-        btn.classList.add("active");
-
-      }else{
-
-        btn.classList.remove("active");
-
-      }
-
-    });
-
-  const names = {
-
-    agent:[
-      "JOVS Agent",
-      "Dein Browser-AI-Arbeitsplatz"
-    ],
-
-    builder:[
-      "Project Builder",
-      "Erstelle komplette Webprojekte"
-    ],
-
-    image:[
-      "Bildstudio",
-      "KI-Bildgenerierung"
-    ],
-
-    "3d":[
-      "3D Studio",
-      "Erstelle interaktive 3D-Szenen"
-    ],
-
-    preview:[
-      "Live Preview",
-      "Teste dein Projekt direkt im Browser"
-    ]
-
-  };
-
-  const data =
-    names[mode] ||
-    names.agent;
-
-  pageTitle.textContent =
-    data[0];
-
-  pageSub.textContent =
-    data[1];
-
-  if(mode === "preview"){
-
-    updatePreview();
-
-  }
-
-}
-
-document
-  .querySelectorAll("[data-mode]")
-  .forEach(btn => {
-
-    btn.onclick = () => {
-
-      setMode(
-        btn.dataset.mode
-      );
-
-    };
-
-  });
-
-/* =========================================================
-   BROWSER BUTTONS
-========================================================= */
-
-document
-  .getElementById("googleBtn")
-  .onclick = () => {
-
-    window.location.href =
-      "https://www.google.com/";
-
-  };
-
-document
-  .getElementById("youtubeBtn")
-  .onclick = () => {
-
-    window.location.href =
-      "https://www.youtube.com/";
-
-  };
-
-document
-  .getElementById("mapsBtn")
-  .onclick = () => {
-
-    window.location.href =
-      "https://www.google.com/maps/";
-
-  };
-
-/* =========================================================
-   SETTINGS
-========================================================= */
-
-const settingsModal =
-  document.getElementById("settingsModal");
-
-document
-  .getElementById("settingsBtn")
-  .onclick = () => {
-
-    document
-      .getElementById("apiKeyInput")
-      .value = apiKey;
-
-    document
-      .getElementById("imageSize")
-      .value =
-        localStorage.getItem(
-          "jovs_image_size"
-        ) || "1K";
-
-    document
-      .getElementById("aspectRatio")
-      .value =
-        localStorage.getItem(
-          "jovs_aspect"
-        ) || "16:9";
-
-    settingsModal.classList.add("show");
-
-  };
-
-document
-  .getElementById("closeSettings")
-  .onclick = () => {
-
-    settingsModal.classList.remove(
-      "show"
-    );
-
-  };
-
-document
-  .getElementById("saveSettings")
-  .onclick = () => {
-
-    apiKey =
-      document
-        .getElementById("apiKeyInput")
-        .value
-        .trim();
-
-    localStorage.setItem(
-      "jovs_gemini_key",
-      apiKey
-    );
-
-    localStorage.setItem(
-      "jovs_image_size",
-      document
-        .getElementById("imageSize")
-        .value
-    );
-
-    localStorage.setItem(
-      "jovs_aspect",
-      document
-        .getElementById("aspectRatio")
-        .value
-    );
-
-    settingsModal.classList.remove(
-      "show"
-    );
-
-    setStatus(
-      apiKey
-        ? "JOVS ONLINE"
-        : "API KEY FEHLT"
-    );
-
-    addSystem(
-      apiKey
-        ? "Gemini API-Key gespeichert."
-        : "API-Key entfernt."
-    );
-
-  };
-
-/* =========================================================
-   MOBILE CHAT
-========================================================= */
-
-document
-  .getElementById("openChatBtn")
-  .onclick = () => {
-
-    document
-      .getElementById("chat")
-      .classList.toggle("open");
-
-  };
-
-/* =========================================================
-   MOBILE SIDEBAR
-========================================================= */
-
-document
-  .querySelector(".logo")
-  .ondblclick = () => {
-
-    document
-      .getElementById("sidebar")
-      .classList.toggle("open");
-
-  };
-
-/* =========================================================
-   UTILS
-========================================================= */
-
-function sleep(ms){
-
-  return new Promise(
-    resolve =>
-      setTimeout(resolve,ms)
-  );
-
-}
-
-function cleanCode(text){
-
-  return text
-    .replace(/^```html\s*/i,"")
-    .replace(/^```javascript\s*/i,"")
-    .replace(/^```js\s*/i,"")
-    .replace(/^```\s*/,"")
-    .replace(/\s*```$/,"")
-    .trim();
-
-}
-
-/* =========================================================
-   PARTICLES
-========================================================= */
-
-const canvas =
-  document.getElementById("particles");
-
-const ctx =
-  canvas.getContext("2d");
-
-let particleArray = [];
-
-function resizeCanvas(){
-
-  canvas.width =
-    window.innerWidth *
-    devicePixelRatio;
-
-  canvas.height =
-    window.innerHeight *
-    devicePixelRatio;
-
-  canvas.style.width =
-    window.innerWidth + "px";
-
-  canvas.style.height =
-    window.innerHeight + "px";
-
-  ctx.scale(
-    devicePixelRatio,
-    devicePixelRatio
-  );
-
-}
-
-function createParticles(){
-
-  particleArray = [];
-
-  const count =
-    Math.min(
-      90,
-      Math.floor(
-        window.innerWidth / 18
-      )
-    );
-
-  for(let i=0;i<count;i++){
-
-    particleArray.push({
-
-      x:Math.random()*innerWidth,
-
-      y:Math.random()*innerHeight,
-
-      vx:(Math.random()-.5)*.25,
-
-      vy:(Math.random()-.5)*.25,
-
-      r:Math.random()*1.5+.3,
-
-      a:Math.random()*.6+.1
-
-    });
-
-  }
-
-}
-
-function animateParticles(){
-
-  ctx.clearRect(
-    0,
-    0,
-    innerWidth,
-    innerHeight
-  );
-
-  particleArray.forEach(p => {
-
-    p.x += p.vx;
-
-    p.y += p.vy;
-
-    if(p.x < 0) p.x = innerWidth;
-
-    if(p.x > innerWidth)
-      p.x = 0;
-
-    if(p.y < 0) p.y = innerHeight;
-
-    if(p.y > innerHeight)
-      p.y = 0;
-
-    ctx.beginPath();
-
-    ctx.arc(
-      p.x,
-      p.y,
-      p.r,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fillStyle =
-      `rgba(255,25,55,${p.a})`;
-
-    ctx.fill();
-
-  });
-
-  requestAnimationFrame(
-    animateParticles
-  );
-
-}
-
-window.addEventListener(
-  "resize",
-  () => {
-
-    resizeCanvas();
-    createParticles();
-
-  }
-);
-
-/* =========================================================
-   INIT
-========================================================= */
-
-resizeCanvas();
-
-createParticles();
-
-animateParticles();
-
-renderProjects();
-
-loadProject(
-  Object.keys(projects)[0]
-);
-
-setStatus(
-  apiKey
-    ? "JOVS ONLINE"
-    : "API KEY FEHLT"
-);
-
+setUI(ALL,false);
+document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
+ if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
+ else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
+cv.addEventListener("dblclick",()=>setUI(ALL,$("side").classList.contains("hide")));
 </script>
-
 </body>
 </html>
