@@ -121,6 +121,19 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
+// UI-Helfer: Chatmeldungen sichtbar ausgeben (wurde im vorherigen Umbau versehentlich entfernt).
+const ALL=["hud","side","state","boot","account","accountbtn"];
+const CH=["side"];
+function setUI(ids,show){
+ const list=Array.isArray(ids)?ids:[ids];
+ for(const id of list){const el=typeof id==="string"?$(id):id;if(el)el.classList.toggle("hide",!show)}
+}
+function log(message,type="s"){
+ const root=$("log");if(!root)return;
+ const node=document.createElement("div");node.className="m "+(type==="u"?"u":type==="j"?"j":"s");
+ node.textContent=String(message??"");root.appendChild(node);root.scrollTop=root.scrollHeight;
+}
+
 const SRC="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
 /* ---------- Firebase: anonyme Anmeldung, Modellwissen und JARVIS-Memory ---------- */
 const firebaseConfig={
@@ -574,16 +587,16 @@ function startRec(){
    if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe Windows-Eingabegerät und Verbindung.","s");
    scheduleRecognitionRestart();
   };
-  rec.onend=()=>{recStarting=false;if(listening&&!recognitionPaused)scheduleRecognitionRestart()};
+  rec.onend=()=>{recStarting=false;if(listening&&!recognitionPaused){setState("HÖRE ZU");scheduleRecognitionRestart()}};
  }
  try{ensureRecognition()}catch(e){scheduleRecognitionRestart()}
 }
 const queuedVoice=[];
 $("mic").onclick=async()=>{
- if(listening){listening=false;recognitionPaused=false;clearTimeout(restartTimer);$("mic").classList.remove("on");try{rec&&rec.stop()}catch(e){}setState("BEREIT");return}
+ if(listening){listening=false;recognitionPaused=false;clearTimeout(restartTimer);$("mic").classList.remove("on");try{rec&&rec.stop()}catch(e){}setState("BEREIT");log("Mikrofon ausgeschaltet.","s");return}
  try{
   await requestMicPermissionOnce();
-  listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");
+  listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");log("Mikrofon aktiv. Ich höre weiter zu und erkenne eine Äußerung nach einer Sprechpause automatisch.","s");
  }catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s");}
 };
 $("go").onclick=()=>{const v=$("in").value;$("in").value="";run(v)};
