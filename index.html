@@ -114,9 +114,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
    <h3>GITHUB-VERBINDUNG</h3>
    <label>Repository (owner/name)</label><input id="ghrepo" value="hoffmannerik1-eng/Jarvis">
    <label>Dateipfad in GitHub</label><input id="ghpath" value="index.html">
-   <label>GitHub Personal Access Token</label><input id="ghtoken" type="password" autocomplete="off" placeholder="Token nur für diese Sitzung">
-   <p style="font-size:12px;color:var(--dim)">Token bleibt nur im Arbeitsspeicher dieses Tabs und wird nicht in Firebase gespeichert. Verwende nur ein Token mit minimalen Rechten.</p>
-   <div id="ghstatus" style="font-size:12px;color:var(--g)">Noch keine Verbindung</div>
+   <p style="font-size:12px;color:var(--dim)">JARVIS kopiert den Code und öffnet den GitHub-Editor. Du prüfst und speicherst die Änderung direkt bei GitHub. Kein Zugriffstoken nötig.</p>
   </div>
   <div class="plugin-card">
    <h3>EIGENES PLUGIN ERSTELLEN</h3>
@@ -129,7 +127,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
  <div id="ghreview" class="plugin-card" style="display:none;margin-top:12px">
   <h3>GITHUB-ÄNDERUNG PRÜFEN</h3>
   <div id="ghpreview"></div>
-  <div class="plugin-actions"><button id="ghcommit">ÄNDERUNG JETZT COMMITTEN</button><button id="ghcancel">ABBRECHEN</button></div>
+  <div class="plugin-actions"><button id="ghcommit">CODE IN GITHUB ÜBERNEHMEN</button><button id="ghcancel">ABBRECHEN</button></div>
   <p style="font-size:12px;color:var(--dim);margin-top:6px">Es wird erst nach deinem Klick gespeichert. Vorhandene Dateien werden aktualisiert.</p>
  </div>
 </section>
@@ -153,7 +151,7 @@ const firebaseConfig={
  appId:"1:310550760592:web:43be322f363cab47501c15"
 };
 let db=null,jarvisUid=null,cloudReady=false,cloudDoc=null,cloudData={};
-let githubToken="",pendingGitHub=null;
+let pendingGitHub=null;
 async function initCloud(){
  try{
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -494,27 +492,22 @@ function stageGitHub(content,path){
 }
 $("plugbtn").onclick=()=>{$("plugins").classList.toggle("hide");renderPlugins()};
 $("plugclose").onclick=()=>$("plugins").classList.add("hide");
-$("ghtoken").oninput=()=>{githubToken=$("ghtoken").value.trim();$("ghstatus").textContent=githubToken?"Token nur im Tab gespeichert · noch nicht geprüft":"Noch keine Verbindung"};
 $("mailopen").onclick=()=>{const to=$("mailto").value.trim(),subject=$("mailsubject").value,body=$("mailbody").value;const url="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);location.href=url;$("mailnote").textContent="Dein Mailprogramm sollte den Entwurf geöffnet haben. Bitte selbst prüfen und senden."};
 $("pcreate").onclick=async()=>{const name=$("pname").value.trim(),description=$("pdesc").value.trim();if(!name||!description){log("Bitte Plugin-Name und Beschreibung ausfüllen.","s");return}const res=await tools.plugin(JSON.stringify({name,description}));log(res,"s");$("pname").value="";$("pdesc").value=""};
 $("ghcancel").onclick=()=>{pendingGitHub=null;$("ghreview").style.display="none"};
 $("ghcommit").onclick=async()=>{
- if(!pendingGitHub){log("Keine Änderung zum Speichern vorhanden.","s");return}
- const repo=$("ghrepo").value.trim(),token=$("ghtoken").value.trim();
- if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)||!token){log("Bitte Repository und GitHub-Token eintragen.","s");return}
+ if(!pendingGitHub){log("Keine Änderung zum Einfügen vorhanden.","s");return}
+ const repo=$("ghrepo").value.trim();
+ if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)){log("Bitte Repository im Format owner/name eintragen.","s");return}
  const path=pendingGitHub.path.split("/").filter(Boolean).map(encodeURIComponent).join("/");
+ const url="https://github.com/"+repo+"/edit/main/"+path;
  try{
-  const headers={Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
-  const url="https://api.github.com/repos/"+repo+"/contents/"+path;
-  let sha=null;const old=await fetch(url,{headers});
-  if(old.ok){const data=await old.json();sha=data.sha}else if(old.status!==404)throw new Error("GitHub-Lesen fehlgeschlagen: HTTP "+old.status);
-  const payload={message:pendingGitHub.message||"JARVIS: Datei aktualisiert",content:btoa(unescape(encodeURIComponent(pendingGitHub.content))),branch:"main"};if(sha)payload.sha=sha;
-  const saved=await fetch(url,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify(payload)});
-  if(!saved.ok){const e=await saved.json().catch(()=>({}));throw new Error("GitHub-Commit fehlgeschlagen: HTTP "+saved.status+" "+(e.message||""))}
-  const out=await saved.json();log("GitHub-Datei gespeichert: "+pendingGitHub.path+" · Commit "+out.commit.sha.slice(0,7),"s");
+  await navigator.clipboard.writeText(pendingGitHub.content);
+  window.open(url,"_blank","noopener");
+  log("Code kopiert und GitHub-Editor geöffnet. Füge den Code dort ein und speichere ihn selbst. JARVIS hat noch nichts veröffentlicht.","s");
   pendingGitHub=null;$("ghreview").style.display="none";
- }catch(e){log(emsg(e),"s")}
-};
+ }catch(e){log("Kopieren nicht möglich. Bitte Browser-Zugriff auf die Zwischenablage erlauben.","s")}
+}
 
 let busy=false;
 let TK=false,ABORT=false,SC=null;
