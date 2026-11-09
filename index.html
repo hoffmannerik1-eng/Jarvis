@@ -384,14 +384,19 @@ function renderProv(){
  });
  renderModelCount();
 }
+function isGPUCompatibilityError(message){
+ return /unable to find a compatible gpu|no compatible gpu|failed to create gpuadapter|requestadapter|webgpu.{0,40}(not available|unsupported|adapter)|gpu adapter.{0,40}(not found|unavailable)/i.test(String(message||""));
+}
 async function getWebGPUProblem(){
- if(!navigator.gpu)return "WebGPU wird von diesem Browser nicht bereitgestellt. Öffne JARVIS in einem aktuellen Chrome- oder Edge-Browser und aktiviere die Hardwarebeschleunigung.";
+ if(!navigator.gpu)return "WebGPU wird von diesem Browser nicht bereitgestellt. Die lokale KI benötigt WebGPU.";
  try{
-  const adapter=await navigator.gpu.requestAdapter();
-  if(!adapter)return "Der Browser stellt WebGPU bereit, findet aber keinen kompatiblen Grafikadapter. Prüfe die Hardwarebeschleunigung und die Grafiktreiber oder nutze einen anderen Browser.";
+  const adapter=await navigator.gpu.requestAdapter({powerPreference:"high-performance"});
+  if(!adapter)return "Der Browser meldet WebGPU, kann aber keinen leistungsfähigen Grafikadapter bereitstellen.";
+  const info=adapter.info||{};
+  const details=[info.vendor,info.architecture,info.device,info.description].filter(Boolean).join(" / ");
   return "";
  }catch(e){
-  return "Der Grafikadapter kann nicht gestartet werden: "+emsg(e);
+  return "WebGPU kann keinen Grafikadapter starten: "+emsg(e);
  }
 }
 async function loadWebLLM(){
@@ -556,10 +561,18 @@ async function ask(msgs,sys,img){
     }catch(recoveryError){
      localEngine=null;engineModel="";
      const recoveryText=emsg(recoveryError);
+     if(isGPUCompatibilityError(recoveryText)){
+      $("kihealth").textContent="WEBGPU / GRAFIKADAPTER NICHT KOMPATIBEL";
+      const browserHint=/Safari/i.test(navigator.userAgent)&&!/Chrome|Chromium|Edg/i.test(navigator.userAgent)
+       ?" Du verwendest Safari. WebGPU ist dort abhängig von Browser- und macOS-Version nur teilweise verfügbar. Teste JARVIS mit aktuellem Chrome oder Edge."
+       :" Prüfe, ob die Hardwarebeschleunigung aktiv ist und der Grafiktreiber aktuell ist.";
+      log("Lokale KI gestoppt: WebLLM kann keinen kompatiblen GPU-Adapter initialisieren. Es wird kein weiterer Neustart versucht."+browserHint,"s");
+      throw new Error("WebLLM kann auf diesem Browser/Gerät keinen kompatiblen GPU-Adapter initialisieren. Das ist eine WebGPU-/Treiber-/Browser-Kompatibilität und kein Fehler deiner Nachricht."+browserHint);
+     }
      const gpuProblem=await getWebGPUProblem();
-     if(gpuProblem||/compatible GPU|requestAdapter|WebGPU.*adapter/i.test(recoveryText)){
-      $("kihealth").textContent="KEIN KOMPATIBLER GRAFIKADAPTER";
-      throw new Error((gpuProblem||"Der Browser findet keinen kompatiblen Grafikadapter.")+" Die lokale KI kann auf diesem Gerät derzeit nicht starten. Prüfe die Hardwarebeschleunigung oder verwende Chrome/Edge.");
+     if(gpuProblem){
+      $("kihealth").textContent="WEBGPU NICHT VERFÜGBAR";
+      throw new Error(gpuProblem+" Die lokale KI kann auf diesem Gerät derzeit nicht starten.");
      }
      throw new Error("Die lokale KI-Engine ließ sich nicht neu starten: "+recoveryText+". Bitte die Seite neu laden.");
     }finally{modelLoading=false}
