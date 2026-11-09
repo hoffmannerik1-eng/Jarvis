@@ -155,7 +155,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
  <h3 style="color:var(--c)">PLUGINS</h3>
  <p style="font-size:12px;color:var(--dim)">Neue Plugins sagst du JARVIS einfach per Sprache („füge ein Plugin hinzu, das …“). Er schreibt den Code, zeigt ihn dir und aktiviert ihn erst nach deinem Ja.</p>
  <div id="pluglist"></div>
- <input id="ghtoken" type="password" placeholder="GitHub-Token (nur bis zum Schließen dieses Tabs)" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:8px;margin:6px 0" autocomplete="off">
+ <input id="ghtoken" type="password" placeholder="GitHub-Token (nur bis zum Neuladen der Seite)" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:8px;margin:6px 0" autocomplete="off">
  <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="ghsave" type="button">GITHUB-TOKEN SPEICHERN</button><button id="gmailbtn" type="button">GMAIL VERBINDEN</button><button id="plugoff" type="button" style="border-color:#ff4d4d;color:#ff4d4d">ALLE PLUGINS AUS</button></div>
  <div id="plugstatus" style="font-size:12px;color:var(--dim);margin:8px 0"></div>
  <h3 style="color:var(--c)">SPRACHAUSGABE</h3>
@@ -628,8 +628,8 @@ const tools={
   const d=document.createElement("div");d.className="m j";d.appendChild(l);$("log").appendChild(d);$("log").scrollTop=1e9;return"Datei bereit: "+n},
  time:()=>new Date().toLocaleString("de-DE"),
  calc:a=>safeCalculate(a),
- open:a=>{window.open(/^https?:/.test(a)?a:"https://"+a,"_blank");return"Geöffnet: "+a},
- search:a=>{window.open("https://www.google.com/search?q="+encodeURIComponent(a),"_blank");return"Suche geöffnet: "+a},
+ open:a=>{const raw=String(a||"").trim();let u;try{u=new URL(/^https?:\/\//i.test(raw)?raw:"https://"+raw)}catch(e){return"Ungültige Webadresse."}if(!["http:","https:"].includes(u.protocol))return"Nur HTTP- und HTTPS-Adressen sind erlaubt.";window.open(u.href,"_blank","noopener,noreferrer");return"Geöffnet: "+u.href},
+ search:a=>{window.open("https://www.google.com/search?q="+encodeURIComponent(String(a||"").slice(0,300)),"_blank","noopener,noreferrer");return"Suche geöffnet: "+String(a||"").slice(0,300)},
  timer:a=>{const parts=String(a||"").split("|"),raw=parts[0].trim(),label=String(parts.slice(1).join("|")).slice(0,120),n=Number(raw);if(!Number.isFinite(n)||n<1||n>86400)return"Bitte eine Timerdauer zwischen 1 und 86400 Sekunden angeben.";setTimeout(()=>{log("Timer abgelaufen: "+label,"s");speak("Timer abgelaufen. "+label)},n*1000);return"Timer läuft "+n+" Sekunden"}
 };
 
@@ -751,9 +751,9 @@ function layoutWindows(force){
   if(best<cur*.7){o.el.classList.add("auto");o.el.style.left=bx+"px";o.el.style.top=by+"px"}
  });
 }
-setInterval(()=>layoutWindows(),900);
+setInterval(()=>{if(!document.hidden)layoutWindows()},900);
 addEventListener("resize",()=>layoutWindows());
-new MutationObserver(()=>setTimeout(layoutWindows,650)).observe($("log"),{attributes:true,attributeFilter:["class"]});
+new MutationObserver(()=>{if(!document.hidden)setTimeout(layoutWindows,650)}).observe($("log"),{attributes:true,attributeFilter:["class"]});
 function openImageWin(urls,cap){
  const imgs=wins.filter(w=>w.type==="img");if(imgs.length>=2)closeWin(imgs[0]);
  const o=mkWin("img","🖼 "+String(cap||"Bilder").toUpperCase().slice(0,40),Math.min(540,innerWidth*.92),urls.length>1?350:300);
@@ -797,7 +797,7 @@ tools.youtube=async q=>{
 let autoMicDone=true;
 
 /* ---------- Plugin-System: eingebaute Plugins + selbst geschriebene Plugins ---------- */
-let pendingPlugin=null,gmailTok="",gmailExp=0;
+let pendingPlugin=null,gmailTok="",gmailExp=0,githubTokenMemory="";
 const PLUG=[],pluginDescs={};
 const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/[\s]/g,"").replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0)));
 const b64s=t=>{const b=new TextEncoder().encode(t);let x="";for(let i=0;i<b.length;i+=8192)x+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(x)};
@@ -866,7 +866,7 @@ function makeJ(rec){
    pluginDescs[key]=t.description||"";rec.tools.push(key)});
    if(def&&def.init)Promise.resolve().then(()=>def.init()).catch(e=>log("Plugin "+rec.name+": "+emsg(e),"s"))},
   fetch:(u,o)=>fetch(u,o),
-  secret:k=>{try{return sessionStorage.getItem("jsec_"+k)||""}catch(e){return""}},
+  secret:k=>k==="github"?githubTokenMemory:"",
   log:m=>log("["+rec.name+"] "+m,"s"),say:t=>speak(t),esc:x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),
   window:(title,html)=>{const o=mkWin("plug","🧩 "+String(title).toUpperCase().slice(0,34),520,360);o.body.innerHTML=html;return o},
   confirm:m=>window.confirm(m),
@@ -950,7 +950,7 @@ tools.plugin_besser=async a=>{const i=a.indexOf("|"),nm=(i>0?a.slice(0,i):a).tri
  const code=await genPlugin(wish,r.code);stagePlugin(code,r.id,r.name);return"Verbesserter Entwurf liegt im Code-Fenster. Frage den Nutzer, ob du ihn aktivieren sollst."};
 tools.plugin_weg=async a=>{const r=PLUG.find(x=>x.name.toLowerCase()===String(a).trim().toLowerCase());if(!r)return"Plugin nicht gefunden.";deactivate(r);if(!r.builtin)PLUG.splice(PLUG.indexOf(r),1);await persistPlugins();renderPlugins();return r.builtin?r.name+" ausgeschaltet.":r.name+" entfernt."};
 tools.plugin_liste=()=>PLUG.map(r=>r.name+(r.enabled?" (an)":" (aus)")+": "+r.description).join("\n")||"Keine Plugins";
-$("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();try{if(v)sessionStorage.setItem("jsec_github",v);else sessionStorage.removeItem("jsec_github")}catch(e){}$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token bis zum Schließen dieses Tabs gespeichert.":"GitHub-Token aus diesem Tab entfernt.";};
+$("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();githubTokenMemory=v;$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token nur bis zum Neuladen dieser Seite im Arbeitsspeicher gehalten.":"GitHub-Token aus dem Arbeitsspeicher entfernt.";};
 $("plugoff").onclick=async()=>{PLUG.forEach(deactivate);await persistPlugins();renderPlugins();$("plugstatus").textContent="Alle Plugins ausgeschaltet."};
 $("gmailbtn").onclick=async()=>{
  try{
