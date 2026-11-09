@@ -117,6 +117,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <div>Kernlast</div><div class="bar"><i id="b1"></i></div><div>Speicher</div><div class="bar"><i id="b2"></i></div><div>Netzwerk</div><div class="bar"><i id="b3"></i></div>
   <h3>KI-VERBINDUNG</h3>
   <div id="kihealth" style="font-size:12px;margin:4px 0 8px;color:var(--g)">AUTOMATISCHE PRÜFUNG AKTIV</div>
+  <div id="questioncount" style="font-size:12px;margin:0 0 10px;color:var(--w)">FRAGEN HEUTE: 0 · GESAMT: 0</div>
   <div id="prov"></div>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
@@ -211,6 +212,29 @@ const firebaseConfig={
 };
 let db=null,jarvisUid=null,cloudReady=false,cloudDoc=null,cloudData={};
 let pendingGitHub=null;
+let questionStats={total:0,day:"",today:0};
+function localDayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function renderQuestionCount(){
+ const day=localDayKey();
+ if(questionStats.day!==day){questionStats.day=day;questionStats.today=0}
+ const el=$("questioncount");
+ if(el)el.textContent="FRAGEN HEUTE: "+questionStats.today+" · GESAMT: "+questionStats.total;
+}
+function loadQuestionStats(){
+ try{const saved=JSON.parse(localStorage.getItem("jarvis_question_stats")||"{}");
+  questionStats={total:Math.max(0,Number(saved.total)||0),day:String(saved.day||""),today:Math.max(0,Number(saved.today)||0)};
+ }catch(e){questionStats={total:0,day:"",today:0}}
+ renderQuestionCount();
+}
+async function recordSuccessfulQuestion(){
+ const day=localDayKey();
+ if(questionStats.day!==day){questionStats.day=day;questionStats.today=0}
+ questionStats.total++;questionStats.today++;
+ try{localStorage.setItem("jarvis_question_stats",JSON.stringify(questionStats))}catch(e){}
+ renderQuestionCount();
+ if(cloudReady)await saveCloud({questionStats:{...questionStats}});
+}
+loadQuestionStats();
 async function initCloud(){
  try{
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -220,6 +244,11 @@ async function initCloud(){
   cloudDoc=db.collection("jarvis_users").doc(jarvisUid).collection("memory").doc("main");
   const snap=await cloudDoc.get();
   cloudData=snap.exists?snap.data():{};
+  if(cloudData.questionStats&&typeof cloudData.questionStats==="object"){
+   const q=cloudData.questionStats;questionStats={total:Math.max(0,Number(q.total)||0),day:String(q.day||""),today:Math.max(0,Number(q.today)||0)};
+   try{localStorage.setItem("jarvis_question_stats",JSON.stringify(questionStats))}catch(e){}
+  }
+  renderQuestionCount();
   try{if(!cloudData.tasks)cloudData.tasks=JSON.parse(localStorage.getItem("jarvis_tasks")||"[]");if(!cloudData.ownerEmail)cloudData.ownerEmail=localStorage.getItem("jarvis_email")||""}catch(e){}
   cloudReady=true;
   if(Array.isArray(cloudData.history)&&!hist.length)hist=cloudData.history.slice(-100);
@@ -449,6 +478,7 @@ async function ask(msgs,sys,img){
     const answer=await call(p,msgs,sys,img);
     if(!answer||!answer.trim())throw new Error("Modell hat eine leere Antwort geliefert");
     modelCooldowns.delete(p.key);
+    await recordSuccessfulQuestion();
     log("Antwort von "+p.name+" erhalten.","s");
     return answer;
    }catch(e){
