@@ -518,12 +518,31 @@ async function ask(msgs,sys,img){
     const compact=[history[0],...history.slice(-2)];
     result=await engine.chat.completions.create({messages:compact,temperature:0.7,max_tokens:600});
    }else if(/already been disposed|disposed object|object.*disposed/i.test(err)){
-    // Ein vorheriger Modellwechsel kann eine alte WebGPU-Engine hinterlassen.
-    // Den veralteten Verweis verwerfen und die Engine genau einmal neu aufbauen.
-    log("Die lokale KI-Engine wurde beendet. Ich starte sie einmal neu …","s");
-    if(localEngine===engine){localEngine=null;engineModel="";}
-    const freshEngine=await loadLocalEngine(modelId);
-    result=await freshEngine.chat.completions.create({messages:history,temperature:0.7,max_tokens:OUTPUT_LIMIT});
+    // WebLLM kann intern noch einen bereits freigegebenen TVM/WebGPU-Verweis halten.
+    // Deshalb nicht loadLocalEngine() verwenden (das könnte denselben Verweis zurückgeben),
+    // sondern die Engine-Instanz vollständig verwerfen und frisch erzeugen.
+    log("Die lokale KI-Engine wurde freigegeben. Ich baue sie einmal vollständig neu auf …","s");
+    const stale=localEngine;
+    localEngine=null;engineModel="";
+    modelLoading=true;
+    try{
+     if(stale){try{await stale.unload()}catch(_){}}
+     await loadWebLLM();
+     const freshEngine=await webllm.CreateMLCEngine(modelId,{
+      appConfig:{...webllm.prebuiltAppConfig,cacheBackend:"cache"},
+      initProgressCallback:report=>{
+       const pct=Math.round((report.progress||0)*100);
+       $("kihealth").textContent="KI-ENGINE WIRD NEU GESTARTET · "+pct+"% · "+(report.text||"");
+      }
+     });
+     localEngine=freshEngine;engineModel=modelId;
+     $("kihealth").textContent="LOKALE KI BEREIT · "+shortModelName(modelId);
+     renderProv();
+     result=await freshEngine.chat.completions.create({messages:history,temperature:0.7,max_tokens:OUTPUT_LIMIT});
+    }catch(recoveryError){
+     localEngine=null;engineModel="";
+     throw new Error("Die lokale KI-Engine ließ sich nicht neu starten: "+emsg(recoveryError)+". Bitte die Seite neu laden.");
+    }finally{modelLoading=false}
    }else throw e;
   }
   const answer=String(result?.choices?.[0]?.message?.content||"").trim();
