@@ -155,7 +155,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
  <h3 style="color:var(--c)">PLUGINS</h3>
  <p style="font-size:12px;color:var(--dim)">Neue Plugins sagst du JARVIS einfach per Sprache („füge ein Plugin hinzu, das …“). Er schreibt den Code, zeigt ihn dir und aktiviert ihn erst nach deinem Ja.</p>
  <div id="pluglist"></div>
- <input id="ghtoken" type="password" placeholder="GitHub-Token (bleibt nur in diesem Browser)" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:8px;margin:6px 0" autocomplete="off">
+ <input id="ghtoken" type="password" placeholder="GitHub-Token (nur bis zum Schließen dieses Tabs)" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:8px;margin:6px 0" autocomplete="off">
  <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="ghsave" type="button">GITHUB-TOKEN SPEICHERN</button><button id="gmailbtn" type="button">GMAIL VERBINDEN</button><button id="plugoff" type="button" style="border-color:#ff4d4d;color:#ff4d4d">ALLE PLUGINS AUS</button></div>
  <div id="plugstatus" style="font-size:12px;color:var(--dim);margin:8px 0"></div>
  <h3 style="color:var(--c)">SPRACHAUSGABE</h3>
@@ -477,7 +477,7 @@ const txt=r=>{
 };
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function ask(msgs,sys,img){
- if(img)throw new Error("Die eingebauten lokalen Modelle können derzeit Text verarbeiten, aber keine Bilder analysieren.");
+ if(img)throw new Error("Bildanalyse ist mit dem aktuell ausgewählten lokalen Textmodell nicht verfügbar. Bitte stelle deine Frage als Text.");
  if(activeRequests>0)throw new Error("J.A.R.V.I.S. verarbeitet bereits eine Anfrage. Bitte kurz warten.");
  activeRequests++;
  const modelId=selectedLocalModel;
@@ -784,9 +784,8 @@ tools.youtube=async q=>{
  const id=await ytSearch(q);openYtWin(id,q);
  return id?"Video wird im Fenster abgespielt. Falls der Player einen Fehler zeigt, hilft der Pfeil ↗ oben im Fenster.":"Videosuche nicht erreichbar; ein Link zur YouTube-Suche steht im Fenster.";
 };
-/* Mikrofon startet beim ersten Klick von selbst, damit alles per Sprache geht */
-let autoMicDone=false;
-addEventListener("pointerdown",e=>{if(autoMicDone)return;autoMicDone=true;if(e.target.closest&&e.target.closest("#mic"))return;if(!listening)$("mic").click()},true);
+/* Mikrofon wird nur durch bewussten Klick auf die Mikrofontaste aktiviert. */
+let autoMicDone=true;
 
 /* ---------- Plugin-System: eingebaute Plugins + selbst geschriebene Plugins ---------- */
 let pendingPlugin=null,gmailTok="",gmailExp=0;
@@ -858,7 +857,7 @@ function makeJ(rec){
    pluginDescs[key]=t.description||"";rec.tools.push(key)});
    if(def&&def.init)Promise.resolve().then(()=>def.init()).catch(e=>log("Plugin "+rec.name+": "+emsg(e),"s"))},
   fetch:(u,o)=>fetch(u,o),
-  secret:k=>{try{return localStorage.getItem("jsec_"+k)||""}catch(e){return""}},
+  secret:k=>{try{return sessionStorage.getItem("jsec_"+k)||""}catch(e){return""}},
   log:m=>log("["+rec.name+"] "+m,"s"),say:t=>speak(t),esc:x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),
   window:(title,html)=>{const o=mkWin("plug","🧩 "+String(title).toUpperCase().slice(0,34),520,360);o.body.innerHTML=html;return o},
   confirm:m=>window.confirm(m),
@@ -941,7 +940,7 @@ tools.plugin_besser=async a=>{const i=a.indexOf("|"),nm=(i>0?a.slice(0,i):a).tri
  const code=await genPlugin(wish,r.code);stagePlugin(code,r.id,r.name);return"Verbesserter Entwurf liegt im Code-Fenster. Frage den Nutzer, ob du ihn aktivieren sollst."};
 tools.plugin_weg=async a=>{const r=PLUG.find(x=>x.name.toLowerCase()===String(a).trim().toLowerCase());if(!r)return"Plugin nicht gefunden.";deactivate(r);if(!r.builtin)PLUG.splice(PLUG.indexOf(r),1);await persistPlugins();renderPlugins();return r.builtin?r.name+" ausgeschaltet.":r.name+" entfernt."};
 tools.plugin_liste=()=>PLUG.map(r=>r.name+(r.enabled?" (an)":" (aus)")+": "+r.description).join("\n")||"Keine Plugins";
-$("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();try{localStorage.setItem("jsec_github",v)}catch(e){}$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token gespeichert (nur in diesem Browser).":"GitHub-Token gelöscht."};
+$("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();try{if(v)sessionStorage.setItem("jsec_github",v);else sessionStorage.removeItem("jsec_github")}catch(e){}$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token bis zum Schließen dieses Tabs gespeichert.":"GitHub-Token aus diesem Tab entfernt.";};
 $("plugoff").onclick=async()=>{PLUG.forEach(deactivate);await persistPlugins();renderPlugins();$("plugstatus").textContent="Alle Plugins ausgeschaltet."};
 $("gmailbtn").onclick=async()=>{
  try{
@@ -1145,11 +1144,7 @@ tools.route=async a=>{
  openMapWin(emb,"https://www.google.com/maps/dir/?api=1&"+(from?"origin="+enc(from)+"&":"")+"destination="+enc(to),"Route · "+to);
  return"Route nach „"+to+"“ ist im Fenster geöffnet."+(from?"":" Ohne Startpunkt, bitte oben im Fenster eintragen.");
 };
-/* Mikrofon direkt beim Laden versuchen; klappt das nicht, genügt der erste Klick */
-setTimeout(async()=>{
- if(listening||autoMicDone)return;
- try{await requestMicPermissionOnce();if(listening)return;autoMicDone=true;if(!SR){await useCloudMic("");return}listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");log("Mikrofon ist automatisch an. Sprich einfach los.","s")}catch(e){listening=false}
-},1500);
+/* Kein automatischer Mikrofonzugriff beim Laden. */
 /* ---------- Sprachsteuerung ohne externen KI-Dienst ---------- */
 function handleVoice(t){
  let phrase=String(t||"").trim();if(phrase.length<2)return;
@@ -1248,13 +1243,14 @@ let pendingVisionImage=null;
 $("pick").onclick=()=>$("filepick").click();
 $("filepick").onchange=async()=>{
  const f=$("filepick").files?.[0];if(!f)return;
- if(!f.type.startsWith("image/")){log("Bitte eine Bilddatei auswählen.","s");return}
- if(f.size>8*1024*1024){log("Das Bild ist größer als 8 MB. Bitte wähle eine kleinere Datei.","s");return}
+ if(!f.type.startsWith("image/")){$("filepick").value="";log("Bitte eine Bilddatei auswählen.","s");return}
+ if(f.size>8*1024*1024){$("filepick").value="";log("Das Bild ist größer als 8 MB. Bitte wähle eine kleinere Datei.","s");return}
  try{
   const data=await new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>resolve(rd.result);rd.onerror=reject;rd.readAsDataURL(f)});
-  pendingVisionImage=dataBlob(data);logImg([data],"Dein Bild · bereit zur Analyse");
-  $("in").value=$("in").value.trim()||"Beschreibe und analysiere dieses Bild.";
-  log("Bild angehängt. Schreibe deine Frage dazu und drücke Senden.","s");
+  pendingVisionImage=null;logImg([data],"Lokale Bildvorschau · keine KI-Analyse");
+  $("in").value=$("in").value.trim()||"Ich habe ein Bild ausgewählt, kann es mit dem aktuellen Textmodell aber nicht analysieren.";
+  log("Bildvorschau geöffnet. Das Bild wird nicht an die KI übertragen; die lokale KI unterstützt derzeit nur Text.","s");
+  $("filepick").value="";
  }catch(e){log("Bild konnte nicht geladen werden: "+emsg(e),"s")}
 };
 async function run(message){
@@ -1285,7 +1281,7 @@ async function run(message){
   if(!answer)answer="Ich konnte gerade keine Antwort erstellen.";
   if(!cloudData.ownerEmail&&/(e-?mail|email).{0,65}(adresse|address)|(?:adresse|address).{0,65}(e-?mail|email)/i.test(answer))awaitingEmail=true;
   await presentAnswer(answer);if(cloudReady)await saveCloud({history:histForCloud()});
- }catch(e){const msg="Fehler: "+emsg(e);log(msg,"s");await speak(msg)}
+ }catch(e){pendingVisionImage=null;const msg="Fehler: "+emsg(e);log(msg,"s");await speak(msg)}
  finally{busy=false;if(!speaking)setState(listening?"HÖRE ZU":"BEREIT");if(queuedMessages.length)run(queuedMessages.shift());else if(queuedVoice.length)run(queuedVoice.shift())}
 }
 
@@ -1329,12 +1325,12 @@ function germanUtterance(text,volume){
  return u;
 }
 function ensureRecognition(){
- if(cm.on||!SR||!listening||recognitionPaused||!rec||recStarting)return;
+ if(!SR||!listening||recognitionPaused||!rec||recStarting)return;
  try{recStarting=true;rec.start()}catch(e){recStarting=false;if(e.name!=="InvalidStateError")scheduleRecognitionRestart()}
 }
 let recognitionPaused=false,recStarting=false,restartTimer=0,restartDelay=700;
 function scheduleRecognitionRestart(){
- if(cm.on||!listening||recognitionPaused||!SR)return;
+ if(!listening||recognitionPaused||!SR)return;
  clearTimeout(restartTimer);
  restartTimer=setTimeout(()=>{recStarting=false;ensureRecognition()},restartDelay);
  restartDelay=Math.min(5000,Math.round(restartDelay*1.5));
