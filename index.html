@@ -371,7 +371,7 @@ async function testNextLocalModel(){
 }
 function renderModelCount(){
  const el=$("modelcount");if(!el)return;
- el.textContent="LOKALE KI-MODELLE: "+modelCatalog.length+" · OHNE KI-API";
+ el.textContent="OLLAMA-MODELLE AUF DIESEM PC: "+modelCatalog.length;
 }
 function renderProv(){
  const root=$("prov");if(!root)return;root.innerHTML="";
@@ -430,21 +430,14 @@ async function loadWebLLM(){
 }
 async function setLocalModel(id){
  if(!modelCatalog.some(m=>m.id===id))return;
- if(id===selectedLocalModel){log("Dieses lokale Modell ist bereits ausgewählt.","s");return}
- if(modelLoading||activeRequests>0||modelTestRunning){
-  log("Das Modell arbeitet gerade. Bitte den Modellwechsel nach der aktuellen Antwort erneut versuchen.","s");
-  return;
- }
- selectedLocalModel=id;
+ if(id===selectedLocalModel){log("Dieses Ollama-Modell ist bereits ausgewählt.","s");return}
+ if(activeRequests>0){log("Bitte warte, bis die aktuelle Antwort fertig ist.","s");return}
+ selectedLocalModel=id;engineModel=id;
  try{localStorage.setItem("jarvis_local_model",id)}catch(e){}
  if(cloudReady)saveCloud({localModelChoice:id});
- if(localEngine&&engineModel!==id){
-  const old=localEngine;localEngine=null;engineModel="";
-  try{await old.unload()}catch(e){}
- }
  renderProv();
- $("kihealth").textContent="MODELL GEWECHSELT · WIRD BEI DER NÄCHSTEN FRAGE GELADEN";
- log("Lokales Modell ausgewählt: "+shortModelName(id)+". Der Download startet bei der nächsten Frage.","s");
+ $("kihealth").textContent="OLLAMA BEREIT · "+id;
+ log("Ollama-Modell ausgewählt: "+id,"s");
 }
 async function loadLocalEngine(id){
  await loadWebLLM();
@@ -475,46 +468,26 @@ async function loadLocalEngine(id){
 }
 async function autoConnectAI(){
  try{
-  await initCloud();loadPlugins();
-  await loadWebLLM();
-  // Beim Start wird automatisch das stärkste der vorgesehenen Modelle versucht.
-  // Wenn der Gerätespeicher oder die GPU nicht ausreichen, wird stufenweise reduziert.
-  const preferred=[
-   "Qwen2.5-3B-Instruct-q4f16_1-MLC",
-   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
-   "Qwen2.5-0.5B-Instruct-q4f16_1-MLC"
-  ].find(id=>modelCatalog.some(m=>m.id===id));
-  const saved=cloudData.localModelChoice;
-  const startModel=preferred||modelCatalog[0]?.id||selectedLocalModel;
-  const candidates=[startModel,
-   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
-   "Qwen2.5-0.5B-Instruct-q4f16_1-MLC"
-  ].filter((id,i,a)=>modelCatalog.some(m=>m.id===id)&&a.indexOf(id)===i);
-  let loaded=false,lastError=null;
-  for(const id of candidates){
-   try{
-    selectedLocalModel=id;
-    try{localStorage.setItem("jarvis_local_model",id)}catch(e){}
-    if(cloudReady&&saved!==id)await saveCloud({localModelChoice:id});
-    renderProv();
-    log("J.A.R.V.I.S. lädt sein bestes unterstütztes Startmodell: "+shortModelName(id)+". Der Download erfolgt automatisch beim Öffnen.","s");
-    await loadLocalEngine(id);
-    loaded=true;
-    break;
-   }catch(e){
-    lastError=e;
-    log(shortModelName(id)+" kann auf diesem Gerät nicht gestartet werden. Prüfe das nächstkleinere Modell.","s");
-   }
-  }
-  if(!loaded)throw lastError||new Error("Kein unterstütztes lokales Modell verfügbar.");
-  modelTestIndex=0;
-  while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status)modelTestIndex++;
-  renderModelTestStatus();
-  $("modelteststart")?.addEventListener("click",testNextLocalModel);
-  $("modeltestnext")?.addEventListener("click",testNextLocalModel);
+  try{await initCloud();loadPlugins()}catch(e){log("Cloud-Speicher ist nicht verfügbar; die lokale KI kann trotzdem arbeiten.","s")}
+  ["modelteststatus","modelteststart","modeltestnext"].forEach(id=>{const el=$(id);if(el)el.style.display="none"});
+  $("kihealth").textContent="VERBINDE MIT OLLAMA AUF DIESEM PC …";
+  const response=await fetch("http://127.0.0.1:11434/api/tags",{cache:"no-store"});
+  if(!response.ok)throw new Error("Ollama meldet HTTP "+response.status);
+  const data=await response.json();
+  const models=Array.isArray(data.models)?data.models:[];
+  modelCatalog=models.map(m=>({id:String(m.name||m.model||""),name:String(m.name||m.model||"")})).filter(m=>m.id);
+  if(!modelCatalog.length)throw new Error("Ollama hat keine installierten Modelle gefunden.");
+  const preferred="qwen3.8:27b-q4_K_M";
+  if(!modelCatalog.some(m=>m.id===selectedLocalModel))selectedLocalModel=modelCatalog.some(m=>m.id===preferred)?preferred:modelCatalog[0].id;
+  engineModel=selectedLocalModel;
+  try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
+  renderProv();renderModelCount();
+  $("kihealth").textContent="OLLAMA VERBUNDEN · "+selectedLocalModel;
+  log("J.A.R.V.I.S. ist mit Ollama auf diesem PC verbunden. Modell: "+selectedLocalModel+". Die KI läuft auf deinem PC.","s");
  }catch(e){
-  $("kihealth").textContent="LOKALE KI NICHT VERFÜGBAR";
-  log("Lokale KI konnte nicht vorbereitet werden: "+emsg(e),"s");
+  modelCatalog=[];renderProv();renderModelCount();
+  $("kihealth").textContent="OLLAMA NICHT ERREICHBAR";
+  log("Ollama-Verbindung fehlgeschlagen: "+emsg(e)+". Prüfe, ob Ollama läuft und die Browser-Origin freigegeben ist.","s");
  }
 }
 addEventListener("DOMContentLoaded",()=>{autoConnectAI()});
@@ -525,96 +498,37 @@ const txt=r=>{
 };
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function ask(msgs,sys,img){
- if(img)throw new Error("Bildanalyse ist mit dem aktuell ausgewählten lokalen Textmodell nicht verfügbar. Bitte stelle deine Frage als Text.");
+ if(img)throw new Error("Bildanalyse ist über den Ollama-Textmodus derzeit nicht verfügbar.");
  if(activeRequests>0)throw new Error("J.A.R.V.I.S. verarbeitet bereits eine Anfrage. Bitte kurz warten.");
+ if(!selectedLocalModel)throw new Error("Ollama ist nicht verbunden. Starte Ollama und lade J.A.R.V.I.S. neu.");
  activeRequests++;
  const modelId=selectedLocalModel;
  try{
-  const engine=await loadLocalEngine(modelId);
-  const CONTEXT_LIMIT=8192;
-  const OUTPUT_LIMIT=900;
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
-  const systemText=String(sys||"").slice(0,10000);
-  const cleanMessages=msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}));
-  // Die Kontextgrenze zählt Tokens, nicht Zeichen. Mit ca. 3,5 Zeichen pro Token
-  // darf der bisherige Zeichenvergleich nicht die eigentliche Nutzerfrage verwerfen.
-  const budget=Math.floor((CONTEXT_LIMIT-OUTPUT_LIMIT-500)*3.5);
-  const latest=cleanMessages[cleanMessages.length-1];
-  let used=systemText.length;
-  const kept=[];
-  for(let i=cleanMessages.length-1;i>=0;i--){
-   const item=cleanMessages[i];
-   const cost=item.content.length+24;
-   if(i===cleanMessages.length-1){
-    kept.unshift(item);used+=cost;continue;
-   }
-   if(used+cost>budget)continue;
-   kept.unshift(item);used+=cost;
+  const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
+  $("kihealth").textContent="OLLAMA DENKT · "+modelId;
+  const response=await fetch("http://127.0.0.1:11434/api/chat",{
+   method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",
+   body:JSON.stringify({model:modelId,messages:history,stream:false,think:false,keep_alive:"10m",options:{temperature:0.25,num_predict:700}})
+  });
+  if(!response.ok){
+   let detail="HTTP "+response.status;
+   try{const problem=await response.json();detail=problem.error||detail}catch(_){}
+   throw new Error("Ollama: "+detail);
   }
-  while(kept.length>1&&used>budget){
-   const removed=kept.shift();
-   if(removed!==latest)used-=removed.content.length+24;
-  }
-  const history=[{role:"system",content:systemText},...kept];
-  $("kihealth").textContent="LOKALE KI BEREIT · KONTEXT "+Math.min(100,Math.round(used/budget*100))+"%";
-  let result;
-  try{
-   result=await engine.chat.completions.create({messages:history,temperature:0.25,max_tokens:600});
-  }catch(e){
-   const err=emsg(e);
-   if(/context window|prompt tokens exceed|context length/i.test(err)){
-    const compact=[history[0],...history.slice(-2)];
-    result=await engine.chat.completions.create({messages:compact,temperature:0.25,max_tokens:450});
-   }else if(/already been disposed|disposed object|object.*disposed/i.test(err)){
-    // WebLLM kann intern noch einen bereits freigegebenen TVM/WebGPU-Verweis halten.
-    // Deshalb nicht loadLocalEngine() verwenden (das könnte denselben Verweis zurückgeben),
-    // sondern die Engine-Instanz vollständig verwerfen und frisch erzeugen.
-    log("Die lokale KI-Engine wurde freigegeben. Ich baue sie einmal vollständig neu auf …","s");
-    const stale=localEngine;
-    localEngine=null;engineModel="";
-    modelLoading=true;
-    try{
-     if(stale){try{await stale.unload()}catch(_){}}
-     await loadWebLLM();
-     const freshEngine=await webllm.CreateMLCEngine(modelId,{
-      appConfig:{...webllm.prebuiltAppConfig,cacheBackend:"cache"},
-      initProgressCallback:report=>{
-       const pct=Math.round((report.progress||0)*100);
-       $("kihealth").textContent="KI-ENGINE WIRD NEU GESTARTET · "+pct+"% · "+(report.text||"");
-      }
-     });
-     localEngine=freshEngine;engineModel=modelId;
-     $("kihealth").textContent="LOKALE KI BEREIT · "+shortModelName(modelId);
-     renderProv();
-     result=await freshEngine.chat.completions.create({messages:history,temperature:0.25,max_tokens:600});
-    }catch(recoveryError){
-     localEngine=null;engineModel="";
-     const recoveryText=emsg(recoveryError);
-     if(isGPUCompatibilityError(recoveryText)){
-      $("kihealth").textContent="WEBGPU / GRAFIKADAPTER NICHT KOMPATIBEL";
-      const browserHint=/Safari/i.test(navigator.userAgent)&&!/Chrome|Chromium|Edg/i.test(navigator.userAgent)
-       ?" Du verwendest Safari. WebGPU ist dort abhängig von Browser- und macOS-Version nur teilweise verfügbar. Teste JARVIS mit aktuellem Chrome oder Edge."
-       :" Prüfe, ob die Hardwarebeschleunigung aktiv ist und der Grafiktreiber aktuell ist.";
-      log("Lokale KI gestoppt: WebLLM kann keinen kompatiblen GPU-Adapter initialisieren. Es wird kein weiterer Neustart versucht."+browserHint,"s");
-      throw new Error("WebLLM kann auf diesem Browser/Gerät keinen kompatiblen GPU-Adapter initialisieren. Das ist eine WebGPU-/Treiber-/Browser-Kompatibilität und kein Fehler deiner Nachricht."+browserHint);
-     }
-     const gpuProblem=await getWebGPUProblem();
-     if(gpuProblem){
-      $("kihealth").textContent="WEBGPU NICHT VERFÜGBAR";
-      throw new Error(gpuProblem+" Die lokale KI kann auf diesem Gerät derzeit nicht starten.");
-     }
-     throw new Error("Die lokale KI-Engine ließ sich nicht neu starten: "+recoveryText+". Bitte die Seite neu laden.");
-    }finally{modelLoading=false}
-   }else throw e;
-  }
-  const answer=String(result?.choices?.[0]?.message?.content||"").trim();
-  if(!answer)throw new Error("Das lokale Modell hat eine leere Antwort geliefert.");
+  const result=await response.json();
+  const answer=String(result?.message?.content||"").trim();
+  if(!answer)throw new Error("Ollama hat eine leere Antwort geliefert.");
   await recordSuccessfulQuestion();
-  log("Antwort lokal auf diesem Gerät erzeugt · "+shortModelName(modelId),"s");
+  $("kihealth").textContent="OLLAMA BEREIT · "+modelId;
+  log("Antwort mit Ollama auf diesem PC erzeugt · "+modelId,"s");
   return answer;
- }finally{
-  activeRequests=Math.max(0,activeRequests-1);
- }
+ }catch(e){
+  $("kihealth").textContent="OLLAMA-ANFRAGE FEHLGESCHLAGEN";
+  const message=emsg(e);
+  if(/Failed to fetch|NetworkError|Load failed/i.test(message))throw new Error("J.A.R.V.I.S. erreicht Ollama auf diesem PC nicht. Prüfe, ob Ollama läuft und die Browser-Origin freigegeben ist.");
+  throw e;
+ }finally{activeRequests=Math.max(0,activeRequests-1)}
 }
 
 /* ---------- Agent ---------- */
