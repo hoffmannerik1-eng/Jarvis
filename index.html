@@ -1165,9 +1165,9 @@ function speak(t){return new Promise(res=>{
   else setState("BEREIT");
   res();
  };
- const clean=String(t).replace(/https?:\\/\\/\\S+/g," ").replace(/[*_`#]/g," ").replace(/\\s+/g," ").trim();
+ const clean=String(t).replace(/https?:\/\/\S+/g," ").replace(/[*_`#]/g," ").replace(/\s+/g," ").trim();
  const chunks=[];
- (clean.match(/[^.!?;:\\n]+[.!?;:]?/g)||[clean]).forEach(part=>{
+ (clean.match(/[^.!?;:\n]+[.!?;:]?/g)||[clean]).forEach(part=>{
   let x=part.trim();while(x.length>180){let k=x.lastIndexOf(" ",180);if(k<60)k=180;chunks.push(x.slice(0,k));x=x.slice(k).trim()}if(x)chunks.push(x);
  });
  if(!chunks.length){done();return}
