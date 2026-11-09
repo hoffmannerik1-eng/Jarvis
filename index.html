@@ -477,12 +477,36 @@ async function autoConnectAI(){
  try{
   await initCloud();loadPlugins();
   await loadWebLLM();
-  $("kihealth").textContent=navigator.gpu?"LOKALE KI VERFÜGBAR · MODELL WIRD BEI BEDARF GELADEN":"WEBGPU NICHT VERFÜGBAR";
-  log(modelCatalog.length+" lokale Modelle stehen zur Auswahl; beim ersten Einsatz werden die Modelldateien geladen.","s");
-  if(cloudData.localModelChoice&&LOCAL_MODEL_IDS.includes(cloudData.localModelChoice)){
-   selectedLocalModel=cloudData.localModelChoice;
-   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
+  // Beim Start wird automatisch das stärkste der vorgesehenen Modelle versucht.
+  // Wenn der Gerätespeicher oder die GPU nicht ausreichen, wird stufenweise reduziert.
+  const preferred=[
+   "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+   "Qwen2.5-0.5B-Instruct-q4f16_1-MLC"
+  ].find(id=>modelCatalog.some(m=>m.id===id));
+  const saved=cloudData.localModelChoice;
+  const startModel=preferred||modelCatalog[0]?.id||selectedLocalModel;
+  const candidates=[startModel,
+   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+   "Qwen2.5-0.5B-Instruct-q4f16_1-MLC"
+  ].filter((id,i,a)=>modelCatalog.some(m=>m.id===id)&&a.indexOf(id)===i);
+  let loaded=false,lastError=null;
+  for(const id of candidates){
+   try{
+    selectedLocalModel=id;
+    try{localStorage.setItem("jarvis_local_model",id)}catch(e){}
+    if(cloudReady&&saved!==id)await saveCloud({localModelChoice:id});
+    renderProv();
+    log("J.A.R.V.I.S. lädt sein bestes unterstütztes Startmodell: "+shortModelName(id)+". Der Download erfolgt automatisch beim Öffnen.","s");
+    await loadLocalEngine(id);
+    loaded=true;
+    break;
+   }catch(e){
+    lastError=e;
+    log(shortModelName(id)+" kann auf diesem Gerät nicht gestartet werden. Prüfe das nächstkleinere Modell.","s");
+   }
   }
+  if(!loaded)throw lastError||new Error("Kein unterstütztes lokales Modell verfügbar.");
   modelTestIndex=0;
   while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status)modelTestIndex++;
   renderModelTestStatus();
