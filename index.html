@@ -591,6 +591,15 @@ $("ivprev").onclick=()=>showViewer(viewerIndex-1);$("ivnext").onclick=()=>showVi
 $("imageViewer").addEventListener("click",e=>{if(e.target===$("imageViewer"))$("imageViewer").classList.remove("open")});
 document.addEventListener("keydown",e=>{if(!$("imageViewer").classList.contains("open"))return;if(e.key==="Escape")$("imageViewer").classList.remove("open");if(e.key==="ArrowLeft")showViewer(viewerIndex-1);if(e.key==="ArrowRight")showViewer(viewerIndex+1)});
 function logImg(urls,cap){viewerImages=urls.slice();openImageWin(urls,cap);log("Bilder im Fenster geöffnet: "+(cap||""),"s")}
+function safeCalculate(expression){
+ const src=String(expression||"").replace(/,/g,".").replace(/\s+/g,"");let i=0;
+ function number(){const start=i;while(/[0-9.]/.test(src[i]||""))i++;const raw=src.slice(start,i);if(!raw||!/^\d+(?:\.\d*)?$|^\.\d+$/.test(raw))throw new Error("Zahl erwartet");const n=Number(raw);if(!Number.isFinite(n))throw new Error("Ungültige Zahl");return n}
+ function primary(){if(src[i]==="+"){i++;return primary()}if(src[i]==="-"){i++;return-primary()}if(src[i]==="("){i++;const v=add();if(src[i++]!==")")throw new Error("Klammer fehlt");return v}return number()}
+ function power(){let v=primary();if(src[i]==="^"){i++;v=Math.pow(v,power())}return v}
+ function mul(){let v=power();while(src[i]==="*"||src[i]==="/"||src[i]==="%"){const op=src[i++],r=power();if((op==="/"||op==="%")&&r===0)throw new Error("Division durch null");v=op==="*"?v*r:op==="/"?v/r:v%r}return v}
+ function add(){let v=mul();while(src[i]==="+"||src[i]==="-"){const op=src[i++],r=mul();v=op==="+"?v+r:v-r}return v}
+ try{if(!src||src.length>120||!/^[0-9.+\-*/%^()]+$/.test(src))return"Ungültiger Ausdruck";const result=add();if(i!==src.length||!Number.isFinite(result))return"Ungültiger Ausdruck";return String(result)}catch(e){return"Rechenfehler: "+e.message}
+}
 const tools={
 
  taskadd:async a=>{let v;try{v=JSON.parse(a)}catch(e){return "Bitte die Daueraufgabe als JSON mit description angeben."}const description=String(v.description||"").trim();if(!description)return "Die Beschreibung fehlt.";const tasks=Array.isArray(cloudData.tasks)?cloudData.tasks.slice():[];tasks.push({id:"t"+Date.now(),description,active:true,createdAt:Date.now()});cloudData.tasks=tasks;const saved=await saveCloud({tasks});try{localStorage.setItem("jarvis_tasks",JSON.stringify(tasks))}catch(e){}renderTasks();return saved?"Daueraufgabe wurde in Firebase gespeichert.":"Daueraufgabe wurde lokal gespeichert; Firebase ist nicht verbunden."},
@@ -615,13 +624,13 @@ const tools={
    logImg(["data:image/svg+xml;charset=utf-8,"+encodeURIComponent(m[0].replace(/<script[\s\S]*?<\/script>/gi,""))],q);return"Grafik gezeichnet und angezeigt"}
   logImg(["https://image.pollinations.ai/prompt/"+enc(q)+"?width=768&height=768&nologo=true&seed="+Date.now()%99999],q);return"Bild wird erzeugt und angezeigt"},
  file:a=>{showLog(45000);const i=a.indexOf("|"),n=(i>0?a.slice(0,i):"datei.txt").replace(/[^\w.\-]/g,"_"),c=i>0?a.slice(i+1):a;
-  const l=document.createElement("a");l.href=URL.createObjectURL(new Blob([c],{type:"text/plain"}));l.download=n;l.textContent="⬇ "+n;
+  const l=document.createElement("a"),blobUrl=URL.createObjectURL(new Blob([c],{type:"text/plain"}));l.href=blobUrl;l.download=n;l.textContent="⬇ "+n;l.addEventListener("click",()=>setTimeout(()=>URL.revokeObjectURL(blobUrl),1000),{once:true});
   const d=document.createElement("div");d.className="m j";d.appendChild(l);$("log").appendChild(d);$("log").scrollTop=1e9;return"Datei bereit: "+n},
  time:()=>new Date().toLocaleString("de-DE"),
- calc:a=>{if(!/^[\d\s+\-*/().,%^]+$/.test(a))return"Ungültiger Ausdruck";try{return String(Function('"use strict";return ('+a.replace(/,/g,".").replace(/\^/g,"**")+')')())}catch(e){return"Fehler"}},
+ calc:a=>safeCalculate(a),
  open:a=>{window.open(/^https?:/.test(a)?a:"https://"+a,"_blank");return"Geöffnet: "+a},
  search:a=>{window.open("https://www.google.com/search?q="+encodeURIComponent(a),"_blank");return"Suche geöffnet: "+a},
- timer:a=>{const[s,t]=a.split("|");const n=parseFloat(s)||10;setTimeout(()=>{log("Timer abgelaufen: "+(t||""),"s");speak("Timer abgelaufen. "+(t||""))},n*1000);return"Timer läuft "+n+" Sekunden"}
+ timer:a=>{const parts=String(a||"").split("|"),raw=parts[0].trim(),label=String(parts.slice(1).join("|")).slice(0,120),n=Number(raw);if(!Number.isFinite(n)||n<1||n>86400)return"Bitte eine Timerdauer zwischen 1 und 86400 Sekunden angeben.";setTimeout(()=>{log("Timer abgelaufen: "+label,"s");speak("Timer abgelaufen. "+label)},n*1000);return"Timer läuft "+n+" Sekunden"}
 };
 
 
@@ -640,7 +649,7 @@ function openCodeWin(blocks){
   const head=document.createElement("div");head.className="cbh";
   const lab=document.createElement("span");lab.textContent=(b.lang||"code").toUpperCase()+" · "+b.code.split("\n").length+" Zeilen";head.appendChild(lab);
   const cp=document.createElement("button");cp.textContent="KOPIEREN";cp.onclick=()=>copyText(b.code,cp);head.appendChild(cp);
-  const sv=document.createElement("button");sv.textContent="SPEICHERN";sv.onclick=()=>{const ext=EXT[b.lang]||(isHtmlCode(b)?"html":"txt");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([b.code],{type:"text/plain"}));a.download="jarvis"+(blocks.length>1?"_"+(i+1):"")+"."+ext;document.body.appendChild(a);a.click();a.remove()};head.appendChild(sv);
+  const sv=document.createElement("button");sv.textContent="SPEICHERN";sv.onclick=()=>{const ext=EXT[b.lang]||(isHtmlCode(b)?"html":"txt");const a=document.createElement("a"),blobUrl=URL.createObjectURL(new Blob([b.code],{type:"text/plain"}));a.href=blobUrl;a.download="jarvis"+(blocks.length>1?"_"+(i+1):"")+"."+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(blobUrl),1000)};head.appendChild(sv);
   const pre=document.createElement("pre");pre.textContent=b.code;
   wrap.append(head,pre);
   if(isHtmlCode(b)){
@@ -868,8 +877,9 @@ function makeJ(rec){
  return J;
 }
 function activate(rec){
- try{rec.tools=[];const J=makeJ(rec);if(rec.fn)rec.fn(J);else new Function("J",rec.code)(J);rec.enabled=true;rec.error="";}
- catch(e){rec.error=emsg(e);rec.enabled=false;log("Plugin "+rec.name+" konnte nicht starten: "+emsg(e),"s")}
+ if(rec.user){rec.enabled=false;rec.error="Eigene Plugins sind in dieser Version aus Sicherheitsgründen deaktiviert; beliebiger JavaScript-Code wird nicht ausgeführt.";return false}
+ try{rec.tools=[];const J=makeJ(rec);if(rec.fn)rec.fn(J);else throw new Error("Unbekanntes Plugin.");rec.enabled=true;rec.error="";return true}
+ catch(e){rec.error=emsg(e);rec.enabled=false;log("Plugin "+rec.name+" konnte nicht starten: "+emsg(e),"s");return false}
 }
 function deactivate(rec){
  try{rec.def&&rec.def.destroy&&rec.def.destroy()}catch(e){}
@@ -888,7 +898,7 @@ function loadPlugins(){
  if(!Array.isArray(list)){try{const l=JSON.parse(localStorage.getItem("jarvis_plugins")||"{}");list=l.list||[];off=l.off||[]}catch(e){list=[];off=[]}}
  off=off||[];
  BUILTIN.forEach(b=>{const r={id:b.id,name:b.name,description:b.description,fn:b.fn,builtin:true,tools:[]};PLUG.push(r);if(!off.includes(b.id))activate(r)});
- list.forEach(u=>{const r={...u,user:true,tools:[]};PLUG.push(r);if(u.enabled!==false)activate(r)});
+ list.filter(u=>u&&typeof u==="object"&&typeof u.name==="string").forEach(u=>{const r={...u,user:true,enabled:false,tools:[],error:"Eigene Plugins sind aus Sicherheitsgründen deaktiviert. Code kann geprüft und kopiert werden."};PLUG.push(r)});
  renderPlugins();
 }
 function renderPlugins(){
@@ -897,7 +907,7 @@ function renderPlugins(){
   const row=document.createElement("div");row.className="taskrow";
   const lab=document.createElement("span");lab.textContent=r.name+(r.builtin?"":" (eigenes)")+" – "+(r.error?"Fehler: "+r.error:r.description);
   const tg=document.createElement("button");tg.textContent=r.enabled?"AN":"AUS";
-  tg.onclick=async()=>{if(r.enabled)deactivate(r);else activate(r);await persistPlugins();renderPlugins()};
+  tg.onclick=async()=>{if(r.user){r.enabled=false;r.error="Eigene Plugins können in dieser Version nicht sicher ausgeführt werden.";renderPlugins();return}if(r.enabled)deactivate(r);else activate(r);await persistPlugins();renderPlugins()};
   row.append(lab,tg);
   if(!r.builtin){const d=document.createElement("button");d.textContent="LÖSCHEN";d.onclick=async()=>{deactivate(r);PLUG.splice(PLUG.indexOf(r),1);await persistPlugins();renderPlugins()};row.appendChild(d)}
   root.appendChild(row);
@@ -927,8 +937,8 @@ async function installPending(){
  if(!pendingPlugin)return;const p=pendingPlugin;pendingPlugin=null;
  const old=p.replaceId&&PLUG.find(r=>r.id===p.replaceId);
  if(old){deactivate(old);PLUG.splice(PLUG.indexOf(old),1)}
- const rec={id:p.replaceId||"p"+Date.now(),name:p.name,description:p.description,code:p.code,user:true,tools:[]};
- PLUG.push(rec);activate(rec);await persistPlugins();renderPlugins();closeCodeWin();
+ const rec={id:p.replaceId||"p"+Date.now(),name:p.name,description:p.description,code:p.code,user:true,enabled:false,tools:[],error:"Nicht aktiviert: direkte JavaScript-Ausführung ist aus Sicherheitsgründen gesperrt."};
+ PLUG.push(rec);await persistPlugins();renderPlugins();closeCodeWin();
  const msg=rec.error?"Das Plugin hat beim Start einen Fehler gemeldet: "+rec.error:"Plugin "+rec.name+" ist aktiv. Neue Werkzeuge: "+(rec.tools.join(", ")||"keine");
  log(msg,"j");speak(rec.error?"Das Plugin hatte einen Fehler.":"Plugin "+rec.name+" ist aktiv.");
 }
