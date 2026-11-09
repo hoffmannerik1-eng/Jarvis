@@ -1154,6 +1154,20 @@ const FILL=new Set("es das den die dem der chat fenster code bild bilder foto fo
 function localCmd(q){
  const t=String(q||"").toLowerCase().replace(/[.,!?;:]/g," ").replace(/\bjarvis\b/g," ").replace(/\s+/g," ").trim();
  if(!t)return null;
+ // Sprachbefehle für das vorhandene Modell-/Systemmenü
+ if(/^(?:(?:bitte )?(?:öffne|oeffne|zeige|zeig|mach auf|blende ein) )?(?:das )?(?:ki[- ]?)?(?:modell|modelle|anbieter|system|status)? ?(?:menü|menu|fenster|übersicht|uebersicht)(?: mit den modellen)?$/.test(t) ||
+    /(?:öffne|oeffne|zeige|zeig|mach auf|blende ein).*(?:modellmenü|modell menü|ki menü|ki-menü|modellübersicht|modell übersicht|anbieter|modelle und alles|modelle anzeigen)/.test(t) ||
+    /^(?:modellmenü|modell menü|ki menü|ki-menü|modellübersicht|modell übersicht|anbieter anzeigen|modelle anzeigen)$/.test(t)){
+  return()=>{
+   const panel=$("side");
+   if(panel){panel.classList.remove("hide");panel.style.display="block";panel.style.zIndex="90";panel.scrollTop=0}
+   log("Modell- und Systemmenü geöffnet.","j");
+   speak("Das Modell- und Systemmenü ist geöffnet.");
+  };
+ }
+ if(/^(?:schließe|schliesse|verstecke|blende aus) (?:das )?(?:modell|ki|system)? ?(?:menü|menu|fenster)$/.test(t)){
+  return()=>{setUI("side",false);log("Menü geschlossen.","j");speak("Menü geschlossen.")};
+ }
  if(/^(bitte )?(hilfe|befehle|kommandos|was kannst du|hilf mir|sprachbefehle)( .*)?$/.test(t)&&t.split(" ").length<=5)return()=>showHelp();
  if(/hand ?gest|handsteuer|gestensteuer/.test(t)){
   if(/(deaktivier|ausschalt|schalte.*aus|beende|stopp|ausmachen|mach.*aus|\baus\b)/.test(t))return()=>gesturesOff();
