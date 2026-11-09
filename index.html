@@ -725,8 +725,12 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("codeWin").class
 $("logclose").onclick=hideLog;
 $("log").addEventListener("mouseenter",()=>{logHover=true;clearTimeout(logTimer)});
 $("log").addEventListener("mouseleave",()=>{logHover=false;if(!$("log").classList.contains("hide"))logTimer=setTimeout(hideLog,8000)});
+let lastPresentedAnswer="",lastPresentedAt=0;
 async function presentAnswer(answer){
  const blocks=[];
+ const normalizedAnswer=String(answer||"").replace(/\s+/g," ").trim(),answerNow=Date.now();
+ if(normalizedAnswer&&normalizedAnswer===lastPresentedAnswer&&answerNow-lastPresentedAt<12000){log("Doppelte Antwort erkannt und unterdrückt.","s");return}
+ lastPresentedAnswer=normalizedAnswer;lastPresentedAt=answerNow;
  let text=String(answer).replace(/```([\w+#-]*)[ \t]*\r?\n?([\s\S]*?)```/g,(m,l,c)=>{blocks.push({lang:(l||"").toLowerCase(),code:c.replace(/\s+$/,"")});return " "});
  const cut=text.indexOf("```");
  if(cut>=0){const rest=text.slice(cut).replace(/^```[\w+#-]*[ \t]*\r?\n?/,"").trim();if(rest)blocks.push({lang:"",code:rest});text=text.slice(0,cut)}
@@ -1320,8 +1324,15 @@ $("filepick").onchange=async()=>{
   $("filepick").value="";
  }catch(e){log("Bild konnte nicht geladen werden: "+emsg(e),"s")}
 };
+let lastAcceptedMessage="",lastAcceptedMessageAt=0;
 async function run(message){
- const q=String(message||"").trim();if(!q&&!pendingVisionImage)return;if(!pendingVisionImage){const lc=localCmd(q);if(lc){log(q,"u");lc();return}}if(busy){queuedMessages.push(q);log("Nachricht vorgemerkt – JARVIS antwortet nach dem Vorlesen.","s");return}busy=true;log(q,"u");hist.push({role:"user",content:q});setState("DENKE …");
+ const q=String(message||"").trim();if(!q&&!pendingVisionImage)return;
+ const now=Date.now();
+ if(q&&q===lastAcceptedMessage&&now-lastAcceptedMessageAt<2500){log("Doppelte Eingabe erkannt und ignoriert.","s");return}
+ if(q){lastAcceptedMessage=q;lastAcceptedMessageAt=now}
+ if(!pendingVisionImage){const lc=localCmd(q);if(lc){log(q,"u");lc();return}}
+ if(busy){if(q&&queuedMessages[queuedMessages.length-1]===q)return;queuedMessages.push(q);log("Nachricht vorgemerkt – JARVIS antwortet nach dem Vorlesen.","s");return}
+ busy=true;log(q,"u");hist.push({role:"user",content:q});setState("DENKE …");
  try{
   if(awaitingEmail){
    const email=spokenEmail(q);
