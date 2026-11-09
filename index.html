@@ -119,7 +119,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <div style="font-size:12px;margin:9px 0 5px;color:var(--dim)">Zoom: <strong id="pzoomlabel">100 %</strong></div>
   <input id="pzoom" type="range" min="50" max="200" step="5" value="100" style="width:100%">
   <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim)"><span>Weiter weg</span><span>Näher</span></div>
-  <label style="display:flex;align-items:center;gap:8px;margin:10px 0 14px"><input id="pcircle" type="checkbox" checked> Partikelkreis anzeigen</label>
+  <label style="display:flex;align-items:center;gap:8px;margin:10px 0 14px"><input id="pcircle" type="checkbox" checked> Partikel anzeigen</label>
   <h3>SYSTEMSTATUS</h3>
   <div>Kernlast</div><div class="bar"><i id="b1"></i></div><div>Speicher</div><div class="bar"><i id="b2"></i></div><div>Netzwerk</div><div class="bar"><i id="b3"></i></div>
   <h3>KI-VERBINDUNG</h3>
@@ -983,8 +983,8 @@ async function initParticleCore(){
   const particlePrefs=(()=>{try{return JSON.parse(localStorage.getItem("jarvis_particle_prefs")||"{}")}catch(e){return {}}})();
   let configuredCount=Math.max(0,Math.min(N,Number(particlePrefs.count??N)));
   let zoomPct=Math.max(50,Math.min(200,Number(particlePrefs.zoom??100)));
-  let circleEnabled=false;
-  let draw=configuredCount;geo.setDrawRange(0,draw);pts.visible=circleEnabled;
+  let circleEnabled=true;
+  let draw=configuredCount;geo.setDrawRange(0,draw);pts.visible=true;
   const countInput=$("pcount"),zoomInput=$("pzoom"),circleInput=$("pcircle");
   const countLabel=$("pcountlabel"),zoomLabel=$("pzoomlabel");
   const saveParticlePrefs=()=>{
@@ -1494,17 +1494,6 @@ x.strokeStyle=`rgba(${TH[cur].c},.05)`;x.lineWidth=1;
  for(let g=0;g<W;g+=60*d){x.beginPath();x.moveTo(g,0);x.lineTo(g,H);x.stroke()}
  for(let g=0;g<H;g+=60*d){x.beginPath();x.moveTo(0,g);x.lineTo(W,g);x.stroke()}
  pts.forEach(p=>{p.a+=p.v*sp;const rr=R*(1.5+p.r*2.2);x.fillStyle=`rgba(${col},.45)`;x.fillRect(cx+Math.cos(p.a)*rr,cy+Math.sin(p.a)*rr,2*d,2*d)});
- ring(cx,cy,R*2.05,2*d,0,60,.55,T*.15,.35);
- ring(cx,cy,R*1.8,5*d,0,4,.35,-T*.4,.7);
- ring(cx,cy,R*1.55,2*d,0,24,.3,T*.6,.6);
- ring(cx,cy,R*1.3,10*d,0,3,.25,T*.9,.8);
- ring(cx,cy,R*1.1,1.5*d,0,90,.5,-T*.3,.8);
- for(let i=0;i<120;i++){const a=i/120*6.283+T*.05,l=i%10===0?14:6;x.strokeStyle=`rgba(${col},.5)`;x.lineWidth=d;x.beginPath();x.moveTo(cx+Math.cos(a)*R*2.2,cy+Math.sin(a)*R*2.2);x.lineTo(cx+Math.cos(a)*(R*2.2+l*d),cy+Math.sin(a)*(R*2.2+l*d));x.stroke()}
- if(x.createConicGradient){const cg=x.createConicGradient(T*.9,cx,cy);cg.addColorStop(0,`rgba(${col},.28)`);cg.addColorStop(.1,`rgba(${col},0)`);cg.addColorStop(1,`rgba(${col},0)`);x.fillStyle=cg;x.beginPath();x.arc(cx,cy,R*2.05,0,6.283);x.fill()}
- {const lv=st==="talk"?1:st==="listen"?.45:st==="think"?.6:.14;x.lineWidth=2.5*d;x.strokeStyle=`rgba(${col},.85)`;
-  for(let i=0;i<96;i++){const a=i/96*6.283-T*.2,h=(4+lv*R*.16*(.5+.5*Math.sin(i*1.7+T*9)*Math.sin(i*.6-T*5)))*1,r0=R*1.2;
-   x.beginPath();x.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);x.lineTo(cx+Math.cos(a)*(r0+h),cy+Math.sin(a)*(r0+h));x.stroke()}}
- if(pulse>0){x.strokeStyle=`rgba(255,255,255,${pulse*.8})`;x.lineWidth=3*d;x.beginPath();x.arc(cx,cy,R*(.9+(1-pulse)*2.6),0,6.283);x.stroke();pulse-=.018}
 }
  if(!window.PCORE){
 const S=R*.95,amp=st==="talk"?.08+.05*Math.sin(T*11):st==="think"?.05:.02,ry=T*.45,rx=.4+Math.sin(T*.2)*.15;
