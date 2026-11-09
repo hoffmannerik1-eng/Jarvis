@@ -317,7 +317,7 @@ function renderModelTestStatus(){
 async function testNextLocalModel(){
  if(modelTestRunning||activeRequests>0||modelLoading)return;
  if(!modelCatalog.length)return;
- while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status==="ok")modelTestIndex++;
+ while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status)modelTestIndex++;
  if(modelTestIndex>=modelCatalog.length){renderModelTestStatus();log("Alle verfügbaren lokalen Modelle wurden getestet.","s");return}
  const item=modelCatalog[modelTestIndex];
  modelTestRunning=true;renderModelTestStatus();
@@ -328,6 +328,7 @@ async function testNextLocalModel(){
   }
   selectedLocalModel=item.id;
   try{localStorage.setItem("jarvis_local_model",item.id)}catch(e){}
+  if(cloudReady)await saveCloud({localModelChoice:item.id});
   renderProv();
   $("modelteststatus").textContent="TESTE "+shortModelName(item.id)+" · MODELL WIRD GELADEN …";
   const engine=await loadLocalEngine(item.id);
@@ -365,7 +366,8 @@ function renderProv(){
   const d=document.createElement("div");d.className="pr";d.style.cursor="pointer";
   d.title="Klicken, um dieses lokale Modell auszuwählen";
   const b=document.createElement("b");
-  const status=m.id===engineModel?" · BEREIT":(m.id===selectedLocalModel?" · AUSGEWÄHLT":" · BEREIT ZUM LADEN");
+  const tested=modelTestResults[m.id];
+  const status=tested?.status==="ok"?" · TEST BESTANDEN":(tested?.status==="failed"?" · TEST FEHLGESCHLAGEN":(m.id===engineModel?" · BEREIT":(m.id===selectedLocalModel?" · AUSGEWÄHLT":" · BEREIT ZUM LADEN")));
   b.textContent=(i+1)+". "+shortModelName(m.id)+status;
   const dot=document.createElement("span");dot.className="dot "+(m.id===engineModel?"on":(m.id===selectedLocalModel?"act":""));
   d.append(b,dot);
@@ -389,12 +391,13 @@ async function loadWebLLM(){
 async function setLocalModel(id){
  if(!modelCatalog.some(m=>m.id===id))return;
  if(id===selectedLocalModel){log("Dieses lokale Modell ist bereits ausgewählt.","s");return}
- if(modelLoading||activeRequests>0){
+ if(modelLoading||activeRequests>0||modelTestRunning){
   log("Das Modell arbeitet gerade. Bitte den Modellwechsel nach der aktuellen Antwort erneut versuchen.","s");
   return;
  }
  selectedLocalModel=id;
  try{localStorage.setItem("jarvis_local_model",id)}catch(e){}
+ if(cloudReady)saveCloud({localModelChoice:id});
  if(localEngine&&engineModel!==id){
   const old=localEngine;localEngine=null;engineModel="";
   try{await old.unload()}catch(e){}
@@ -435,8 +438,12 @@ async function autoConnectAI(){
   await loadWebLLM();
   $("kihealth").textContent=navigator.gpu?"LOKALE KI VERFÜGBAR · MODELL WIRD BEI BEDARF GELADEN":"WEBGPU NICHT VERFÜGBAR";
   log(modelCatalog.length+" lokale Modelle stehen zur Auswahl; beim ersten Einsatz werden die Modelldateien geladen.","s");
+  if(cloudData.localModelChoice&&LOCAL_MODEL_IDS.includes(cloudData.localModelChoice)){
+   selectedLocalModel=cloudData.localModelChoice;
+   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
+  }
   modelTestIndex=0;
-  while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status==="ok")modelTestIndex++;
+  while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status)modelTestIndex++;
   renderModelTestStatus();
   $("modelteststart")?.addEventListener("click",testNextLocalModel);
   $("modeltestnext")?.addEventListener("click",testNextLocalModel);
