@@ -488,17 +488,26 @@ async function ask(msgs,sys,img){
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
   const systemText=String(sys||"").slice(0,10000);
   const cleanMessages=msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}));
-  const budget=CONTEXT_LIMIT-OUTPUT_LIMIT-500;
+  // Die Kontextgrenze zählt Tokens, nicht Zeichen. Mit ca. 3,5 Zeichen pro Token
+  // darf der bisherige Zeichenvergleich nicht die eigentliche Nutzerfrage verwerfen.
+  const budget=Math.floor((CONTEXT_LIMIT-OUTPUT_LIMIT-500)*3.5);
+  const latest=cleanMessages[cleanMessages.length-1];
   let used=systemText.length;
   const kept=[];
   for(let i=cleanMessages.length-1;i>=0;i--){
    const item=cleanMessages[i];
    const cost=item.content.length+24;
+   if(i===cleanMessages.length-1){
+    kept.unshift(item);used+=cost;continue;
+   }
    if(used+cost>budget)continue;
    kept.unshift(item);used+=cost;
   }
+  while(kept.length>1&&used>budget){
+   const removed=kept.shift();
+   if(removed!==latest)used-=removed.content.length+24;
+  }
   const history=[{role:"system",content:systemText},...kept];
-  while(history.length>2&&history.reduce((n,m)=>n+m.content.length+24,0)>budget)history.splice(1,1);
   $("kihealth").textContent="LOKALE KI BEREIT · KONTEXT "+Math.min(100,Math.round(used/budget*100))+"%";
   let result;
   try{
