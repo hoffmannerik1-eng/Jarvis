@@ -117,7 +117,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <h3>KI-VERBINDUNG</h3>
   <div id="kihealth" style="font-size:12px;margin:4px 0 8px;color:var(--g)">AUTOMATISCHE PRÜFUNG AKTIV</div>
   <div id="questioncount" style="font-size:12px;margin:0 0 5px;color:var(--w)">FRAGEN HEUTE: 0 · GESAMT: 0</div>
-  <div id="modelcount" style="font-size:11px;margin:0 0 10px;color:var(--dim)">GRATIS-MODELLE: werden geladen …</div>
+  <div id="modelcount" style="font-size:11px;margin:0 0 10px;color:var(--dim)">LOKALE MODELLE: werden vorbereitet …</div>
   <div id="prov"></div>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
@@ -289,7 +289,7 @@ function shortModelName(id){
 }
 function renderModelCount(){
  const el=$("modelcount");if(!el)return;
- el.textContent="LOKALE KI-MODELLE: "+modelCatalog.length+" · OHNE PUTER · OHNE KI-API";
+ el.textContent="LOKALE KI-MODELLE: "+modelCatalog.length+" · OHNE KI-API";
 }
 function renderProv(){
  const root=$("prov");if(!root)return;root.innerHTML="";
@@ -362,7 +362,7 @@ async function autoConnectAI(){
   await initCloud();loadPlugins();
   await loadWebLLM();
   $("kihealth").textContent=navigator.gpu?"LOKALE KI VERFÜGBAR · MODELL WIRD BEI BEDARF GELADEN":"WEBGPU NICHT VERFÜGBAR";
-  log("Puter wurde entfernt. "+modelCatalog.length+" lokale Modelle stehen zur Auswahl; beim ersten Einsatz werden die Modelldateien geladen.","s");
+  log(modelCatalog.length+" lokale Modelle stehen zur Auswahl; beim ersten Einsatz werden die Modelldateien geladen.","s");
  }catch(e){
   $("kihealth").textContent="LOKALE KI NICHT VERFÜGBAR";
   log("Lokale KI konnte nicht vorbereitet werden: "+emsg(e),"s");
@@ -953,66 +953,16 @@ setTimeout(async()=>{
  if(listening||autoMicDone)return;
  try{await requestMicPermissionOnce();if(listening)return;autoMicDone=true;if(!SR){await useCloudMic("");return}listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");log("Mikrofon ist automatisch an. Sprich einfach los.","s")}catch(e){listening=false}
 },1500);
-/* ---------- Ersatz-Spracherkennung: Mikrofon aufnehmen und online erkennen (Puter) ---------- */
-const cm={on:false,ctx:null,stream:null,node:null,src:null};
-function wavBlob(chunks,sr){
- let n=0;chunks.forEach(c=>n+=c.length);const all=new Float32Array(n);let o=0;chunks.forEach(c=>{all.set(c,o);o+=c.length});
- const ratio=sr/16000,len=Math.floor(n/ratio),pcm=new Int16Array(len);
- for(let i=0;i<len;i++){const v=Math.max(-1,Math.min(1,all[Math.floor(i*ratio)]||0));pcm[i]=v<0?v*32768:v*32767}
- const buf=new ArrayBuffer(44+len*2),dv=new DataView(buf),w=(p,t)=>{for(let i=0;i<t.length;i++)dv.setUint8(p+i,t.charCodeAt(i))};
- w(0,"RIFF");dv.setUint32(4,36+len*2,true);w(8,"WAVE");w(12,"fmt ");dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,16000,true);dv.setUint32(28,32000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,"data");dv.setUint32(40,len*2,true);
- new Int16Array(buf,44,len).set(pcm);return new Blob([buf],{type:"audio/wav"});
-}
+/* ---------- Sprachsteuerung ohne externen KI-Dienst ---------- */
 function handleVoice(t){
  let phrase=String(t||"").trim();if(phrase.length<2)return;
- if($("wake").checked){const m=phrase.match(/(?:jarvis|jarwis|charvis|dscharvis|jarvas|dschar\w*)[,.!]?\s*(.*)/i);if(!m)return;phrase=m[1]||"ja?"}
+ if($("wake").checked){const m=phrase.match(/(?:jarvis|jarwis|charvis|dscharvis|jarvas|dschar\\w*)[,.!]?\\s*(.*)/i);if(!m)return;phrase=m[1]||"ja?"}
  const lc=localCmd(phrase);if(lc){log(phrase,"u");lc();return}
  if(busy)queuedVoice.push(phrase);else run(phrase);
 }
-async function sendCloud(chunks,sr){
- try{
-  const r=await puter.ai.speech2txt(wavBlob(chunks,sr),{language:"de"});
-  const t=typeof r==="string"?r:(r&&(r.text||(r.results&&r.results[0]&&r.results[0].text)))||"";
-  handleVoice(t);
- }catch(e){log("Online-Spracherkennung fehlgeschlagen: "+emsg(e),"s")}
-}
-async function startCloudMic(){
- cm.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
- const C=window.AudioContext||window.webkitAudioContext;cm.ctx=new C();if(cm.ctx.state!=="running")await cm.ctx.resume();
- cm.src=cm.ctx.createMediaStreamSource(cm.stream);cm.node=cm.ctx.createScriptProcessor(4096,1,1);cm.src.connect(cm.node);cm.node.connect(cm.ctx.destination);
- let noise=.008,pre=[],rec2=[],inS=false,sil=0,sp2=0;
- cm.node.onaudioprocess=e=>{
-  const d=new Float32Array(e.inputBuffer.getChannelData(0));
-  if(speaking){inS=false;rec2=[];pre=[];return}
-  let sum=0;for(let i=0;i<d.length;i++)sum+=d[i]*d[i];const rms=Math.sqrt(sum/d.length),ms=d.length/cm.ctx.sampleRate*1000;
-  if(!inS){
-   if(rms<noise*2.5)noise=noise*.95+rms*.05;
-   pre.push(d);if(pre.length>4)pre.shift();
-   if(rms>Math.max(.02,noise*3)){inS=true;rec2=pre.slice();sil=0;sp2=0;setState("HÖRE ZU")}
-  }else{
-   rec2.push(d);sp2+=ms;if(rms>Math.max(.014,noise*2))sil=0;else sil+=ms;
-   if(sil>1300||sp2>20000){const ch=rec2,sr=cm.ctx.sampleRate,real=sp2-sil;inS=false;rec2=[];pre=[];if(real>350)sendCloud(ch,sr)}
-  }
- };
- cm.on=true;
-}
-function stopCloudMic(){
- if(!cm.on)return;cm.on=false;
- try{cm.node.disconnect();cm.src.disconnect()}catch(e){}try{cm.stream.getTracks().forEach(t=>t.stop())}catch(e){}try{cm.ctx.close()}catch(e){}
- recognitionPaused=false;
-}
-async function useCloudMic(reason){
- if(cm.on)return;
- try{
-  if(!puterReady)puterReady=await loadPuter();
-  if(!window.puter||!puter.ai||!puter.ai.speech2txt)throw new Error("Online-Spracherkennung nicht verfügbar (Puter nicht geladen).");
-  try{rec&&rec.stop()}catch(e){}recognitionPaused=true;clearTimeout(restartTimer);
-  await startCloudMic();listening=true;$("mic").classList.add("on");setState("HÖRE ZU");
-  log((reason?reason+" ":"")+"JARVIS nutzt jetzt die Online-Spracherkennung. Sprich einfach; nach einer kurzen Pause wird erkannt.","s");
- }catch(e){
-  cm.on=false;listening=false;recognitionPaused=false;$("mic").classList.remove("on");setState("BEREIT");
-  log("Mikrofon konnte nicht starten: "+((e&&e.name==="NotAllowedError")?"Der Browser verweigert den Zugriff. Klicke in der Adressleiste auf das Schloss-Symbol → Mikrofon → Zulassen und lade die Seite neu.":emsg(e)),"s");
- }
+function stopCloudMic(){}
+async function useCloudMic(){
+ log("Dieser Browser bietet keine integrierte Spracherkennung. Nutze bitte das Texteingabefeld oder einen Browser mit SpeechRecognition.","s");
 }
 const STOPM=new Set("bitte spiel spiele öffne oeffne zeig zeige such suche suchen starte mach mir mal ein eine einen das auf bei in von zu nach den die kannst du kann ich will möchte an karte karten maps map google wo ist finde navigiere route dem der im wie komme anzeigen zeigen stadtplan".split(" "));
 const STOP=new Set("bitte spiel spiele öffne oeffne zeig zeige such suche suchen starte mach abspielen mir mal ein eine einen das auf bei in von youtube you tube video videos zu nach den die kannst du kann ich will möchte ansehen anschauen an".split(" "));
@@ -1200,69 +1150,37 @@ function unlockAudio(){
 }
 ["pointerdown","touchstart","mousedown","keydown","click"].forEach(ev=>addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 
-/* Online-Stimme (Puter) als Ersatz, falls die Systemstimme des Browsers stumm bleibt */
-async function speakOnline(text){
- if(!window.puter||!puter.ai||!puter.ai.txt2speech)throw new Error("Online-Stimme nicht verfügbar");
- const a=await puter.ai.txt2speech(String(text).slice(0,2800),{language:"de-DE",voice:"Vicki",engine:"neural"});
- const src=a.currentSrc||a.src;
- const el=src?voiceAudio:a;
- if(src){el.onended=null;el.src=src}
- el.volume=Math.max(.1,Math.min(1,+$("vl").value||1));
- await new Promise((ok,fail)=>{el.onended=ok;el.onerror=()=>fail(new Error("Audio-Wiedergabe fehlgeschlagen"));const p=el.play();if(p&&p.catch)p.catch(fail)});
-}
+/* Sprachausgabe ausschließlich über die lokale Browser-Stimme */
 function speak(t){return new Promise(res=>{
  const synth=window.speechSynthesis;
  if(!$("vo").checked){speaking=false;setSpeakingUI(false);res();return}
+ if(!synth){log("Dieser Browser unterstützt keine lokale Sprachausgabe.","s");speaking=false;setSpeakingUI(false);res();return}
  if(listening&&rec){recognitionPaused=true;clearTimeout(restartTimer);try{rec.stop()}catch(e){}}
- let finished=false,watchdog=0,keepAlive=0,startTimer=0,usedOnline=false,idx=0;
+ let finished=false,idx=0,watchdog=0;
  setSpeakingUI(true);
  const done=()=>{
-  if(finished)return;finished=true;
-  clearTimeout(watchdog);clearTimeout(startTimer);clearInterval(keepAlive);
+  if(finished)return;finished=true;clearTimeout(watchdog);
   speaking=false;setSpeakingUI(false);
   if(listening){recognitionPaused=false;restartDelay=900;scheduleRecognitionRestart();setState("HÖRE ZU")}
   else setState("BEREIT");
   res();
  };
- const clean=String(t).replace(/https?:\/\/\S+/g," ").replace(/[*_`#]/g," ").replace(/\s+/g," ").trim();
- if(!clean){done();return}
+ const clean=String(t).replace(/https?:\\/\\/\\S+/g," ").replace(/[*_`#]/g," ").replace(/\\s+/g," ").trim();
  const chunks=[];
- (clean.match(/[^.!?;:\n]+[.!?;:]?/g)||[clean]).forEach(s=>{
-  s=s.trim();
-  while(s.length>180){let k=s.lastIndexOf(" ",180);if(k<60)k=180;chunks.push(s.slice(0,k));s=s.slice(k).trim()}
-  if(s)chunks.push(s);
+ (clean.match(/[^.!?;:\\n]+[.!?;:]?/g)||[clean]).forEach(part=>{
+  let x=part.trim();while(x.length>180){let k=x.lastIndexOf(" ",180);if(k<60)k=180;chunks.push(x.slice(0,k));x=x.slice(k).trim()}if(x)chunks.push(x);
  });
- const online=async()=>{
-  if(usedOnline||finished)return;usedOnline=true;
-  try{synth&&synth.cancel()}catch(e){}
-  const rest=chunks.slice(Math.max(0,idx-1)).join(" ");
-  log("Systemstimme reagiert nicht – nutze Online-Stimme.","s");
-  speaking=true;setState("SPRECHE");
-  try{await speakOnline(rest)}catch(err){log("Online-Stimme fehlgeschlagen: "+emsg(err),"s");if(/not allowed|denied|permission/i.test(emsg(err)))log("Der Browser blockiert Ton. Öffne index.html direkt per Doppelklick (nicht in der Vorschau), klicke einmal auf die Seite und sende die Nachricht erneut. Prüfe auch Seiteneinstellungen → Ton: Zulassen.","s")}
-  done();
- };
- if(!synth){online();return}
+ if(!chunks.length){done();return}
  const next=()=>{
-  if(finished||usedOnline)return;
-  if(idx>=chunks.length){done();return}
+  if(finished)return;if(idx>=chunks.length){done();return}
   const u=germanUtterance(chunks[idx++]);
-  clearTimeout(startTimer);startTimer=setTimeout(online,3500);
-  u.onstart=()=>{clearTimeout(startTimer);speaking=true;setState("SPRECHE")};
-  u.onend=()=>{clearTimeout(startTimer);next()};
-  u.onerror=e=>{
-   clearTimeout(startTimer);
-   if(usedOnline)return;
-   if(e.error==="canceled"||e.error==="interrupted"){done();return}
-   log("Sprachausgabe-Fehler: "+(e.error||"unbekannt"),"s");online();
-  };
-  try{synth.speak(u)}catch(err){log("Sprachausgabe fehlgeschlagen: "+emsg(err),"s");online()}
+  u.onstart=()=>{speaking=true;setState("SPRECHE")};
+  u.onend=next;
+  u.onerror=e=>{if(e.error==="canceled"||e.error==="interrupted"){done();return}log("Lokale Sprachausgabe: "+(e.error||"Fehler"),"s");next()};
+  try{synth.speak(u)}catch(e){log("Lokale Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}
  };
- try{
-  synth.cancel();
-  watchdog=setTimeout(()=>{if(!finished){try{synth.cancel()}catch(e){}done()}},120000);
-  keepAlive=setInterval(()=>{if(!finished&&synth.paused)try{synth.resume()}catch(e){}},500);
-  setTimeout(()=>{try{synth.resume()}catch(e){}next()},120);
- }catch(e){log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s");online()}
+ try{synth.cancel();watchdog=setTimeout(()=>{try{synth.cancel()}catch(e){}done()},120000);setTimeout(next,120)}
+ catch(e){log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}
 })}
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
 $("vs").onchange=()=>{try{localStorage.setItem("jv",voices[$("vs").value].name)}catch(e){}};
