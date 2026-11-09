@@ -983,7 +983,7 @@ async function initParticleCore(){
   const particlePrefs=(()=>{try{return JSON.parse(localStorage.getItem("jarvis_particle_prefs")||"{}")}catch(e){return {}}})();
   let configuredCount=Math.max(0,Math.min(N,Number(particlePrefs.count??N)));
   let zoomPct=Math.max(50,Math.min(200,Number(particlePrefs.zoom??100)));
-  let circleEnabled=particlePrefs.circle!==false;
+  let circleEnabled=false;
   let draw=configuredCount;geo.setDrawRange(0,draw);pts.visible=circleEnabled;
   const countInput=$("pcount"),zoomInput=$("pzoom"),circleInput=$("pcircle");
   const countLabel=$("pcountlabel"),zoomLabel=$("pzoomlabel");
