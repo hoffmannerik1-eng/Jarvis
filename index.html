@@ -1380,18 +1380,21 @@ function scheduleRecognitionRestart(){
 }
 function setSpeakingUI(on){$("bar").classList.toggle("speaking",!!on);$("go").disabled=!!on;$("go").title=on?"Warte, bis JARVIS fertig gesprochen hat":"Nachricht senden"}
 
-/* Ton im echten Klick/Tastendruck freischalten (Safari und Chrome blockieren sonst Audio und Sprache) */
-const SILENT="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
-const voiceAudio=new Audio();
+/* Ausschließlich die im Browser installierte Sprachausgabe verwenden.
+   Kein Audio-Stream, kein externer TTS-Dienst und keine KI-Stimme. */
 let speechPrimed=false;
 function unlockAudio(){
- try{voiceAudio.src=SILENT;const p=voiceAudio.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}
- try{const C=window.AudioContext||window.webkitAudioContext;if(C){window.__ac=window.__ac||new C();if(window.__ac.state!=="running")window.__ac.resume()}}catch(e){}
- try{if(window.speechSynthesis&&!speechPrimed){const u=new SpeechSynthesisUtterance("a");u.volume=0;speechSynthesis.speak(u);speechPrimed=true}}catch(e){}
+ try{
+  if(window.speechSynthesis&&!speechPrimed){
+   const u=new SpeechSynthesisUtterance("");
+   u.lang="de-DE";u.volume=0;
+   speechSynthesis.speak(u);speechPrimed=true;
+  }
+ }catch(e){}
 }
 ["pointerdown","touchstart","mousedown","keydown","click"].forEach(ev=>addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 
-/* Sprachausgabe ausschließlich über die lokale Browser-Stimme */
+/* JARVIS spricht nur über SpeechSynthesis des aktuellen Browsers. */
 function speak(t){return new Promise(res=>{
  const synth=window.speechSynthesis;
  if(!$("vo").checked){speaking=false;setSpeakingUI(false);res();return}
