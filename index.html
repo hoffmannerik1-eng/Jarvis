@@ -286,8 +286,9 @@ function renderProv(){
  items.forEach((p,i)=>{
   const d=document.createElement("div");d.className="pr";
   const st=p.cool>Date.now()?"cd":(i===active?"act":"on");
-  const b=document.createElement("b");b.textContent=(i+1)+". "+p.name;
-  const dot=document.createElement("span");dot.className="dot "+st;
+  const test=(cloudData.modelTests||{})[String(p.provider||"puter")+":"+String(p.model)];
+  const b=document.createElement("b");b.textContent=(i+1)+". "+p.name+(test?(test.ok?" · OK":" · NICHT ERREICHBAR"):" · UNGETESTET");
+  const dot=document.createElement("span");dot.className="dot "+(test?(test.ok?"on":"cd"):st);
   d.append(b,dot);root.appendChild(d);
  });
  renderModelCount();
@@ -302,9 +303,14 @@ function loadPuter(){return new Promise(res=>{
 async function refreshModelCatalog(force=false){
  if(!force&&modelCatalog.length&&Date.now()-catalogAt<60000)return modelCatalog;
  try{
+  const previous=new Set(modelCatalog.filter(isFreeModel).map(m=>String(m.provider||"puter")+":"+String(m.id)));
   const rows=await puter.ai.listModels();
   modelCatalog=Array.isArray(rows)?rows.filter(m=>m&&m.id):[];
   catalogAt=Date.now();renderProv();
+  const added=modelCatalog.filter(isFreeModel).some(m=>!previous.has(String(m.provider||"puter")+":"+String(m.id)));
+  if(added&&cloudReady&&typeof benchmarkModels==="function"){
+   setTimeout(()=>benchmarkModels().catch(e=>log("Neue Gratis-Modelle konnten nicht getestet werden: "+emsg(e),"s")),1500);
+  }
   $("kihealth").textContent=modelCatalog.length
    ? "MODELLLISTE ERREICHBAR · "+modelCatalog.filter(isFreeModel).length+" GRATIS-KANDIDATEN"
    : "KEINE MODELLE GEMELDET · PRÜFE ERNEUT";
@@ -323,9 +329,22 @@ function classifyRequest(text){
  return "general";
 }
 function isFreeModel(m){
- const id=String(m.id||"").toLowerCase(),cost=m.cost||m.pricing||{};
- const input=Number(cost.input),output=Number(cost.output);
- return m.free===true||m.is_free===true||/:free$/.test(id)||(Number.isFinite(input)&&Number.isFinite(output)&&input===0&&output===0);
+ const id=String(m.id||"").toLowerCase();
+ if(m.free===true||m.is_free===true||/:free$/.test(id))return true;
+ const sources=[m.cost,m.pricing,m.prices].filter(v=>v&&typeof v==="object");
+ const zero=v=>{
+  if(v===0)return true;
+  if(typeof v!=="string"||!v.trim())return false;
+  const n=Number(v.replace(/[^0-9eE+.-]/g,""));
+  return Number.isFinite(n)&&n===0;
+ };
+ for(const c of sources){
+  const pairs=[["input","output"],["prompt","completion"],["input_cost","output_cost"]];
+  for(const [a,b] of pairs){
+   if(c[a]!==undefined&&c[b]!==undefined&&zero(c[a])&&zero(c[b]))return true;
+  }
+ }
+ return false;
 }
 function scoreModel(m,kind){
  const id=String(m.id||"").toLowerCase(),name=String(m.name||"").toLowerCase();
@@ -384,6 +403,7 @@ async function benchmarkModels(){
     log("KI-Test "+(i+1)+"/"+pending.length+": "+(m.name||m.id)+" · nicht verfügbar","s");
    }
    await saveCloud({benchmarkStarted:true,modelTests:tests});
+   renderProv();
   }
   const ranked=Object.values(tests).filter(t=>t.ok).sort((a,b)=>a.ms-b.ms);
   const saved=await saveCloud({benchmarkDone:true,benchmarkStarted:false,benchmarkAt:cloudData.benchmarkAt||Date.now(),
