@@ -119,6 +119,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <div id="questioncount" style="font-size:12px;margin:0 0 5px;color:var(--w)">FRAGEN HEUTE: 0 · GESAMT: 0</div>
   <div id="modelcount" style="font-size:11px;margin:0 0 10px;color:var(--dim)">LOKALE MODELLE: werden vorbereitet …</div>
   <div id="prov"></div>
+  <div id="modelteststatus" style="font-size:11px;margin:8px 0;color:var(--dim)">Gerätetest noch nicht gestartet.</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+   <button id="modelteststart" type="button">KLEINSTES MODELL TESTEN</button>
+   <button id="modeltestnext" type="button" disabled>NÄCHSTES MODELL TESTEN</button>
+  </div>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
   <input id="hk" placeholder="Code aus jarvis_hand.py" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:4px;margin:4px 0">
@@ -251,6 +256,10 @@ async function initCloud(){
   renderQuestionCount();
   try{if(!cloudData.tasks)cloudData.tasks=JSON.parse(localStorage.getItem("jarvis_tasks")||"[]");if(!cloudData.ownerEmail)cloudData.ownerEmail=localStorage.getItem("jarvis_email")||""}catch(e){}
   cloudReady=true;
+  if(cloudData.localModelTests&&typeof cloudData.localModelTests==="object"){
+   modelTestResults={...modelTestResults,...cloudData.localModelTests};
+   try{localStorage.setItem("jarvis_model_tests",JSON.stringify(modelTestResults))}catch(e){}
+  }
   if(Array.isArray(cloudData.history)&&!hist.length)hist=cloudData.history.slice(-100);
   loadAccountFields();
   log("Firebase-Gedächtnis verbunden. Gespeicherte Daten geladen.","s");
@@ -268,17 +277,16 @@ async function saveCloud(patch){
 }
 /* ---------- Lokale KI-Modelle im Browser (WebLLM, ohne KI-API) ---------- */
 const LOCAL_MODEL_IDS=[
- "Qwen3-0.6B-q4f16_1-MLC",
  "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
- "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
- "Qwen2.5-3B-Instruct-q4f16_1-MLC",
  "Qwen2.5-Coder-0.5B-Instruct-q4f16_1-MLC",
- "Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC",
+ "Qwen3-0.6B-q4f16_1-MLC",
+ "TinyLlama-1.1B-Chat-v0.4-MLC",
  "Llama-3.2-1B-Instruct-q4f16_1-MLC",
- "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+ "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
  "gemma-2-2b-it-q4f16_1-MLC",
- "Phi-3.5-mini-instruct-q4f16_1-MLC",
- "TinyLlama-1.1B-Chat-v0.4-q4f16_1-MLC"
+ "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+ "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+ "Phi-3.5-mini-instruct-q4f16_1-MLC"
 ];
 let webllm=null,modelCatalog=[],localEngine=null,engineModel="";
 let selectedLocalModel=localStorage.getItem("jarvis_local_model")||LOCAL_MODEL_IDS[0];
@@ -286,6 +294,66 @@ let active=-1,modelLoading=false,activeRequests=0;
 const emsg=e=>{try{return (e&&(e.message||(e.error&&(e.error.message||e.error))||e.code))||JSON.stringify(e)}catch(_){return String(e)}};
 function shortModelName(id){
  return id.replace(/-q4f16_1-MLC$/,"").replace(/-Instruct$/," Instruct").replace(/-/g," ");
+}
+function getModelTestResults(){
+ try{return JSON.parse(localStorage.getItem("jarvis_model_tests")||"{}")}catch(e){return {}}
+}
+let modelTestResults=getModelTestResults(),modelTestIndex=0,modelTestRunning=false;
+function saveModelTestResults(){
+ try{localStorage.setItem("jarvis_model_tests",JSON.stringify(modelTestResults))}catch(e){}
+ if(cloudReady)saveCloud({localModelTests:modelTestResults});
+}
+function renderModelTestStatus(){
+ const el=$("modelteststatus");
+ if(!el)return;
+ const passed=Object.values(modelTestResults).filter(x=>x&&x.status==="ok").length;
+ const failed=Object.values(modelTestResults).filter(x=>x&&x.status==="failed").length;
+ const current=modelCatalog[modelTestIndex];
+ el.textContent="GETESTET: "+passed+" FUNKTIONIEREN · "+failed+" NICHT KOMPATIBEL · "+modelCatalog.length+" VERFÜGBAR"+(current?" · ALS NÄCHSTES: "+shortModelName(current.id):" · ALLE GEPRÜFT");
+ const next=$("modeltestnext"),start=$("modelteststart");
+ if(next)next.disabled=modelTestRunning||modelTestIndex>=modelCatalog.length;
+ if(start)start.disabled=modelTestRunning||!modelCatalog.length;
+}
+async function testNextLocalModel(){
+ if(modelTestRunning||activeRequests>0||modelLoading)return;
+ if(!modelCatalog.length)return;
+ while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status==="ok")modelTestIndex++;
+ if(modelTestIndex>=modelCatalog.length){renderModelTestStatus();log("Alle verfügbaren lokalen Modelle wurden getestet.","s");return}
+ const item=modelCatalog[modelTestIndex];
+ modelTestRunning=true;renderModelTestStatus();
+ try{
+  if(localEngine&&engineModel!==item.id){
+   const old=localEngine;localEngine=null;engineModel="";
+   try{await old.unload()}catch(e){}
+  }
+  selectedLocalModel=item.id;
+  try{localStorage.setItem("jarvis_local_model",item.id)}catch(e){}
+  renderProv();
+  $("modelteststatus").textContent="TESTE "+shortModelName(item.id)+" · MODELL WIRD GELADEN …";
+  const engine=await loadLocalEngine(item.id);
+  $("modelteststatus").textContent="TESTE "+shortModelName(item.id)+" · PROBEANTWORT LÄUFT …";
+  const result=await engine.chat.completions.create({
+   messages:[{role:"user",content:"Antworte nur mit: JARVIS TEST OK"}],
+   temperature:0,max_tokens:24
+  });
+  const answer=String(result?.choices?.[0]?.message?.content||"").trim();
+  if(!answer)throw new Error("Das Modell hat keine Testantwort geliefert.");
+  modelTestResults[item.id]={status:"ok",testedAt:Date.now(),answer:answer.slice(0,100)};
+  modelTestIndex++;
+  saveModelTestResults();
+  $("kihealth").textContent="MODELL FUNKTIONIERT · "+shortModelName(item.id);
+  log("Gerätetest bestanden: "+shortModelName(item.id)+". Das Modell bleibt geladen und kann sofort verwendet werden.","s");
+ }catch(e){
+  modelTestResults[item.id]={status:"failed",testedAt:Date.now(),error:emsg(e).slice(0,240)};
+  saveModelTestResults();
+  $("kihealth").textContent="MODELL NICHT KOMPATIBEL · "+shortModelName(item.id);
+  log("Gerätetest fehlgeschlagen: "+shortModelName(item.id)+" · "+emsg(e),"s");
+  if(localEngine){const old=localEngine;localEngine=null;engineModel="";try{await old.unload()}catch(_){}}
+  modelTestIndex++;
+ }finally{
+  modelTestRunning=false;
+  renderProv();renderModelTestStatus();
+ }
 }
 function renderModelCount(){
  const el=$("modelcount");if(!el)return;
@@ -367,6 +435,11 @@ async function autoConnectAI(){
   await loadWebLLM();
   $("kihealth").textContent=navigator.gpu?"LOKALE KI VERFÜGBAR · MODELL WIRD BEI BEDARF GELADEN":"WEBGPU NICHT VERFÜGBAR";
   log(modelCatalog.length+" lokale Modelle stehen zur Auswahl; beim ersten Einsatz werden die Modelldateien geladen.","s");
+  modelTestIndex=0;
+  while(modelTestIndex<modelCatalog.length&&modelTestResults[modelCatalog[modelTestIndex].id]?.status==="ok")modelTestIndex++;
+  renderModelTestStatus();
+  $("modelteststart")?.addEventListener("click",testNextLocalModel);
+  $("modeltestnext")?.addEventListener("click",testNextLocalModel);
  }catch(e){
   $("kihealth").textContent="LOKALE KI NICHT VERFÜGBAR";
   log("Lokale KI konnte nicht vorbereitet werden: "+emsg(e),"s");
