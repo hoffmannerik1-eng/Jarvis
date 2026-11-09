@@ -968,7 +968,7 @@ async function initParticleCore(){
   let configuredCount=Math.max(0,Math.min(N,Number(particlePrefs.count??N)));
   let zoomPct=Math.max(50,Math.min(200,Number(particlePrefs.zoom??100)));
   let circleEnabled=particlePrefs.circle!==false;
-  draw=configuredCount;geo.setDrawRange(0,draw);pts.visible=circleEnabled;
+  let draw=configuredCount;geo.setDrawRange(0,draw);pts.visible=circleEnabled;
   const countInput=$("pcount"),zoomInput=$("pzoom"),circleInput=$("pcircle");
   const countLabel=$("pcountlabel"),zoomLabel=$("pzoomlabel");
   const saveParticlePrefs=()=>{
@@ -1001,7 +1001,7 @@ async function initParticleCore(){
   let objScale=1;
   const resize=()=>{const pr=Math.min(devicePixelRatio||1,1.5);ren.setPixelRatio(pr);ren.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();U.uSize.value=2.1*pr;objScale=Math.min(1,cam.aspect*1.05)};
   addEventListener("resize",resize);resize();
-  let last=performance.now(),T3=0,ampS=0,draw=N,slow=0;const tgt=new THREE.Color();
+  let last=performance.now(),T3=0,ampS=0,slow=0;const tgt=new THREE.Color();
   (function loop(now){
    requestAnimationFrame(loop);
    const dt=Math.min(.05,(now-last)/1000);last=now;T3+=dt*sp;
