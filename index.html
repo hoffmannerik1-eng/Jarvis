@@ -1146,9 +1146,14 @@ function submitInput(){
  const v=$("in").value.trim();
  const lc=v&&localCmd(v);
  if(lc){$("in").value="";log(v,"u");lc();return}
- if(speaking)return;
  if(!v&&!pendingVisionImage)return;
- $("in").value="";run(v);
+ $("in").value="";
+ if(busy||speaking||modelLoading||modelTestRunning){
+  queuedMessages.push(v);
+  log("Nachricht vorgemerkt. J.A.R.V.I.S. bearbeitet sie automatisch, sobald der aktuelle Vorgang beendet ist.","s");
+  return;
+ }
+ run(v);
 }
 let busy=false;
 const queuedMessages=[];
