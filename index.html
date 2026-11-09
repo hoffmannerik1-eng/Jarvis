@@ -1015,13 +1015,16 @@ async function initParticleCore(){
   ren.setClearColor(0x000000,0);
   const dom=ren.domElement;dom.id="cv3";dom.style.cssText="position:fixed;inset:0;width:100%;height:100%;pointer-events:none";$("cv").after(dom);
   let objScale=1;
-  const resize=()=>{const pr=Math.min(devicePixelRatio||1,1.5);ren.setPixelRatio(pr);ren.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();U.uSize.value=2.1*pr;objScale=Math.min(1,cam.aspect*1.05)};
+  const resize=()=>{const pr=Math.min(devicePixelRatio||1,1.25);ren.setPixelRatio(pr);ren.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();U.uSize.value=2.1*pr;objScale=Math.min(1,cam.aspect*1.05)};
   addEventListener("resize",resize);resize();
-  let last=performance.now(),T3=0,ampS=0,slow=0;const tgt=new THREE.Color();
+  let last=performance.now(),T3=0,ampS=0,slow=0,fast=0;const tgt=new THREE.Color();
   (function loop(now){
    requestAnimationFrame(loop);
+   if(document.hidden){last=now;return}
    const dt=Math.min(.05,(now-last)/1000);last=now;T3+=dt*sp;
-   slow=dt>.04?slow+1:Math.max(0,slow-1);if(slow>90&&draw>Math.max(5000,configuredCount*.35)){draw=Math.floor(draw*.75);geo.setDrawRange(0,draw);slow=0}
+   if(dt>.028){slow++;fast=0}else{fast++;slow=Math.max(0,slow-1)}
+   if(slow>45&&draw>Math.max(12000,configuredCount*.35)){draw=Math.max(Math.floor(configuredCount*.35),Math.floor(draw*.85));geo.setDrawRange(0,draw);slow=0;log("Grafik automatisch entlastet, damit JARVIS flüssiger läuft.","s")}
+   else if(fast>360&&draw<configuredCount){draw=Math.min(configuredCount,Math.floor(draw*1.05)+1);geo.setDrawRange(0,draw);fast=0}
    const amp=st==="talk"?.5+.3*Math.sin(T3*9):st==="think"?(workMode?.55:.4)+.15*Math.sin(T3*(workMode?8:5)):st==="listen"?.28+.1*Math.sin(T3*3):.07;
    ampS+=(amp-ampS)*.12;
    const c=String(col).split(",").map(Number);tgt.setRGB(c[0]/255,c[1]/255,c[2]/255);U.uColor.value.lerp(tgt,.08);
@@ -1482,6 +1485,7 @@ $("start").onclick=()=>{
 function ring(cx,cy,r,w,a0,n,gap,rot,al){x.lineWidth=w;x.strokeStyle=`rgba(${col},${al})`;
  const seg=6.283/n;for(let i=0;i<n;i++){x.beginPath();x.arc(cx,cy,r,rot+i*seg,rot+i*seg+seg*(1-gap));x.stroke()}}
 function frame(){
+ if(window.PCORE)return;
  T+=.016*sp;const d=devicePixelRatio||1,cx=W/2,cy=H/2,R=Math.min(W,H)*.205;
  x.fillStyle=`rgba(${TH[cur].bg},.28)`;x.fillRect(0,0,W,H);
  x.lineCap="butt";
