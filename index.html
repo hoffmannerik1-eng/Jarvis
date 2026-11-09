@@ -117,7 +117,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <div>Kernlast</div><div class="bar"><i id="b1"></i></div><div>Speicher</div><div class="bar"><i id="b2"></i></div><div>Netzwerk</div><div class="bar"><i id="b3"></i></div>
   <h3>KI-VERBINDUNG</h3>
   <div id="kihealth" style="font-size:12px;margin:4px 0 8px;color:var(--g)">AUTOMATISCHE PRÜFUNG AKTIV</div>
-  <div id="questioncount" style="font-size:12px;margin:0 0 10px;color:var(--w)">FRAGEN HEUTE: 0 · GESAMT: 0</div>
+  <div id="questioncount" style="font-size:12px;margin:0 0 5px;color:var(--w)">FRAGEN HEUTE: 0 · GESAMT: 0</div>
+  <div id="modelcount" style="font-size:11px;margin:0 0 10px;color:var(--dim)">GRATIS-MODELLE: werden geladen …</div>
   <div id="prov"></div>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
@@ -271,6 +272,14 @@ const P=[];
 let modelCatalog=[],catalogAt=0;
 P.forEach(p=>p.cool=0);
 let active=-1;
+function renderModelCount(){
+ const el=$("modelcount");if(!el)return;
+ const free=modelCatalog.filter(isFreeModel);
+ const tests=cloudData.modelTests||{};
+ const tested=free.filter(m=>Object.prototype.hasOwnProperty.call(tests,String(m.provider||"puter")+":"+String(m.id))).length;
+ const passed=free.filter(m=>tests[String(m.provider||"puter")+":"+String(m.id)]?.ok).length;
+ el.textContent="GRATIS-MODELLE: "+free.length+" · EINMAL GETESTET: "+tested+" · FUNKTIONIEREN: "+passed+" · OFFEN: "+Math.max(0,free.length-tested);
+}
 function renderProv(){
  const root=$("prov");root.innerHTML="";
  const items=modelCatalog.filter(isFreeModel).map(m=>({name:m.name||m.id,model:m.id,t:"puter"}));
@@ -281,6 +290,7 @@ function renderProv(){
   const dot=document.createElement("span");dot.className="dot "+st;
   d.append(b,dot);root.appendChild(d);
  });
+ renderModelCount();
 }
 renderProv();
 function loadPuter(){return new Promise(res=>{
@@ -346,9 +356,8 @@ async function benchmarkModels(){
  if(benchmarkPromise)return benchmarkPromise;
  benchmarkPromise=(async()=>{
   if(!modelCatalog.length||!cloudReady)return;
-  if(cloudData.benchmarkDone===true){
-   log("KI-Kompletttest bereits in Firebase gespeichert. Kein erneuter Test.","s");return;
-  }
+  // Bereits getestete Modelle werden über den gespeicherten Schlüssel übersprungen.
+  // Neue Modelle werden beim nächsten Katalog-Update einmalig ergänzt.
   const tests={...(cloudData.modelTests||{})};
   const free=modelCatalog.filter(isFreeModel);
   const pending=free.filter(m=>!tests[String(m.provider||"puter")+":"+String(m.id)]);
