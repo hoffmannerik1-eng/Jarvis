@@ -380,6 +380,14 @@ async function loadWebLLM(){
  if(webllm)return webllm;
  if(!navigator.gpu)throw new Error("Dieser Browser unterstützt WebGPU nicht. Öffne JARVIS in einem aktuellen Chrome- oder Edge-Browser.");
  $("kihealth").textContent="LOKALE KI-BIBLIOTHEK WIRD GELADEN …";
+ try{
+  if(navigator.storage?.persist){
+   const already=await navigator.storage.persisted?.();
+   const kept=already||await navigator.storage.persist();
+   if(kept)log("Dauerhafter Browser-Speicher ist aktiviert. Heruntergeladene Modelle sollen nicht automatisch gelöscht werden.","s");
+   else log("Der Browser erlaubt keinen garantierten Schutz vor automatischem Löschen. Die Modell-Cache bleibt normalerweise trotzdem erhalten.","s");
+  }
+ }catch(e){log("Speicher-Schutz konnte nicht abgefragt werden: "+emsg(e),"s")}
  webllm=await import("https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.84/+esm");
  const available=new Set((webllm.prebuiltAppConfig?.model_list||[]).map(m=>m.model_id));
  modelCatalog=LOCAL_MODEL_IDS.filter(id=>available.has(id)).map(id=>({id,name:shortModelName(id)}));
@@ -416,6 +424,7 @@ async function loadLocalEngine(id){
   $("kihealth").textContent="LOKALES MODELL WIRD GELADEN · "+shortModelName(id);
   log("Lade "+shortModelName(id)+" direkt in den Browser. Beim ersten Mal kann der Download mehrere Minuten dauern.","s");
   localEngine=await webllm.CreateMLCEngine(id,{
+   appConfig:{...webllm.prebuiltAppConfig,cacheBackend:"cache"},
    initProgressCallback:report=>{
     const pct=Math.round((report.progress||0)*100);
     $("kihealth").textContent="MODELLDOWNLOAD · "+pct+"% · "+(report.text||"");
