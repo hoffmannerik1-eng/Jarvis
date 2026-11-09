@@ -132,6 +132,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
    <button id="modelteststart" type="button">KLEINSTES MODELL TESTEN</button>
    <button id="modeltestnext" type="button" disabled>NÄCHSTES MODELL TESTEN</button>
   </div>
+  <h3>BLUETOOTH-HANDSCANNER</h3>
+  <div style="font-size:11px;color:var(--dim);margin:4px 0">Kopple den Scanner zuerst in den Windows-Bluetooth-Einstellungen. Die meisten Scanner arbeiten danach wie eine Tastatur.</div>
+  <input id="scaninput" type="text" autocomplete="off" placeholder="Hier scannen …" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:7px;margin:4px 0">
+  <div id="scanstatus" style="font-size:11px;color:var(--dim);margin:3px 0 6px">Scanner bereit · Feld anklicken und scannen</div>
+  <button id="scanuse" type="button" style="width:100%;margin-bottom:10px">SCAN IN CHAT ÜBERNEHMEN</button>
   <h3>COMPUTERSTEUERUNG</h3>
   <label><input type="checkbox" id="hc"> Maus &amp; Tastatur erlauben</label>
   <input id="hk" placeholder="Code aus jarvis_hand.py" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:4px;margin:4px 0">
@@ -610,6 +615,25 @@ async function hand(cmd,args){
   const t=await r.text();return r.ok?t:(r.status===403?"Falscher Code.":t)}catch(e){return"jarvis_hand.py läuft nicht (oder blockiert)."}}
 if(window.JTOKEN){$("hc").checked=true;$("hk").value=window.JTOKEN;log("Computersteuerung verbunden. Sag einfach, was ich tun soll.","s")}
 $("nz").onclick=()=>{ABORT=true;TK=false;$("hc").checked=false;try{speechSynthesis.cancel()}catch(e){}log("NOT-AUS: Computersteuerung gesperrt.","s")};
+/* Bluetooth-HID-Scanner: Tastatur-Scanner schreibt in das fokussierte Feld. */
+let lastScannedCode="";
+$("scaninput").addEventListener("keydown",e=>{
+ if(e.key!=="Enter")return;
+ e.preventDefault();
+ const code=$("scaninput").value.trim();
+ if(!code)return;
+ lastScannedCode=code;
+ $("scanstatus").textContent="Scan empfangen · "+code.slice(0,70);
+ log("Handscanner: "+code,"s");
+ $("scaninput").value="";
+});
+$("scanuse").onclick=()=>{
+ if(!lastScannedCode){$("scanstatus").textContent="Noch kein Code gescannt.";return}
+ $("in").value=lastScannedCode;
+ $("in").focus();
+ $("scanstatus").textContent="Code in das Chatfeld übernommen.";
+};
+
 const enc=encodeURIComponent;
 async function jget(u){const r=await fetch(u);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}
 let viewerImages=[],viewerIndex=0;
