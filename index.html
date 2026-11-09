@@ -384,9 +384,23 @@ function renderProv(){
  });
  renderModelCount();
 }
+async function getWebGPUProblem(){
+ if(!navigator.gpu)return "WebGPU wird von diesem Browser nicht bereitgestellt. Öffne JARVIS in einem aktuellen Chrome- oder Edge-Browser und aktiviere die Hardwarebeschleunigung.";
+ try{
+  const adapter=await navigator.gpu.requestAdapter();
+  if(!adapter)return "Der Browser stellt WebGPU bereit, findet aber keinen kompatiblen Grafikadapter. Prüfe die Hardwarebeschleunigung und die Grafiktreiber oder nutze einen anderen Browser.";
+  return "";
+ }catch(e){
+  return "Der Grafikadapter kann nicht gestartet werden: "+emsg(e);
+ }
+}
 async function loadWebLLM(){
  if(webllm)return webllm;
- if(!navigator.gpu)throw new Error("Dieser Browser unterstützt WebGPU nicht. Öffne JARVIS in einem aktuellen Chrome- oder Edge-Browser.");
+ const gpuProblem=await getWebGPUProblem();
+ if(gpuProblem){
+  $("kihealth").textContent="KEIN KOMPATIBLER GRAFIKADAPTER";
+  throw new Error(gpuProblem+" Die lokale KI bleibt deaktiviert; es wird kein endloser Neustart versucht.");
+ }
  $("kihealth").textContent="LOKALE KI-BIBLIOTHEK WIRD GELADEN …";
  try{
   if(navigator.storage?.persist){
@@ -541,7 +555,13 @@ async function ask(msgs,sys,img){
      result=await freshEngine.chat.completions.create({messages:history,temperature:0.7,max_tokens:OUTPUT_LIMIT});
     }catch(recoveryError){
      localEngine=null;engineModel="";
-     throw new Error("Die lokale KI-Engine ließ sich nicht neu starten: "+emsg(recoveryError)+". Bitte die Seite neu laden.");
+     const recoveryText=emsg(recoveryError);
+     const gpuProblem=await getWebGPUProblem();
+     if(gpuProblem||/compatible GPU|requestAdapter|WebGPU.*adapter/i.test(recoveryText)){
+      $("kihealth").textContent="KEIN KOMPATIBLER GRAFIKADAPTER";
+      throw new Error((gpuProblem||"Der Browser findet keinen kompatiblen Grafikadapter.")+" Die lokale KI kann auf diesem Gerät derzeit nicht starten. Prüfe die Hardwarebeschleunigung oder verwende Chrome/Edge.");
+     }
+     throw new Error("Die lokale KI-Engine ließ sich nicht neu starten: "+recoveryText+". Bitte die Seite neu laden.");
     }finally{modelLoading=false}
    }else throw e;
   }
