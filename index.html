@@ -1035,7 +1035,7 @@ async function initParticleCore(){
    pts.rotation.z=G.spin?pts.rotation.z+dt*1.6:pts.rotation.z*.97;
    ren.render(scene,cam);
   })(last);
-  window.PCORE=true;PC={THREE};
+  window.PCORE=true;cv.getContext("2d").clearRect(0,0,cv.width,cv.height);cv.style.display="none";PC={THREE};
   log("Partikel-Kern aktiv ("+N.toLocaleString("de-DE")+" Partikel).","s");
  }catch(e){window.PCORE=false;log("Partikel-Kern nicht verfügbar, einfache Kugel wird genutzt: "+emsg(e),"s")}
 }
