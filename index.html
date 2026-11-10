@@ -478,8 +478,9 @@ async function autoConnectAI(){
   const models=Array.isArray(data.models)?data.models:[];
   modelCatalog=models.map(m=>({id:String(m.name||m.model||""),name:String(m.name||m.model||"")})).filter(m=>m.id);
   if(!modelCatalog.length)throw new Error("Ollama hat keine installierten Modelle gefunden.");
-  const preferred="qwen3.8:27b";
-  if(!modelCatalog.some(m=>m.id===selectedLocalModel))selectedLocalModel=modelCatalog.some(m=>m.id===preferred)?preferred:modelCatalog[0].id;
+  const preferred="qwen3-vl:8b";
+  const chatModel=modelCatalog.find(m=>m.id.toLowerCase()===preferred)||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b-instruct")||modelCatalog[0];
+  selectedLocalModel=chatModel.id;
   engineModel=selectedLocalModel;
   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
   renderProv();renderModelCount();
@@ -555,11 +556,40 @@ async function ask(msgs,sys,img){
  }finally{activeRequests=Math.max(0,activeRequests-1)}
 }
 
-/* ---------- Agent ---------- */
-let codingMode=(()=>{try{return localStorage.getItem("jarvis_coding_mode")==="1"}catch(e){return false}})();
-function renderCodingMode(){const b=$("coding");if(!b)return;b.classList.toggle("on",codingMode);b.textContent=codingMode?"CODING: AN":"CODING: AUS";b.title=codingMode?"Lokaler Coding-Modus aktiv · Qwen über Ollama":"Normaler Chat · Qwen über Ollama"}
-$("coding").onclick=()=>{codingMode=!codingMode;try{localStorage.setItem("jarvis_coding_mode",codingMode?"1":"0")}catch(e){}renderCodingMode();log(codingMode?"Coding-Modus aktiviert. Anfragen werden an dein lokales Ollama-Modell mit Programmier-Fokus gesendet.":"Normaler Chat aktiviert.","s");speak(codingMode?"Coding-Modus aktiviert.":"Normaler Chat aktiviert.")};
-renderCodingMode();
+/* ---------- Automatische Anfrage-Erkennung ---------- */
+let codingMode=false;
+const codingIntentPattern=/(\\b(code|coding|programmier|programmieren|programmiere|entwickle|entwickeln|debug|debugge|fehler im code|syntaxerror|exception|stack trace|html|css|javascript|typescript|python|java|c\\+\\+|c#|sql|json|api|funktion|funktioniert nicht|script|skript|website|webseite|webapp|app bauen|projekt bauen|github|index\\.html|main\\.py|datei erstellen|datei ändern|code ändern|code schreiben|code erstellen|code verbessern|bug|kompilier|terminal|powershell|ollama)\\b)/i;
+function detectCodingRequest(message){
+ const q=String(message||"").trim();
+ const recent=hist.slice(-4).map(m=>String(m.content||"")).join("\\n");
+ const context=(q+"\\n"+recent).slice(-12000);
+ const explicit=codingIntentPattern.test(q)||/(\\`{3}|<\\/?[a-z][^>]*>|function\\s+\\w+\\s*\\(|const\\s+\\w+\\s*=|def\\s+\\w+\\s*\\(|import\\s+\\w+|SyntaxError:|TypeError:|ReferenceError:)/i.test(q);
+ const followUp=/^(mach das|ändere das|aendere das|verbessere das|bau das ein|baue das ein|mach weiter|weiter|fix das|repariere das|es geht nicht|geht nicht|noch besser|ja|genau)$/i.test(q);
+ const recentCode=/(\\`{3}|index\\.html|javascript|typescript|python|html|css|github|programmier|code ändern|code schreiben)/i.test(recent);
+ return explicit||(followUp&&recentCode);
+}
+function chooseAutomaticModel(forCoding){
+ const chatNames=["qwen3-vl:8b","qwen3-vl:8b-instruct"];
+ const codingNames=["qwen3.8:27b"];
+ const names=forCoding?codingNames:chatNames;
+ const chosen=modelCatalog.find(m=>names.includes(m.id.toLowerCase()));
+ if(!chosen){
+  const wanted=forCoding?"Qwen3.8:27b":"Qwen3-VL:8B";
+  $("kihealth").textContent=(forCoding?"CODING-MODELL FEHLT":"CHAT-MODELL FEHLT")+" · "+wanted;
+  log("Automatische Modellwahl: "+wanted+" ist in Ollama nicht installiert. JARVIS verwendet vorübergehend "+selectedLocalModel+".","s");
+  return false;
+ }
+ if(selectedLocalModel!==chosen.id){
+  selectedLocalModel=chosen.id;engineModel=chosen.id;
+  try{localStorage.setItem("jarvis_local_model",chosen.id)}catch(e){}
+  renderProv();
+  log("Automatischer Modellwechsel: "+(forCoding?"CODING · ":"CHAT · ")+chosen.id,"s");
+ }
+ $("kihealth").textContent=(forCoding?"CODING-MODELL":"CHAT-MODELL")+" AKTIV · "+chosen.id;
+ return true;
+}
+const codingButton=$("coding");
+if(codingButton){codingButton.textContent="AUTO";codingButton.title="JARVIS erkennt automatisch, ob du programmierst oder normal chattest";codingButton.disabled=true;codingButton.style.opacity=".65";codingButton.style.cursor="default";}
 const SYSF=()=> (codingMode ? `CODING-MODUS: Du bist ein erfahrener Softwareentwickler und arbeitest als Programmierassistent für den Nutzer. Verwende das lokale Modell über Ollama. Analysiere die Aufgabe sorgfältig. Bei Änderungen an bestehendem Code frage nach dem vollständigen aktuellen Code, falls er nicht im Chat vorhanden ist. Liefere vollständige, direkt nutzbare Dateien statt unvollständiger Ausschnitte. Erkläre kurz, welche Datei ersetzt werden muss und wie der Nutzer den Code testet. Behaupte niemals, Dateien auf dem PC, GitHub oder einer Website selbst geändert, ausgeführt oder hochgeladen zu haben. Du hast keinen direkten Dateisystem- oder Terminalzugriff. Wenn Code gebraucht wird, gib ihn in Markdown-Codeblöcken mit passender Sprache aus, damit JARVIS ihn im Codefenster anzeigen kann. Wenn mehrere Dateien nötig sind, trenne sie klar mit Dateinamen. Achte auf Sicherheit, keine Geheimnisse oder API-Schlüssel in öffentlichen Code schreiben. Antworte weiterhin ausschließlich im unten beschriebenen JSON-Format. ` : "")+`Du bist J.A.R.V.I.S., ein hilfreicher, allgemeiner KI-Assistent. Antworte IMMER auf Deutsch, freundlich, klar und passend zur Frage. Beantworte normale Fragen direkt. Du bist kein Menü-Bot und kein Zahlungsdienst. Behaupte niemals, du könntest eine Frage nicht beantworten, nur weil sie ein Menü oder eine App erwähnt. Erfinde keine Fakten. Wenn etwas unklar ist, stelle eine kurze Rückfrage. Halte Antworten normalerweise kurz; bei Erklärungen darfst du ausführlicher sein. Bei Codewünschen liefere vollständigen, lauffähigen Code.
 
 WICHTIGES AUSGABEFORMAT: Antworte immer mit genau einem gültigen JSON-Objekt ohne Markdown und ohne Text davor oder danach: {"say":"deine Antwort","tool":null}. Wenn ein Werkzeug wirklich nötig ist, verwende {"say":"kurze Ankündigung","tool":{"name":"WERKZEUGNAME","arg":"Argument"}}. Verwende nur verfügbare Werkzeuge. Erfinde niemals Werkzeugergebnisse. Nach einem Werkzeugaufruf erhältst du das Ergebnis und erklärst es normal.
@@ -1317,6 +1347,8 @@ async function run(message){
     await speak(result);return;
    }
   }
+  codingMode=detectCodingRequest(q);
+  chooseAutomaticModel(codingMode);
   let answer="";
   for(let n=0;n<5;n++){
    setState("DENKE …");const raw=await ask(hist,SYSF()+pluginPrompt()+(NET?"":" Live-Websuche ist derzeit möglicherweise nicht erreichbar; erfinde keine aktuellen Fakten."),pendingVisionImage);
