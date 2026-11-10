@@ -571,7 +571,7 @@ function detectCodingRequest(message){
 }
 function chooseAutomaticModel(forCoding){
  const chatNames=["qwen3:4b","qwen3-vl:8b-instruct","qwen3-vl:8b","qwen3.8:27b","qwen3.8:27b-q4_K_M"];
- const codingNames=["qwen3:4b","qwen3.8:27b","qwen3.8:27b-q4_K_M","qwen3-vl:8b-instruct","qwen3-vl:8b"];
+ const codingNames=["qwen3.8:27b","qwen3.8:27b-q4_K_M","qwen3-vl:8b-instruct","qwen3-vl:8b"];
  const names=forCoding?codingNames:chatNames;
  const chosen=modelCatalog.find(m=>names.includes(m.id.toLowerCase()));
  if(!chosen){
