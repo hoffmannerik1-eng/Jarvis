@@ -477,7 +477,7 @@ async function autoConnectAI(){
   const models=Array.isArray(data.models)?data.models:[];
   modelCatalog=models.map(m=>({id:String(m.name||m.model||""),name:String(m.name||m.model||"")})).filter(m=>m.id);
   if(!modelCatalog.length)throw new Error("Ollama hat keine installierten Modelle gefunden.");
-  const preferred="qwen3.8:27b-q4_K_M";
+  const preferred="qwen3.8:27b";
   if(!modelCatalog.some(m=>m.id===selectedLocalModel))selectedLocalModel=modelCatalog.some(m=>m.id===preferred)?preferred:modelCatalog[0].id;
   engineModel=selectedLocalModel;
   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
@@ -526,7 +526,7 @@ async function ask(msgs,sys,img){
  activeRequests++;
  const modelId=selectedLocalModel;
  try{
-  if(!modelId){$("kihealth").textContent="OLLAMA NICHT VERFÜGBAR · NUTZE CLOUD";return await askCloud(msgs,sys)}
+  if(!modelId){$("kihealth").textContent="OLLAMA NICHT VERFÜGBAR";throw new Error("Kein lokales Ollama-Modell ausgewählt. Starte Ollama und lade die Modellliste neu.")}
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
   const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
   $("kihealth").textContent="OLLAMA DENKT · "+modelId;
@@ -549,7 +549,7 @@ async function ask(msgs,sys,img){
  }catch(e){
   $("kihealth").textContent="OLLAMA-ANFRAGE FEHLGESCHLAGEN";
   const message=emsg(e);
-  if(modelId&&/Failed to fetch|NetworkError|Load failed/i.test(message)){log("Lokales Ollama nicht erreichbar – wechsle zu OpenRouter über Cloudflare.","s");try{return await askCloud(msgs,sys)}catch(cloudError){throw new Error(message+"; Cloud-Fallback: "+emsg(cloudError))}}
+  if(modelId&&/Failed to fetch|NetworkError|Load failed/i.test(message)){throw new Error("JARVIS erreicht Ollama auf diesem PC nicht. Prüfe, ob Ollama läuft und OLLAMA_ORIGINS für https://hoffmannerik1-eng.github.io gesetzt ist. Es wurde keine Anfrage an eine Cloud-KI gesendet.")}
   throw e;
  }finally{activeRequests=Math.max(0,activeRequests-1)}
 }
