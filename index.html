@@ -479,8 +479,8 @@ async function autoConnectAI(){
   const models=Array.isArray(data.models)?data.models:[];
   modelCatalog=models.map(m=>({id:String(m.name||m.model||""),name:String(m.name||m.model||"")})).filter(m=>m.id);
   if(!modelCatalog.length)throw new Error("Ollama hat keine installierten Modelle gefunden.");
-  const preferred="qwen3-vl:8b";
-  const chatModel=modelCatalog.find(m=>m.id.toLowerCase()===preferred)||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b-instruct")||modelCatalog[0];
+  const preferred="qwen3-vl:8b-instruct";
+  const chatModel=modelCatalog.find(m=>m.id.toLowerCase()===preferred)||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b")||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3.8:27b")||modelCatalog[0];
   selectedLocalModel=chatModel.id;
   engineModel=selectedLocalModel;
   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
@@ -531,11 +531,11 @@ async function ask(msgs,sys,img){
  try{
   if(!modelId){$("kihealth").textContent="OLLAMA NICHT VERFÜGBAR";throw new Error("Kein lokales Ollama-Modell ausgewählt. Starte Ollama und lade die Modellliste neu.")}
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
-  const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.slice(-24).map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
+  const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.slice(-12).map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
   $("kihealth").textContent="OLLAMA DENKT · "+modelId;
   const response=await fetch("http://127.0.0.1:11434/api/chat",{
    method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",
-   body:JSON.stringify({model:modelId,messages:history,stream:false,think:false,keep_alive:"30m",options:{temperature:0.35,num_predict:codingMode?2400:1400,num_ctx:8192}})
+   body:JSON.stringify({model:modelId,messages:history,stream:false,think:false,keep_alive:"10m",options:{temperature:0.3,num_predict:codingMode?1200:800,num_ctx:4096}})
   });
   if(!response.ok){
    let detail="HTTP "+response.status;
