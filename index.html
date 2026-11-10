@@ -558,14 +558,14 @@ async function ask(msgs,sys,img){
 
 /* ---------- Automatische Anfrage-Erkennung ---------- */
 let codingMode=false;
-const codingIntentPattern=/(\\b(code|coding|programmier|programmieren|programmiere|entwickle|entwickeln|debug|debugge|fehler im code|syntaxerror|exception|stack trace|html|css|javascript|typescript|python|java|c\\+\\+|c#|sql|json|api|funktion|funktioniert nicht|script|skript|website|webseite|webapp|app bauen|projekt bauen|github|index\\.html|main\\.py|datei erstellen|datei ändern|code ändern|code schreiben|code erstellen|code verbessern|bug|kompilier|terminal|powershell|ollama)\\b)/i;
+const codingIntentPattern=/(\b(code|coding|programmier|programmieren|programmiere|entwickle|entwickeln|debug|debugge|fehler im code|syntaxerror|exception|stack trace|html|css|javascript|typescript|python|java|c\+\+|c#|sql|json|api|funktion|funktioniert nicht|script|skript|website|webseite|webapp|app bauen|projekt bauen|github|index\.html|main\.py|datei erstellen|datei ändern|code ändern|code schreiben|code erstellen|code verbessern|bug|kompilier|terminal|powershell|ollama)\b)/i;
 function detectCodingRequest(message){
  const q=String(message||"").trim();
- const recent=hist.slice(-4).map(m=>String(m.content||"")).join("\\n");
- const context=(q+"\\n"+recent).slice(-12000);
- const explicit=codingIntentPattern.test(q)||/(\\`{3}|<\\/?[a-z][^>]*>|function\\s+\\w+\\s*\\(|const\\s+\\w+\\s*=|def\\s+\\w+\\s*\\(|import\\s+\\w+|SyntaxError:|TypeError:|ReferenceError:)/i.test(q);
+ const recent=hist.slice(-4).map(m=>String(m.content||"")).join("\n");
+ const context=(q+"\n"+recent).slice(-12000);
+ const explicit=codingIntentPattern.test(q)||/(`{3}|<\/?[a-z][^>]*>|function\s+\w+\s*\(|const\s+\w+\s*=|def\s+\w+\s*\(|import\s+\w+|SyntaxError:|TypeError:|ReferenceError:)/i.test(q);
  const followUp=/^(mach das|ändere das|aendere das|verbessere das|bau das ein|baue das ein|mach weiter|weiter|fix das|repariere das|es geht nicht|geht nicht|noch besser|ja|genau)$/i.test(q);
- const recentCode=/(\\`{3}|index\\.html|javascript|typescript|python|html|css|github|programmier|code ändern|code schreiben)/i.test(recent);
+ const recentCode=/(`{3}|index\.html|javascript|typescript|python|html|css|github|programmier|code ändern|code schreiben)/i.test(recent);
  return explicit||(followUp&&recentCode);
 }
 function chooseAutomaticModel(forCoding){
