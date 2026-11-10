@@ -1343,8 +1343,8 @@ let lastAcceptedMessage="",lastAcceptedMessageAt=0;
 function explicitNameFromMessage(message){
  const s=String(message||"").trim();
  const m=s.match(/\b(?:ich\s+heiße|mein\s+name\s+ist|nenn\s+mich)\s+([\p{L}][\p{L}\p{M} .\-’']{0,38})/iu);
- if(!m)return "";const name=m[1].split(/[,.!?;\n]/)[0].trim().replace(/\s+/g," ");
- if(!name||name.length>40||/^(heute|gerade|eigentlich|auch|nicht|der|die|das)$/i.test(name))return "";return name;
+ if(!m)return "";const name=m[1].split(/[,.!?;\n]/)[0].split(/\b(?:und|aber|weil|denn|heute|gerade)\b/i)[0].trim().replace(/\s+/g," ");
+ if(!name||name.length>40||/^(heute|gerade|eigentlich|auch|nicht|der|die|das)$/i.test(name))return "";return name.charAt(0).toLocaleUpperCase("de-DE")+name.slice(1);
 }
 async function run(message){
  const q=String(message||"").trim();if(!q&&!pendingVisionImage)return;
