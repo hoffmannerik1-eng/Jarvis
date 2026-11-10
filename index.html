@@ -1663,7 +1663,7 @@ const S=R*.95,amp=st==="talk"?.08+.05*Math.sin(T*11):st==="think"?.05:.02,ry=T*.
 frame();
 
 
-$("boot").remove();setUI(ALL,false);setUI(CH,false);loadAccountFields();hideLog();
+setUI(["hud","side","account","accountbtn"],false);setUI(CH,false);loadAccountFields();hideLog();
 document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
  if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
