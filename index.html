@@ -497,12 +497,35 @@ const txt=r=>{
  return typeof c==="string"?c:(c&&c.text)||"";
 };
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const JARVIS_WORKER_URL="https://jarvis.hoffmann-erik1.workers.dev";
+async function askCloud(msgs,sys){
+ const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
+ const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
+ $("kihealth").textContent="OPENROUTER · VERBINDE …";
+ const response=await fetch(JARVIS_WORKER_URL+"/v1/chat/completions",{
+  method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",
+  body:JSON.stringify({model:"openrouter/free",messages:history,stream:false})
+ });
+ if(!response.ok){
+  let detail="HTTP "+response.status;
+  try{const problem=await response.json();detail=problem.error?.message||problem.error||detail}catch(_){}
+  throw new Error("OpenRouter: "+detail);
+ }
+ const result=await response.json();
+ const answer=String(result?.choices?.[0]?.message?.content||"").trim();
+ if(!answer)throw new Error("OpenRouter hat eine leere Antwort geliefert.");
+ await recordSuccessfulQuestion();
+ $("kihealth").textContent="OPENROUTER BEREIT";
+ log("Antwort über den sicheren Cloudflare-Worker mit OpenRouter erzeugt.","s");
+ return answer;
+}
 async function ask(msgs,sys,img){
- if(img)throw new Error("Bildanalyse ist über den Ollama-Textmodus derzeit nicht verfügbar.");
+ if(img)throw new Error("Bildanalyse ist derzeit nicht aktiviert.");
  if(activeRequests>0)throw new Error("J.A.R.V.I.S. verarbeitet bereits eine Anfrage. Bitte kurz warten.");
- if(!selectedLocalModel)throw new Error("Ollama ist nicht verbunden. Starte Ollama und lade J.A.R.V.I.S. neu.");
+
  activeRequests++;
  const modelId=selectedLocalModel;
+ if(!modelId){try{return await askCloud(msgs,sys)}catch(e){$("kihealth").textContent="CLOUD-KI NICHT ERREICHBAR";throw e}}
  try{
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
   const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
@@ -526,7 +549,7 @@ async function ask(msgs,sys,img){
  }catch(e){
   $("kihealth").textContent="OLLAMA-ANFRAGE FEHLGESCHLAGEN";
   const message=emsg(e);
-  if(/Failed to fetch|NetworkError|Load failed/i.test(message))throw new Error("J.A.R.V.I.S. erreicht Ollama auf diesem PC nicht. Prüfe, ob Ollama läuft und die Browser-Origin freigegeben ist.");
+  if(/Failed to fetch|NetworkError|Load failed/i.test(message)){log("Lokales Ollama nicht erreichbar – wechsle zu OpenRouter über Cloudflare.","s");try{return await askCloud(msgs,sys)}catch(cloudError){throw new Error(message+"; Cloud-Fallback: "+emsg(cloudError))}}
   throw e;
  }finally{activeRequests=Math.max(0,activeRequests-1)}
 }
