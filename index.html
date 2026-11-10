@@ -64,7 +64,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 #bar{left:18px;right:auto;transform:none;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(560px,48vw);z-index:40;background:rgba(var(--pan),.96);box-shadow:0 8px 30px #0008;gap:7px}
 #bar input{min-width:0}
 #bar button{white-space:nowrap}
-#bar #go{display:inline-block}#mic{min-width:58px;padding:6px 10px}#bar{min-height:0}
+#bar #go{display:inline-block}#coding{white-space:nowrap}#coding.on{background:var(--g);color:#001;border-color:var(--g)}#mic{min-width:58px;padding:6px 10px}#bar{min-height:0}
 #pick{min-width:44px;padding:6px 10px}
 #log .m.j .gallery-title{display:block;color:var(--c);font-weight:700;margin-bottom:5px}
 #imageViewer{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:24px}
@@ -186,6 +186,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <input id="filepick" type="file" accept="image/*">
   <input id="in" placeholder="Nachricht oder Befehl an J.A.R.V.I.S. … (hilfe)" autocomplete="off" list="cmds">
   <datalist id="cmds"><option value="hilfe"><option value="aktiviere Handgesten"><option value="deaktiviere Handgesten"><option value="zeig es"><option value="verstecke den Chat"><option value="schließe alles"><option value="mach das Bild weg"><option value="mach das Video weg"><option value="mach die Karte weg"><option value="Fenster nach links"><option value="Fenster nach rechts"><option value="mach es größer"><option value="Vollbild"><option value="spiel Musik auf YouTube"><option value="pause"><option value="weiter"><option value="zeig Pizzeria in der Nähe auf Google Maps"><option value="route nach Berlin"><option value="lade das in ein neues Repo hoch"><option value="ja"><option value="nein"></datalist>
+  <button id="coding" type="button" title="Zwischen normalem Chat und lokalem Coding-Modus wechseln">CODING: AUS</button>
   <button id="go">SENDEN</button>
 </div>
 <div id="codeWin" class="hide" role="dialog" aria-label="Code-Fenster">
@@ -555,7 +556,11 @@ async function ask(msgs,sys,img){
 }
 
 /* ---------- Agent ---------- */
-const SYSF=()=>`Du bist J.A.R.V.I.S., ein hilfreicher, allgemeiner KI-Assistent. Antworte IMMER auf Deutsch, freundlich, klar und passend zur Frage. Beantworte normale Fragen direkt. Du bist kein Menü-Bot und kein Zahlungsdienst. Behaupte niemals, du könntest eine Frage nicht beantworten, nur weil sie ein Menü oder eine App erwähnt. Erfinde keine Fakten. Wenn etwas unklar ist, stelle eine kurze Rückfrage. Halte Antworten normalerweise kurz; bei Erklärungen darfst du ausführlicher sein. Bei Codewünschen liefere vollständigen, lauffähigen Code.
+let codingMode=(()=>{try{return localStorage.getItem("jarvis_coding_mode")==="1"}catch(e){return false}})();
+function renderCodingMode(){const b=$("coding");if(!b)return;b.classList.toggle("on",codingMode);b.textContent=codingMode?"CODING: AN":"CODING: AUS";b.title=codingMode?"Lokaler Coding-Modus aktiv · Qwen über Ollama":"Normaler Chat · Qwen über Ollama"}
+$("coding").onclick=()=>{codingMode=!codingMode;try{localStorage.setItem("jarvis_coding_mode",codingMode?"1":"0")}catch(e){}renderCodingMode();log(codingMode?"Coding-Modus aktiviert. Anfragen werden an dein lokales Ollama-Modell mit Programmier-Fokus gesendet.":"Normaler Chat aktiviert.","s");speak(codingMode?"Coding-Modus aktiviert.":"Normaler Chat aktiviert.")};
+renderCodingMode();
+const SYSF=()=> (codingMode ? `CODING-MODUS: Du bist ein erfahrener Softwareentwickler und arbeitest als Programmierassistent für den Nutzer. Verwende das lokale Modell über Ollama. Analysiere die Aufgabe sorgfältig. Bei Änderungen an bestehendem Code frage nach dem vollständigen aktuellen Code, falls er nicht im Chat vorhanden ist. Liefere vollständige, direkt nutzbare Dateien statt unvollständiger Ausschnitte. Erkläre kurz, welche Datei ersetzt werden muss und wie der Nutzer den Code testet. Behaupte niemals, Dateien auf dem PC, GitHub oder einer Website selbst geändert, ausgeführt oder hochgeladen zu haben. Du hast keinen direkten Dateisystem- oder Terminalzugriff. Wenn Code gebraucht wird, gib ihn in Markdown-Codeblöcken mit passender Sprache aus, damit JARVIS ihn im Codefenster anzeigen kann. Wenn mehrere Dateien nötig sind, trenne sie klar mit Dateinamen. Achte auf Sicherheit, keine Geheimnisse oder API-Schlüssel in öffentlichen Code schreiben. Antworte weiterhin ausschließlich im unten beschriebenen JSON-Format. ` : "")+`Du bist J.A.R.V.I.S., ein hilfreicher, allgemeiner KI-Assistent. Antworte IMMER auf Deutsch, freundlich, klar und passend zur Frage. Beantworte normale Fragen direkt. Du bist kein Menü-Bot und kein Zahlungsdienst. Behaupte niemals, du könntest eine Frage nicht beantworten, nur weil sie ein Menü oder eine App erwähnt. Erfinde keine Fakten. Wenn etwas unklar ist, stelle eine kurze Rückfrage. Halte Antworten normalerweise kurz; bei Erklärungen darfst du ausführlicher sein. Bei Codewünschen liefere vollständigen, lauffähigen Code.
 
 WICHTIGES AUSGABEFORMAT: Antworte immer mit genau einem gültigen JSON-Objekt ohne Markdown und ohne Text davor oder danach: {"say":"deine Antwort","tool":null}. Wenn ein Werkzeug wirklich nötig ist, verwende {"say":"kurze Ankündigung","tool":{"name":"WERKZEUGNAME","arg":"Argument"}}. Verwende nur verfügbare Werkzeuge. Erfinde niemals Werkzeugergebnisse. Nach einem Werkzeugaufruf erhältst du das Ergebnis und erklärst es normal.
 
