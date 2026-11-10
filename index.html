@@ -531,11 +531,11 @@ async function ask(msgs,sys,img){
  try{
   if(!modelId){$("kihealth").textContent="OLLAMA NICHT VERFÜGBAR";throw new Error("Kein lokales Ollama-Modell ausgewählt. Starte Ollama und lade die Modellliste neu.")}
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
-  const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
+  const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.slice(-24).map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
   $("kihealth").textContent="OLLAMA DENKT · "+modelId;
   const response=await fetch("http://127.0.0.1:11434/api/chat",{
    method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",
-   body:JSON.stringify({model:modelId,messages:history,stream:false,think:false,keep_alive:"10m",options:{temperature:0.25,num_predict:700}})
+   body:JSON.stringify({model:modelId,messages:history,stream:false,think:false,keep_alive:"30m",options:{temperature:0.35,num_predict:codingMode?2400:1400,num_ctx:8192}})
   });
   if(!response.ok){
    let detail="HTTP "+response.status;
@@ -570,8 +570,8 @@ function detectCodingRequest(message){
  return explicit||(followUp&&recentCode);
 }
 function chooseAutomaticModel(forCoding){
- const chatNames=["qwen3-vl:8b","qwen3-vl:8b-instruct"];
- const codingNames=["qwen3.8:27b"];
+ const chatNames=["qwen3-vl:8b-instruct","qwen3-vl:8b","qwen3.8:27b","qwen3.8:27b-q4_K_M"];
+ const codingNames=["qwen3.8:27b","qwen3.8:27b-q4_K_M","qwen3-vl:8b-instruct","qwen3-vl:8b"];
  const names=forCoding?codingNames:chatNames;
  const chosen=modelCatalog.find(m=>names.includes(m.id.toLowerCase()));
  if(!chosen){
