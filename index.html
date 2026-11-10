@@ -525,8 +525,8 @@ async function ask(msgs,sys,img){
 
  activeRequests++;
  const modelId=selectedLocalModel;
- if(!modelId){try{return await askCloud(msgs,sys)}catch(e){$("kihealth").textContent="CLOUD-KI NICHT ERREICHBAR";throw e}}
  try{
+  if(!modelId){$("kihealth").textContent="OLLAMA NICHT VERFÜGBAR · NUTZE CLOUD";return await askCloud(msgs,sys)}
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
   const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
   $("kihealth").textContent="OLLAMA DENKT · "+modelId;
@@ -549,7 +549,7 @@ async function ask(msgs,sys,img){
  }catch(e){
   $("kihealth").textContent="OLLAMA-ANFRAGE FEHLGESCHLAGEN";
   const message=emsg(e);
-  if(/Failed to fetch|NetworkError|Load failed/i.test(message)){log("Lokales Ollama nicht erreichbar – wechsle zu OpenRouter über Cloudflare.","s");try{return await askCloud(msgs,sys)}catch(cloudError){throw new Error(message+"; Cloud-Fallback: "+emsg(cloudError))}}
+  if(modelId&&/Failed to fetch|NetworkError|Load failed/i.test(message)){log("Lokales Ollama nicht erreichbar – wechsle zu OpenRouter über Cloudflare.","s");try{return await askCloud(msgs,sys)}catch(cloudError){throw new Error(message+"; Cloud-Fallback: "+emsg(cloudError))}}
   throw e;
  }finally{activeRequests=Math.max(0,activeRequests-1)}
 }
