@@ -479,8 +479,8 @@ async function autoConnectAI(){
   const models=Array.isArray(data.models)?data.models:[];
   modelCatalog=models.map(m=>({id:String(m.name||m.model||""),name:String(m.name||m.model||"")})).filter(m=>m.id);
   if(!modelCatalog.length)throw new Error("Ollama hat keine installierten Modelle gefunden.");
-  const preferred="qwen3-vl:8b-instruct";
-  const chatModel=modelCatalog.find(m=>m.id.toLowerCase()===preferred)||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b")||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3.8:27b")||modelCatalog[0];
+  const preferred="qwen3:4b";
+  const chatModel=modelCatalog.find(m=>m.id.toLowerCase()===preferred)||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b-instruct")||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b")||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3.8:27b")||modelCatalog[0];
   selectedLocalModel=chatModel.id;
   engineModel=selectedLocalModel;
   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
@@ -570,8 +570,8 @@ function detectCodingRequest(message){
  return explicit||(followUp&&recentCode);
 }
 function chooseAutomaticModel(forCoding){
- const chatNames=["qwen3-vl:8b-instruct","qwen3-vl:8b","qwen3.8:27b","qwen3.8:27b-q4_K_M"];
- const codingNames=["qwen3.8:27b","qwen3.8:27b-q4_K_M","qwen3-vl:8b-instruct","qwen3-vl:8b"];
+ const chatNames=["qwen3:4b","qwen3-vl:8b-instruct","qwen3-vl:8b","qwen3.8:27b","qwen3.8:27b-q4_K_M"];
+ const codingNames=["qwen3:4b","qwen3.8:27b","qwen3.8:27b-q4_K_M","qwen3-vl:8b-instruct","qwen3-vl:8b"];
  const names=forCoding?codingNames:chatNames;
  const chosen=modelCatalog.find(m=>names.includes(m.id.toLowerCase()));
  if(!chosen){
