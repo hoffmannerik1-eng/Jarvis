@@ -1385,27 +1385,32 @@ function loadAccountFields(){const email=cloudData.ownerEmail||(()=>{try{return 
 let speaking=false,listening=false,rec=null;
 let voices=[];
 function loadVoices(){
- const all=speechSynthesis.getVoices();
- voices=all.filter(v=>/^de(?:-|_)/i.test(v.lang));
- voices.sort((x,y)=>sc(y)-sc(x));
- const sel=$("vs"),previous=LS2("jv"),old=sel.value;
+ const all=window.speechSynthesis?.getVoices?.()||[];
+ voices=all.filter(v=>/^de(?:-|_)/i.test(String(v.lang||"")));
+ voices.sort((a,b)=>{
+  const score=v=>(/^de-DE$/i.test(v.lang)?20:0)+(/natural|neural|online/i.test(v.name)?8:0)+(/microsoft|google|katja|markus|anna/i.test(v.name)?5:0)+(v.localService?1:0);
+  return score(b)-score(a);
+ });
+ const sel=$("vs"),previous=LS2("jv");
+ if(!sel)return;
  sel.innerHTML="";
- voices.forEach((v,i)=>{const o=document.createElement("option");o.value=i;o.textContent=v.name+" · "+v.lang;sel.appendChild(o)});
- const k=voices.findIndex(v=>v.name===previous);
- if(k>=0)sel.value=String(k);else if(voices.length)sel.value="0";
- if(!voices.length){const o=document.createElement("option");o.value="";o.textContent="Keine deutsche Stimme installiert";sel.appendChild(o)}
+ voices.forEach((v,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=v.name+" · "+v.lang;sel.appendChild(o)});
+ const saved=voices.findIndex(v=>v.name===previous);
+ sel.value=String(saved>=0?saved:0);
+ if(!voices.length){const o=document.createElement("option");o.value="";o.textContent="Keine deutsche Browser-Stimme verfügbar";sel.appendChild(o)}
 }
-const sc=v=>(/natural|neural|online/i.test(v.name)?4:0)+(/google|microsoft|siri|anna|markus|conrad|katja/i.test(v.name)?2:0)+(v.localService?0:1);
 const LS2=k=>{try{return localStorage.getItem(k)||""}catch(e){return""}};
 function germanUtterance(text,volume){
  loadVoices();
  const u=new SpeechSynthesisUtterance(String(text));
- u.lang="de-DE";u.locale="de-DE";
- const sel=voices[+$("vs").value];
- const v=sel||voices.find(x=>/^de-DE$/i.test(x.lang))||voices[0];
- if(v){u.voice=v;u.lang=v.lang}
+ u.lang="de-DE";
+ u.locale="de-DE";
+ const selected=voices[Number($("vs")?.value)];
+ const german=selected&&/^de(?:-|_)/i.test(selected.lang)?selected:voices.find(v=>/^de-DE$/i.test(v.lang))||voices[0];
+ if(german){u.voice=german;u.lang=german.lang}
  u.volume=volume??Math.max(.1,Math.min(1,+$("vl").value||1));
- u.rate=+$("rt").value||1;u.pitch=+$("pt").value||1;
+ u.rate=+$("rt").value||0.95;
+ u.pitch=+$("pt").value||0.9;
  return u;
 }
 function ensureRecognition(){
