@@ -562,11 +562,12 @@ let codingMode=false;
 const codingIntentPattern=/(\b(code|coding|programmier|programmieren|programmiere|entwickle|entwickeln|debug|debugge|fehler im code|syntaxerror|exception|stack trace|html|css|javascript|typescript|python|java|c\+\+|c#|sql|json|api|funktion|funktioniert nicht|script|skript|website|webseite|webapp|app bauen|projekt bauen|github|index\.html|main\.py|datei erstellen|datei ändern|code ändern|code schreiben|code erstellen|code verbessern|bug|kompilier|terminal|powershell|ollama)\b)/i;
 function detectCodingRequest(message){
  const q=String(message||"").trim();
- const recent=hist.slice(-4).map(m=>String(m.content||"")).join("\n");
- const context=(q+"\n"+recent).slice(-12000);
+ // Begrüßungen und kurze normale Chat-Nachrichten bleiben immer im schnellen Chat-Modell.
+ if(/^(hi|hallo|hey|moin|guten morgen|guten tag|guten abend|servus|was geht|wie gehts|wie geht's)[!.?\s]*$/i.test(q))return false;
  const explicit=codingIntentPattern.test(q)||/(`{3}|<\/?[a-z][^>]*>|function\s+\w+\s*\(|const\s+\w+\s*=|def\s+\w+\s*\(|import\s+\w+|SyntaxError:|TypeError:|ReferenceError:)/i.test(q);
  const followUp=/^(mach das|ändere das|aendere das|verbessere das|bau das ein|baue das ein|mach weiter|weiter|fix das|repariere das|es geht nicht|geht nicht|noch besser|ja|genau)$/i.test(q);
- const recentCode=/(`{3}|index\.html|javascript|typescript|python|html|css|github|programmier|code ändern|code schreiben)/i.test(recent);
+ const recentUser=hist.filter(m=>m.role==="user").slice(-2).map(m=>String(m.content||"")).join("\n");
+ const recentCode=/(programmier|code|html|css|javascript|typescript|python|github|index\.html|main\.py)/i.test(recentUser);
  return explicit||(followUp&&recentCode);
 }
 function chooseAutomaticModel(forCoding){
