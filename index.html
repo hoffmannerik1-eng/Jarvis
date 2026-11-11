@@ -1717,5 +1717,16 @@ document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"|
 cv.addEventListener("dblclick",()=> $("in").focus());
 
 </script>
+<script>
+/* Independent diagnostic: reports runtime failures even if the main app stops early. */
+window.addEventListener("error",function(e){
+ const box=document.getElementById("bl");
+ if(box)box.textContent="JAVASCRIPT-FEHLER: "+(e.message||"Unbekannt")+" · Zeile "+(e.lineno||"?");
+});
+window.addEventListener("unhandledrejection",function(e){
+ const box=document.getElementById("bl");
+ if(box)box.textContent="JAVASCRIPT-FEHLER: "+String(e.reason&&e.reason.message||e.reason||"Promise-Fehler");
+});
+</script>
 </body>
 </html>
