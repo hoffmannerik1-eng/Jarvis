@@ -926,8 +926,8 @@ const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/[
 const b64s=t=>{const b=new TextEncoder().encode(t);let x="";for(let i=0;i<b.length;i+=8192)x+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(x)};
 const b64u=t=>b64s(t).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const BUILTIN=[
-{id:"github",name:"GitHub",description:"Steuert das verbundene GitHub-Konto: Repositories auflisten, Dateien lesen und ändern, Issues verwalten. Anmeldung über GitHub OAuth.",fn:J=>{
- const gh=async(p,o={})=>{const t=J.secret("github");if(!t)throw new Error("Kein GitHub-Token. Trage ihn im Fenster MEIN KONTO ein.");
+{id:"github",name:"GitHub",description:"Steuert das verbundene GitHub-Konto: Repositories auflisten, Dateien lesen und ändern, Issues verwalten. Anmeldung ausschließlich über die Schaltfläche MIT GITHUB ANMELDEN. Niemals nach einem Token fragen oder Token im Chat ausgeben.",fn:J=>{
+ const gh=async(p,o={})=>{const t=J.secret("github");if(!t)throw new Error("GitHub ist noch nicht verbunden. Öffne MEIN KONTO und klicke auf MIT GITHUB ANMELDEN. Du musst keinen Token erstellen, eingeben oder JARVIS mitteilen.");
   const r=await J.fetch("https://api.github.com"+p,{...o,headers:{Authorization:"Bearer "+t,Accept:"application/vnd.github+json","Content-Type":"application/json"}});
   const tx=await r.text();if(!r.ok)throw new Error("GitHub "+r.status+" "+tx.slice(0,160));return tx?JSON.parse(tx):{}};
  J.plugin({tools:{
