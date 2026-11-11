@@ -217,8 +217,8 @@ function setUI(ids,show){
  for(const id of list){const el=typeof id==="string"?$(id):id;if(el)el.classList.toggle("hide",!show)}
 }
 let logTimer=0,logHover=false;
-function hideLog(){clearTimeout(logTimer);const el=$("log");if(el)el.classList.add("hide")}
-function showLog(ms){const el=$("log");if(!el)return;el.classList.remove("hide");clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)}
+function hideLog(){clearTimeout(logTimer);const el=$("log");if(el)el.classList.add("hide");const b=$("bar");if(b)b.classList.add("hide");const t=$("chat-toggle");if(t)t.textContent="CHAT ÖFFNEN"}
+function showLog(ms){const el=$("log");if(!el)return;el.classList.remove("hide");const b=$("bar");if(b)b.classList.remove("hide");const t=$("chat-toggle");if(t)t.textContent="CHAT SCHLIESSEN";clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)}
 function log(message,type="s"){
  const root=$("log");if(!root)return;
  const node=document.createElement("div");node.className="m "+(type==="u"?"u":type==="j"?"j":"s");
