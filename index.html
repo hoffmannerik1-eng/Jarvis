@@ -546,19 +546,44 @@ const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const JARVIS_WORKER_URL="https://jarvis.hoffmann-erik1.workers.dev";
 async function askCloud(msgs,sys){
  const keys=readCloudKeys();if(!keys.length)throw new Error("Kein OpenRouter-API-Key gespeichert. Bitte füge einen Key hinzu.");
- const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
+ const toText=m=>Array.isArray(m.content)?m.content.map(x=>typeof x==="string"?x:(x?.text||"")).join("\\n"):String(m.content??"");
  const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
  let lastError="Unbekannter Fehler";
  for(let i=0;i<keys.length;i++){
   $("kihealth").textContent="OPENROUTER · KEY "+(i+1)+"/"+keys.length;
-  try{
-   const response=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+keys[i],"HTTP-Referer":location.origin,"X-Title":"JARVIS"},cache:"no-store",body:JSON.stringify({model:"openrouter/free",messages:history,stream:false})});
-   if(!response.ok){let detail="HTTP "+response.status;try{const problem=await response.json();detail=problem.error?.message||problem.error||detail}catch(_){}lastError=String(detail);if([401,402,403,408,429,500,502,503,504].includes(response.status)&&i<keys.length-1){log("Key "+(i+1)+" nicht verfügbar ("+response.status+"). Versuche Key "+(i+2)+".","s");continue}throw new Error("OpenRouter: "+lastError)}
-   const result=await response.json(),answer=String(result?.choices?.[0]?.message?.content||"").trim();if(!answer)throw new Error("OpenRouter hat eine leere Antwort geliefert.");
-   await recordSuccessfulQuestion();$("kihealth").textContent="OPENROUTER BEREIT · KEY "+(i+1);log("Cloud-Antwort über OpenRouter · Key "+(i+1)+" von "+keys.length,"s");return answer;
-  }catch(e){lastError=emsg(e);if(i<keys.length-1&&/Failed to fetch|NetworkError|Load failed/i.test(lastError)){log("Verbindung fehlgeschlagen. Versuche den nächsten API-Key.","s");continue}throw e}
+  for(let attempt=0;attempt<2;attempt++){
+   try{
+    const response=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+keys[i],"HTTP-Referer":location.origin,"X-Title":"JARVIS"},cache:"no-store",body:JSON.stringify({model:"openrouter/free",messages:history,stream:false})});
+    if(!response.ok){
+     let detail="HTTP "+response.status;
+     try{const problem=await response.json();detail=problem.error?.message||problem.error||detail}catch(_){}
+     lastError=String(detail);
+     if([401,402,403,408,429,500,502,503,504].includes(response.status))break;
+     throw new Error("OpenRouter: "+lastError);
+    }
+    const result=await response.json();
+    const message=result?.choices?.[0]?.message;
+    let answer="";
+    if(typeof message?.content==="string")answer=message.content.trim();
+    else if(Array.isArray(message?.content))answer=message.content.map(part=>typeof part==="string"?part:(part?.text||"")).join("\\n").trim();
+    if(!answer&&typeof result?.choices?.[0]?.text==="string")answer=result.choices[0].text.trim();
+    if(!answer){
+     lastError="Der OpenRouter-Anbieter hat keine Antwort geliefert"+(result?.choices?.[0]?.finish_reason?" (Grund: "+result.choices[0].finish_reason+")":".");
+     if(attempt===0){await wait(700);continue}
+     break;
+    }
+    await recordSuccessfulQuestion();$("kihealth").textContent="OPENROUTER BEREIT · KEY "+(i+1);log("Cloud-Antwort über OpenRouter · Key "+(i+1)+" von "+keys.length,"s");return answer;
+   }catch(e){
+    lastError=emsg(e);
+    if(/Failed to fetch|NetworkError|Load failed/i.test(lastError)){if(attempt===0){await wait(500);continue}break}
+    if(/leere Antwort|keine Antwort geliefert/i.test(lastError)){if(attempt===0){await wait(700);continue}break}
+    throw e;
+   }
+  }
+  if(i<keys.length-1)log("OpenRouter-Key "+(i+1)+" lieferte keine verwendbare Antwort. JARVIS versucht den nächsten Key.","s");
  }
- throw new Error("Alle gespeicherten API-Keys sind fehlgeschlagen: "+lastError);
+ $("kihealth").textContent="OPENROUTER NICHT VERFÜGBAR";
+ throw new Error("OpenRouter lieferte nach Wiederholungsversuchen keine Antwort. "+lastError+" Bitte später erneut versuchen oder einen anderen verfügbaren API-Key hinzufügen.");
 }
 async function ask(msgs,sys,img){
  if(img)throw new Error("Bildanalyse ist derzeit nicht aktiviert.");
