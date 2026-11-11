@@ -1710,7 +1710,7 @@ function speak(t){return new Promise(res=>{
   u.onerror=e=>{if(e.error==="canceled"||e.error==="interrupted"){done();return}log("Lokale Sprachausgabe: "+(e.error||"Fehler"),"s");next()};
   try{synth.speak(u)}catch(e){log("Lokale Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}
  };
- try{synth.cancel();watchdog=setTimeout(()=>{log("Sprachausgabe wurde automatisch beendet, damit JARVIS weiter bedienbar bleibt.","s");try{synth.cancel()}catch(e){}done()},25000);setTimeout(next,120)}
+ try{synth.cancel();watchdog=setTimeout(()=>{log("Die Sprachausgabe reagiert nicht mehr. JARVIS wird wieder freigegeben.","s");try{synth.cancel()}catch(e){}done()},Math.min(180000,Math.max(45000,clean.length*110)));setTimeout(next,120)}
  catch(e){log("Sprachausgabe fehlgeschlagen: "+emsg(e),"s");done()}
 })}
 if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices();setTimeout(loadVoices,500);setTimeout(loadVoices,1500)}
