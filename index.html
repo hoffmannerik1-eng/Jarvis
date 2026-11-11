@@ -528,14 +528,14 @@ function updateStartButton(){
  button.textContent=ready?"SYSTEM STARTEN":(deviceMode==="cloud"?"BITTE API-KEY HINZUFÜGEN":"BITTE GERÄT AUSWÄHLEN");
 }
 function renderCloudKeys(){const list=$("cloud-key-list"),keys=readCloudKeys();if(!list)return;list.innerHTML="";if(!keys.length){list.textContent="Noch keine API-Keys gespeichert.";return}keys.forEach((key,i)=>{const row=document.createElement("div");row.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0";const label=document.createElement("span");label.textContent="Key "+(i+1)+" · "+key.slice(0,7)+"…"+key.slice(-4);const del=document.createElement("button");del.type="button";del.textContent="ENTFERNEN";del.onclick=()=>{const next=readCloudKeys();next.splice(i,1);writeCloudKeys(next);renderCloudKeys();updateStartButton()};row.append(label,del);list.appendChild(row)})}
-function selectPC(){deviceMode="pc";try{sessionStorage.setItem("jarvis_device_mode","pc")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="none";$("bl").textContent="PC-MODUS · VERBINDE MIT LOKALER OLLAMA-KI …";updateStartButton();autoConnectAI()}
-function selectCloud(){deviceMode="cloud";try{sessionStorage.setItem("jarvis_device_mode","cloud")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="block";$("bl").textContent="";renderCloudKeys();$("kihealth").textContent="CLOUD-MODUS · API-KEYS AUF DIESEM GERÄT";updateStartButton()}
+function selectPC(){deviceMode="pc";try{localStorage.setItem("jarvis_device_mode","pc")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="none";$("bl").textContent="PC-MODUS · VERBINDE MIT LOKALER OLLAMA-KI …";updateStartButton();autoConnectAI()}
+function selectCloud(){deviceMode="cloud";try{localStorage.setItem("jarvis_device_mode","cloud")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="block";$("bl").textContent="";renderCloudKeys();$("kihealth").textContent="CLOUD-MODUS · API-KEYS AUF DIESEM GERÄT";updateStartButton()}
 $("choose-pc").addEventListener("click",selectPC);
 $("choose-cloud").addEventListener("click",selectCloud);
 $("cloud-back").onclick=()=>{$("cloud-setup").style.display="none";$("device-choice").style.display="block";deviceMode="";updateStartButton()};
 $("cloud-key-add").onclick=()=>{const input=$("cloud-key-input"),key=input.value.trim();if(!key)return;if(!/^sk-or-v1-[a-zA-Z0-9]+$/.test(key)){log("Das sieht nicht wie ein OpenRouter-Key aus (normalerweise beginnt er mit sk-or-v1-).","s");return}const keys=readCloudKeys();if(keys.includes(key)){log("Dieser Key ist bereits gespeichert.","s");return}keys.push(key);writeCloudKeys(keys);input.value="";renderCloudKeys();updateStartButton()};
 $("cloud-key-input").addEventListener("keydown",e=>{if(e.key==="Enter")$("cloud-key-add").click()});
-addEventListener("DOMContentLoaded",()=>{const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||matchMedia("(pointer:coarse)").matches;$("device-note").textContent=mobile?"Mobilgerät erkannt – bitte den gewünschten Modus auswählen.":"Wähle PC für die lokale Ollama-KI oder ein anderes Gerät für API-Keys.";let savedMode="";let wasStarted=false;try{savedMode=sessionStorage.getItem("jarvis_device_mode")||"";wasStarted=sessionStorage.getItem("jarvis_started")==="1"}catch(e){}if(wasStarted){deviceMode=savedMode||"pc";const boot=$("boot");if(boot){boot.style.display="none";boot.style.opacity="0";boot.setAttribute("aria-hidden","true")}bootStarting=true;const start=$("start");if(start)start.style.display="none";if(deviceMode==="pc"){ $("device-choice").style.display="none";$("cloud-setup").style.display="none";$("bl").textContent="PC-MODUS · VERBINDE MIT LOKALER OLLAMA-KI …";updateStartButton();autoConnectAI()}else if(deviceMode==="cloud"){ $("device-choice").style.display="none";$("cloud-setup").style.display="block";$("bl").textContent="";renderCloudKeys();updateStartButton()}}});
+addEventListener("DOMContentLoaded",()=>{const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||matchMedia("(pointer:coarse)").matches;$("device-note").textContent=mobile?"Mobilgerät erkannt – bitte den gewünschten Modus auswählen.":"Wähle PC für die lokale Ollama-KI oder ein anderes Gerät für API-Keys.";let savedMode="";let wasStarted=false;try{savedMode=localStorage.getItem("jarvis_device_mode")||"";wasStarted=localStorage.getItem("jarvis_oauth_pending")==="1"&&localStorage.getItem("jarvis_started")==="1";if(wasStarted)localStorage.removeItem("jarvis_oauth_pending")}catch(e){}if(wasStarted){deviceMode=savedMode||"pc";const boot=$("boot");if(boot){boot.style.display="none";boot.style.opacity="0";boot.setAttribute("aria-hidden","true")}bootStarting=true;const start=$("start");if(start)start.style.display="none";if(deviceMode==="pc"){ $("device-choice").style.display="none";$("cloud-setup").style.display="none";$("bl").textContent="PC-MODUS · VERBINDE MIT LOKALER OLLAMA-KI …";updateStartButton();autoConnectAI()}else if(deviceMode==="cloud"){ $("device-choice").style.display="none";$("cloud-setup").style.display="block";$("bl").textContent="";renderCloudKeys();updateStartButton()}}});
 
 const txt=r=>{
  const c=r&&r.message?r.message.content:r;
@@ -1091,6 +1091,8 @@ $("ghconnect").onclick=async()=>{
   }
   if(!auth.currentUser){$("plugstatus").textContent="Firebase-Anmeldung wird initialisiert …";await auth.signInAnonymously()}
   const provider=new firebase.auth.GithubAuthProvider();provider.addScope("repo");provider.addScope("read:user");
+  /* OAuth-Rückkehr markieren, damit die gestartete Oberfläche nach dem Seitenwechsel erhalten bleibt. */
+  try{localStorage.setItem("jarvis_oauth_pending","1");localStorage.setItem("jarvis_device_mode",deviceMode||"pc")}catch(e){}
   /* Redirect statt Popup: verhindert auth/popup-closed-by-user und Popup-Blockaden. */
   $("plugstatus").textContent="GitHub wird geöffnet. Nach der Anmeldung kehrst du automatisch zu JARVIS zurück …";
   try{
@@ -1671,7 +1673,7 @@ $("start").addEventListener("click",()=>{
  if(!deviceMode){log("Bitte wähle zuerst PC oder Cloud aus.","s");return}
  if(deviceMode==="cloud"&&!readCloudKeys().length){log("Bitte füge zuerst mindestens einen OpenRouter-API-Key hinzu.","s");updateStartButton();return}
  bootStarting=true;
- try{sessionStorage.setItem("jarvis_started","1");sessionStorage.setItem("jarvis_device_mode",deviceMode)}catch(e){}
+ try{localStorage.setItem("jarvis_started","1");localStorage.setItem("jarvis_device_mode",deviceMode)}catch(e){}
  const startButton=$("start"),bootScreen=$("boot"),statusLines=$("bl");
  startButton.disabled=true;
  startButton.textContent="SYSTEM STARTET …";
