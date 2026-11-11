@@ -1091,14 +1091,18 @@ $("ghconnect").onclick=async()=>{
   }
   if(!auth.currentUser){$("plugstatus").textContent="Firebase-Anmeldung wird initialisiert …";await auth.signInAnonymously()}
   const provider=new firebase.auth.GithubAuthProvider();provider.addScope("repo");provider.addScope("read:user");
-  $("plugstatus").textContent="GitHub-Anmeldung wird geöffnet …";let result;
-  try{result=await auth.currentUser.linkWithPopup(provider)}
-  catch(e){if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked")result=await auth.signInWithPopup(provider);else if(e.code==="auth/popup-blocked"){await auth.currentUser.linkWithRedirect(provider);return}else throw e}
-  const credential=firebase.auth.GithubAuthProvider.credentialFromResult(result);
-  if(!credential||!credential.accessToken)throw new Error("GitHub hat keinen API-Zugriff zurückgegeben. Prüfe die Anwendungsrechte.");
-  githubTokenMemory=credential.accessToken;
-  $("plugstatus").textContent="GitHub verbunden: "+(result.additionalUserInfo?.username||result.user?.displayName||"Konto erkannt")+". JARVIS kann jetzt auf deine Repositories zugreifen.";
-  log("GitHub erfolgreich verbunden. Der Zugriff bleibt nur im Arbeitsspeicher dieser Sitzung.","s");
+  /* Redirect statt Popup: verhindert auth/popup-closed-by-user und Popup-Blockaden. */
+  $("plugstatus").textContent="GitHub wird geöffnet. Nach der Anmeldung kehrst du automatisch zu JARVIS zurück …";
+  try{
+   await auth.currentUser.linkWithRedirect(provider);
+  }catch(e){
+   if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked"){
+    await auth.signInWithRedirect(provider);
+   }else{
+    throw e;
+   }
+  }
+  return;
  }catch(e){$("plugstatus").textContent="GitHub-Anmeldung fehlgeschlagen: "+emsg(e)+". Bei auth/unauthorized-domain muss hoffmannerik1-eng.github.io in Firebase unter Authentication → Einstellungen → Autorisierte Domains stehen.";log("GitHub-Anmeldung fehlgeschlagen: "+emsg(e),"s")}
 };
 $("ghdisconnect").onclick=()=>{githubTokenMemory="";$("plugstatus").textContent="GitHub-Zugriff getrennt.";log("GitHub-Verbindung getrennt.","s")};
