@@ -1599,13 +1599,43 @@ setInterval(()=>{const n=new Date();$("clock").textContent=n.toLocaleDateString(
  const base=st==="think"?70:st==="talk"?55:20;$("b1").style.width=Math.min(98,base+Math.random()*25)+"%";
  $("b2").style.width=(performance.memory?Math.round(performance.memory.usedJSHeapSize/performance.memory.jsHeapSizeLimit*100):40+Math.random()*10)+"%";
  $("b3").style.width=navigator.onLine?(85+Math.random()*14)+"%":"3%"},1000);
-$("start").onclick=()=>{
+let bootStarting=false;
+$("start").addEventListener("click",()=>{
+ if(bootStarting)return;
  if(deviceMode==="cloud"&&!readCloudKeys().length){log("Bitte füge zuerst mindestens einen OpenRouter-API-Key hinzu.","s");return}
- speak("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.");
- beep(300,.2,"square");$("start").style.display="none";
- const L=["INITIALISIERE KERNREAKTOR ........ OK","LADE SPRACHMODUL ................. OK","VERBINDE KI-KETTE ................ OK","SENSOREN KALIBRIERT .............. OK","ALLE SYSTEME ONLINE"];let i=0;
- const iv=setInterval(()=>{if(i<L.length){$("bl").innerHTML+=L[i]+"<br>";beep(500+i*140,.1);i++}else{clearInterval(iv);beep(1200,.4);$("boot").style.opacity=0;pulse=1;
-  setTimeout(()=>{$("boot").remove();log("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.","j")},900)}},420)};const LB={k:-1,l:[]};const IP=Array.from({length:80},()=>{const u=Math.random()*2-1,a=Math.random()*6.283,r=Math.cbrt(Math.random())*.85,q=Math.sqrt(1-u*u);return{x:q*Math.cos(a)*r,y:u*r,z:q*Math.sin(a)*r,s:Math.random()*6}});
+ bootStarting=true;
+ const startButton=$("start"),bootScreen=$("boot"),statusLines=$("bl");
+ startButton.disabled=true;
+ startButton.textContent="SYSTEM STARTET …";
+ startButton.style.display="none";
+ try{beep(300,.2,"square")}catch(e){}
+ const L=["INITIALISIERE KERNREAKTOR ........ OK","LADE SPRACHMODUL ................. OK","VERBINDE KI-KETTE ................ OK","SENSOREN KALIBRIERT .............. OK","ALLE SYSTEME ONLINE"];
+ let i=0;
+ const iv=setInterval(()=>{
+  try{
+   if(i<L.length){
+    const line=document.createElement("div");line.textContent=L[i];statusLines.appendChild(line);
+    try{beep(500+i*140,.1)}catch(e){}
+    i++;
+   }else{
+    clearInterval(iv);
+    try{beep(1200,.4)}catch(e){}
+    pulse=1;
+    bootScreen.style.opacity="0";
+    setTimeout(()=>{
+     bootScreen.style.display="none";
+     bootScreen.setAttribute("aria-hidden","true");
+     log("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.","j");
+     try{speak("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.")}catch(e){}
+    },950);
+   }
+  }catch(err){
+   clearInterval(iv);
+   bootScreen.style.opacity="0";
+   setTimeout(()=>{bootScreen.style.display="none";log("JARVIS wurde gestartet. Ein Animationseffekt konnte nicht geladen werden: "+(err.message||err),"s")},950);
+  }
+ },420);
+});const LB={k:-1,l:[]};const IP=Array.from({length:80},()=>{const u=Math.random()*2-1,a=Math.random()*6.283,r=Math.cbrt(Math.random())*.85,q=Math.sqrt(1-u*u);return{x:q*Math.cos(a)*r,y:u*r,z:q*Math.sin(a)*r,s:Math.random()*6}});
 function ring(cx,cy,r,w,a0,n,gap,rot,al){x.lineWidth=w;x.strokeStyle=`rgba(${col},${al})`;
  const seg=6.283/n;for(let i=0;i<n;i++){x.beginPath();x.arc(cx,cy,r,rot+i*seg,rot+i*seg+seg*(1-gap));x.stroke()}}
 function frame(){
