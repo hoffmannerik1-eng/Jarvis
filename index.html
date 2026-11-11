@@ -102,13 +102,19 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 .jwb.grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--c2);cursor:zoom-in;border-radius:6px}
 .jwb iframe{width:100%;height:100%;border:0;display:block;background:#000}
 .jwb .note{padding:14px;color:var(--t)}.jwb .note a{color:var(--c)}
-</style>
+#hud,#side,#accountbtn,#account,#state{display:none!important}
+#chat-toggle{position:fixed;right:22px;bottom:22px;z-index:70;border-radius:999px;padding:10px 17px;background:rgba(var(--pan),.82);backdrop-filter:blur(10px);box-shadow:0 0 18px rgba(var(--rgb),.25);font-size:12px;letter-spacing:.12em}
+#log,#bar{display:none}#log:not(.hide){display:flex}#bar:not(.hide){display:flex}
+#log{left:50%;right:auto;transform:translateX(-50%);bottom:90px;width:min(620px,calc(100% - 28px));height:min(42vh,440px);z-index:65}
+#bar{left:50%;right:auto;transform:translateX(-50%);bottom:22px;width:min(620px,calc(100% - 28px));z-index:66}
+#bar #mic,#bar #pick,#bar #coding,#bar #filepick{display:none!important}#bar input{min-width:0}#logclose{display:none}
+@media(max-width:650px){#log{height:38vh;bottom:78px}#bar{bottom:14px}#chat-toggle{right:14px;bottom:14px}}</style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <div id="hud"><h1>J.A.R.V.I.S.</h1><div id="clock"></div><button id="dl" style="display:none;pointer-events:auto;margin-top:6px;font-size:12px;padding:4px 12px">⬇ VOLLVERSION MIT INTERNET UND FOTOS HERUNTERLADEN</button></div>
 <div id="boot"><h2>J.A.R.V.I.S.</h2><div id="device-choice" style="width:min(440px,90vw);text-align:center"><div style="color:var(--g);margin:8px 0 14px">AUF WELCHEM GERÄT VERWENDEST DU JARVIS?</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button id="choose-pc">🖥 PC · LOKALE KI</button><button id="choose-cloud">📱 iPad / HANDY / ANDERES GERÄT</button></div><div id="device-note" style="color:var(--dim);font-size:12px;margin-top:12px"></div></div><div id="cloud-setup" style="display:none;width:min(440px,90vw);text-align:left"><div style="color:var(--g);text-align:center;margin-bottom:8px">CLOUD-KI · OPENROUTER</div><div style="font-size:12px;color:var(--dim);margin-bottom:8px">Ein oder mehrere OpenRouter-API-Keys. Speicherung nur in diesem Browser.</div><div style="display:flex;gap:6px"><input id="cloud-key-input" type="password" autocomplete="off" placeholder="OpenRouter API-Key" style="flex:1;min-width:0;background:#160b05;border:1px solid var(--bd);color:var(--t);padding:9px"><button id="cloud-key-add">HINZUFÜGEN</button></div><div id="cloud-key-list" style="font-size:12px;color:var(--g);margin:9px 0;max-height:90px;overflow:auto"></div><div style="font-size:11px;color:var(--dim);margin:8px 0">Bei Limit oder ungültigem Key versucht JARVIS automatisch den nächsten. Keys werden nicht zwischen Geräten synchronisiert.</div><button id="cloud-back">ZURÜCK</button></div><div id="bl"></div><button id="start" type="button" disabled>BITTE GERÄT AUSWÄHLEN</button></div>
-<div id="state">BEREIT</div>
+<div id="state">BEREIT</div><button id="chat-toggle" type="button">CHAT ÖFFNEN</button>
 <div class="pan" id="log"><button id="logclose" type="button" aria-label="Chat ausblenden">✕</button><div class="m s">System online. JARVIS prüft die KI-Verbindung automatisch und wechselt bei Fehlern zum nächsten verfügbaren Modell.</div></div>
 <div class="pan" id="side">
   <button id="th" style="width:100%;margin-bottom:8px">Farbe: Orange / Cyan</button>
@@ -182,12 +188,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
   <button id="camstop" style="width:100%;margin-bottom:8px" disabled>KAMERA AUSSCHALTEN</button>
 </section>
 <div class="pan" id="bar">
-  <button id="mic" aria-label="Mikrofon">MIKRO</button>
-  <button id="pick" type="button" title="Bild auswählen">＋</button>
+  <button id="mic" class="legacy-controls" aria-label="Mikrofon">MIKRO</button>
+  <button id="pick" class="legacy-controls" type="button" title="Bild auswählen">＋</button>
   <input id="filepick" type="file" accept="image/*">
   <input id="in" placeholder="Nachricht oder Befehl an J.A.R.V.I.S. … (hilfe)" autocomplete="off" list="cmds">
   <datalist id="cmds"><option value="hilfe"><option value="aktiviere Handgesten"><option value="deaktiviere Handgesten"><option value="zeig es"><option value="verstecke den Chat"><option value="schließe alles"><option value="mach das Bild weg"><option value="mach das Video weg"><option value="mach die Karte weg"><option value="Fenster nach links"><option value="Fenster nach rechts"><option value="mach es größer"><option value="Vollbild"><option value="spiel Musik auf YouTube"><option value="pause"><option value="weiter"><option value="zeig Pizzeria in der Nähe auf Google Maps"><option value="route nach Berlin"><option value="lade das in ein neues Repo hoch"><option value="ja"><option value="nein"></datalist>
-  <button id="coding" type="button" title="Zwischen normalem Chat und lokalem Coding-Modus wechseln">CODING: AUS</button>
+  <button id="coding" class="legacy-controls" type="button" title="Coding-Modus">CODING: AUS</button>
   <button id="go">SENDEN</button>
 </div>
 <div id="codeWin" class="hide" role="dialog" aria-label="Code-Fenster">
@@ -1666,11 +1672,26 @@ function startRec(){
  if(!rec){
   rec=new SR();rec.lang="de-DE";rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
   rec.onstart=()=>{recStarting=false;setState("AUFNAHME LÄUFT")};
-  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const part=String(e.results[i][0]?.transcript||"").trim();if(part&&e.results[i].isFinal)micSpeechBuffer+=(micSpeechBuffer?" ":"")+part}};
+  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const part=String(e.results[i][0]?.transcript||"").trim();if(part&&e.results[i].isFinal)handleWakePhrase(part)}};
   rec.onerror=e=>{recStarting=false;if(e.error==="not-allowed"||e.error==="service-not-allowed"){listening=false;$("mic").classList.remove("on");log("Mikrofonzugriff verweigert. Bitte Website-Mikrofon erlauben.","s")}else if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe die Mikrofon-Einstellungen.","s");else if(e.error!=="no-speech"&&e.error!=="aborted")log("Mikrofonfehler: "+e.error,"s")};
   rec.onend=()=>{recStarting=false;if(listening&&!recognitionPaused){setState("AUFNAHME LÄUFT");scheduleRecognitionRestart()}else{setState("BEREIT");if(micSpeechBuffer.trim())deliverMicSpeech()}};
  }
  try{ensureRecognition()}catch(e){log("Aufnahme konnte nicht gestartet werden: "+emsg(e),"s")}
+}
+let wakeAwaitingCommand=false,wakeAwaitTimer=0,wakeListenerStarted=false;
+async function startWakeListener(){
+ if(wakeListenerStarted)return;
+ if(!SR){log("Automatische Spracheingabe wird in diesem Browser nicht unterstützt. Nutze den Chat-Schalter für Texteingaben.","s");return}
+ try{await requestMicPermissionOnce();wakeListenerStarted=true;listening=true;recognitionPaused=false;startRec();setState("HÖRE ZU")}
+ catch(e){log("Mikrofonfreigabe nötig: "+(e.message||"Bitte Mikrofon im Browser erlauben."),"s")}
+}
+function handleWakePhrase(part){
+ const q=String(part||"").trim();if(!q)return;
+ const wake=/^(?:hey\\s+)?(?:jarvis|jarwis|charvis|dscharvis|jarvas)[,.:;!?\\s-]*/i;
+ if(wakeAwaitingCommand){clearTimeout(wakeAwaitTimer);wakeAwaitingCommand=false;const command=q.replace(/^(?:bitte\\s*)/i,"").trim();if(command){showLog(18000);run(command)}return}
+ const match=q.match(wake);if(!match)return;
+ const command=q.slice(match[0].length).trim();if(command){showLog(18000);run(command);return}
+ wakeAwaitingCommand=true;setState("HÖRE ZU");clearTimeout(wakeAwaitTimer);wakeAwaitTimer=setTimeout(()=>wakeAwaitingCommand=false,9000);
 }
 const queuedVoice=[];
 $("mic").onclick=async()=>{
@@ -1682,7 +1703,8 @@ const DRAFT_KEY="jarvis_message_draft";
 try{$("in").value=localStorage.getItem(DRAFT_KEY)||""}catch(e){}
 $("in").addEventListener("input",()=>{try{localStorage.setItem(DRAFT_KEY,$("in").value)}catch(e){}});
 $("go").onclick=submitInput;
-$("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();log("Nachricht gespeichert. Zum Absenden bitte auf SENDEN klicken.","s")}};
+$("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();submitInput()}};
+$("chat-toggle").onclick=()=>{if(!$("log").classList.contains("hide"))hideLog();else{showLog(0);$("in").focus()}};
 
 /* ---------- Kern-Animation ---------- */
 const cv=$("cv"),x=cv.getContext("2d");const TH={orange:{c:"255,138,31",think:"255,225,110",work:"190,120,255",listen:"93,255,176",bg:"10,5,3",v:{"--bg":"#0a0503","--rgb":"255,138,31","--c":"#ff8a1f","--c2":"#a84f00","--w":"#ffd36b","--t":"#ffe9d2","--dim":"#b0825a","--bg2":"#1c0d03","--bd":"#6b3300","--pan":"12,5,1"}},
@@ -1818,7 +1840,7 @@ const S=R*.95,amp=st==="talk"?.08+.05*Math.sin(T*11):st==="think"?.05:.02,ry=T*.
 frame();
 
 
-setUI(["hud","side","account"],false);setUI(CH,false);$("accountbtn").classList.remove("hide");$("accountbtn").style.display="block";loadAccountFields();hideLog();
+setUI(["hud","side","account","accountbtn"],false);setUI(CH,false);loadAccountFields();hideLog();
 document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
  if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
