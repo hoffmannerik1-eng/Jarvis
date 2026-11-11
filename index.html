@@ -262,6 +262,25 @@ async function initCloud(){
  try{
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
   const auth=firebase.auth();
+  /* GitHub-OAuth nach der Rückkehr vom Redirect abschließen. */
+  try{
+   const redirectResult=await auth.getRedirectResult();
+   if(redirectResult){
+    const credential=firebase.auth.GithubAuthProvider.credentialFromResult(redirectResult);
+    const token=credential&&credential.accessToken;
+    if(token){
+     githubTokenMemory=token;
+     try{localStorage.setItem("jarvis_github_token",token)}catch(e){}
+     const status=document.getElementById("plugstatus");
+     if(status)status.textContent="GitHub verbunden. Zugriff gespeichert.";
+     log("GitHub-Konto erfolgreich verbunden.","s");
+    }
+   }
+  }catch(redirectError){
+   const status=document.getElementById("plugstatus");
+   if(status)status.textContent="GitHub-Anmeldung fehlgeschlagen: "+emsg(redirectError);
+   log("GitHub-Weiterleitung fehlgeschlagen: "+emsg(redirectError),"s");
+  }
   if(!auth.currentUser)await auth.signInAnonymously();
   jarvisUid=auth.currentUser.uid;db=firebase.firestore();
   cloudDoc=db.collection("jarvis_users").doc(jarvisUid).collection("memory").doc("main");
@@ -1060,7 +1079,24 @@ tools.plugin_besser=async a=>{const i=a.indexOf("|"),nm=(i>0?a.slice(0,i):a).tri
 tools.plugin_weg=async a=>{const r=PLUG.find(x=>x.name.toLowerCase()===String(a).trim().toLowerCase());if(!r)return"Plugin nicht gefunden.";deactivate(r);if(!r.builtin)PLUG.splice(PLUG.indexOf(r),1);await persistPlugins();renderPlugins();return r.builtin?r.name+" ausgeschaltet.":r.name+" entfernt."};
 tools.plugin_liste=()=>PLUG.map(r=>r.name+(r.enabled?" (an)":" (aus)")+": "+r.description).join("\n")||"Keine Plugins";
 $("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();githubTokenMemory=v;try{if(v)localStorage.setItem("jarvis_github_token",v);else localStorage.removeItem("jarvis_github_token")}catch(e){}$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token auf diesem Gerät gespeichert.":"GitHub-Token entfernt.";};
-$("ghconnect").onclick=async()=>{try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const auth=firebase.auth();if(!auth.currentUser)await auth.signInAnonymously();const provider=new firebase.auth.GithubAuthProvider();provider.addScope("repo");provider.addScope("read:user");let result;try{result=await auth.currentUser.linkWithPopup(provider)}catch(e){if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked")result=await auth.signInWithPopup(provider);else throw e}const credential=firebase.auth.GithubAuthProvider.credentialFromResult(result);const token=credential&&credential.accessToken;if(!token)throw new Error("GitHub hat keinen Zugriffstoken geliefert.");githubTokenMemory=token;localStorage.setItem("jarvis_github_token",token);$("plugstatus").textContent="GitHub verbunden. Zugriff gespeichert.";log("GitHub-Konto erfolgreich verbunden.","s")}catch(e){$("plugstatus").textContent="Anmeldung fehlgeschlagen: "+emsg(e)+". GitHub-Anbieter muss in Firebase Authentication aktiviert sein."}};
+$("ghconnect").onclick=async()=>{
+ try{
+  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+  const auth=firebase.auth();
+  if(!auth.currentUser)throw new Error("JARVIS richtet die Anmeldung noch ein. Bitte warte kurz und drücke dann erneut.");
+  const provider=new firebase.auth.GithubAuthProvider();
+  provider.addScope("repo");provider.addScope("read:user");
+  $("plugstatus").textContent="Weiterleitung zu GitHub …";
+  try{await auth.currentUser.linkWithRedirect(provider)}
+  catch(e){
+   if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked")await auth.signInWithRedirect(provider);
+   else throw e;
+  }
+ }catch(e){
+  $("plugstatus").textContent="Anmeldung fehlgeschlagen: "+emsg(e)+". Prüfe, ob GitHub in Firebase Authentication aktiviert ist.";
+  log("GitHub-Anmeldung fehlgeschlagen: "+emsg(e),"s");
+ }
+};
 $("ghdisconnect").onclick=()=>{githubTokenMemory="";try{localStorage.removeItem("jarvis_github_token")}catch(e){}$("plugstatus").textContent="GitHub-Zugriff auf diesem Gerät entfernt.";log("GitHub-Verbindung getrennt.","s")};
 $("plugoff").onclick=async()=>{PLUG.forEach(deactivate);await persistPlugins();renderPlugins();$("plugstatus").textContent="Alle Plugins ausgeschaltet."};
 $("gmailbtn").onclick=async()=>{
