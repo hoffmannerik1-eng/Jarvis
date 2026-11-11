@@ -333,6 +333,7 @@ const LOCAL_MODEL_IDS=[
 let webllm=null,modelCatalog=[],localEngine=null,engineModel="";
 function safeStorageGet(key,fallback=""){try{return window.localStorage.getItem(key)??fallback}catch(e){return fallback}}
 let selectedLocalModel=safeStorageGet("jarvis_local_model",LOCAL_MODEL_IDS[0])||LOCAL_MODEL_IDS[0];
+let aiBackend="ollama",aiBackendError="";
 let active=-1,modelLoading=false,activeRequests=0;
 const emsg=e=>{try{return (e&&(e.message||(e.error&&(e.error.message||e.error))||e.code))||JSON.stringify(e)}catch(_){return String(e)}};
 function shortModelName(id){
@@ -462,14 +463,16 @@ async function loadWebLLM(){
 }
 async function setLocalModel(id){
  if(!modelCatalog.some(m=>m.id===id))return;
- if(id===selectedLocalModel){log("Dieses Ollama-Modell ist bereits ausgewählt.","s");return}
- if(activeRequests>0){log("Bitte warte, bis die aktuelle Antwort fertig ist.","s");return}
- selectedLocalModel=id;engineModel=id;
+ if(id===selectedLocalModel){log("Dieses Modell ist bereits ausgewählt.","s");return}
+ if(activeRequests>0||modelLoading){log("Bitte warte, bis die aktuelle Anfrage oder der Modellstart beendet ist.","s");return}
+ if(aiBackend==="webllm"&&localEngine){const old=localEngine;localEngine=null;engineModel="";try{await old.unload()}catch(e){log("Altes Browsermodell konnte nicht vollständig entladen werden: "+emsg(e),"s")}}
+ selectedLocalModel=id;
+ if(aiBackend==="ollama")engineModel=id;else engineModel="";
  try{localStorage.setItem("jarvis_local_model",id)}catch(e){}
  if(cloudReady)saveCloud({localModelChoice:id});
  renderProv();
- $("kihealth").textContent="OLLAMA BEREIT · "+id;
- log("Ollama-Modell ausgewählt: "+id,"s");
+ $("kihealth").textContent=(aiBackend==="webllm"?"BROWSER-KI AUSGEWÄHLT · ":"OLLAMA AUSGEWÄHLT · ")+id;
+ log("KI-Modell ausgewählt: "+id,"s");
 }
 async function loadLocalEngine(id){
  await loadWebLLM();
@@ -510,16 +513,33 @@ async function autoConnectAI(){
   if(!modelCatalog.length)throw new Error("Ollama hat keine installierten Modelle gefunden.");
   const preferred="qwen3:4b";
   const chatModel=modelCatalog.find(m=>m.id.toLowerCase()===preferred)||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b-instruct")||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3-vl:8b")||modelCatalog.find(m=>m.id.toLowerCase()==="qwen3.8:27b")||modelCatalog[0];
-  selectedLocalModel=chatModel.id;
-  engineModel=selectedLocalModel;
+  aiBackend="ollama";aiBackendError="";
+  selectedLocalModel=chatModel.id;engineModel=selectedLocalModel;
   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
   renderProv();renderModelCount();
   $("kihealth").textContent="OLLAMA VERBUNDEN · "+selectedLocalModel;
   log("J.A.R.V.I.S. ist mit Ollama auf diesem PC verbunden. Modell: "+selectedLocalModel+". Die KI läuft auf deinem PC.","s");
  }catch(e){
-  modelCatalog=[];renderProv();renderModelCount();
-  $("kihealth").textContent="OLLAMA NICHT ERREICHBAR";
-  log("Ollama-Verbindung fehlgeschlagen: "+emsg(e)+". Prüfe, ob Ollama läuft und die Browser-Origin freigegeben ist.","s");
+  const ollamaError=emsg(e);
+  log("Ollama ist nicht erreichbar: "+ollamaError+". JARVIS versucht jetzt eine kostenlose KI direkt im Browser.","s");
+  try{
+   $("kihealth").textContent="PRÜFE BROWSER-KI · WEBGPU …";
+   aiBackend="webllm";
+   await loadWebLLM();
+   aiBackendError="";
+   const preferred=modelCatalog.find(m=>/Qwen3-0\.6B/i.test(m.id))||modelCatalog.find(m=>/Qwen2\.5-0\.5B-Instruct/i.test(m.id))||modelCatalog[0];
+   if(!preferred)throw new Error("Kein passendes Browsermodell gefunden.");
+   selectedLocalModel=preferred.id;engineModel="";
+   try{localStorage.setItem("jarvis_local_model",selectedLocalModel)}catch(e){}
+   renderProv();renderModelCount();
+   $("kihealth").textContent="BROWSER-KI BEREIT · "+shortModelName(selectedLocalModel)+" · DOWNLOAD BEIM ERSTEN CHAT";
+   log("Ollama ist nicht erreichbar. Ersatz aktiviert: "+shortModelName(selectedLocalModel)+". Das Modell wird beim ersten Chat heruntergeladen und bleibt lokal im Browser.","s");
+  }catch(fallbackError){
+   aiBackend="unavailable";aiBackendError=emsg(fallbackError);
+   modelCatalog=[];engineModel="";renderProv();renderModelCount();
+   $("kihealth").textContent="KEINE LOKALE KI VERFÜGBAR";
+   log("Ollama ist nicht erreichbar und die Browser-KI konnte nicht vorbereitet werden: "+aiBackendError+". Prüfe Ollama oder nutze den Cloud-Modus mit eigenem API-Key.","s");
+  }
  }
 }
 let deviceMode="";
@@ -594,14 +614,26 @@ async function askCloud(msgs,sys){
 async function ask(msgs,sys,img){
  if(img)throw new Error("Bildanalyse ist derzeit nicht aktiviert.");
  if(activeRequests>0)throw new Error("J.A.R.V.I.S. verarbeitet bereits eine Anfrage. Bitte kurz warten.");
-
  activeRequests++;
  const modelId=selectedLocalModel;
  try{
   if(deviceMode==="cloud")return await askCloud(msgs,sys);
-  if(!modelId){$("kihealth").textContent="OLLAMA NICHT VERFÜGBAR";throw new Error("Kein lokales Ollama-Modell ausgewählt. Starte Ollama und lade die Modellliste neu.")}
+  if(aiBackend==="unavailable")throw new Error("Keine lokale KI verfügbar: "+(aiBackendError||"WebGPU oder Ollama ist nicht verfügbar.")+" Starte Ollama oder wähle den Cloud-Modus.");
+  if(!modelId)throw new Error("Kein KI-Modell ausgewählt. Bitte prüfe den KI-Status.");
   const toText=m=>Array.isArray(m.content)?m.content.map(x=>x.text||"").join("\\n"):String(m.content??"");
   const history=[{role:"system",content:String(sys||"").slice(0,10000)},...msgs.slice(-12).map(m=>({role:m.role==="assistant"?"assistant":"user",content:toText(m)}))];
+  if(aiBackend==="webllm"){
+   $("kihealth").textContent="BROWSER-KI LÄDT · "+shortModelName(modelId);
+   const engine=await loadLocalEngine(modelId);
+   $("kihealth").textContent="BROWSER-KI DENKT · "+shortModelName(modelId);
+   const result=await engine.chat.completions.create({messages:history,temperature:0.3,max_tokens:codingMode?1200:800});
+   const answer=String(result?.choices?.[0]?.message?.content||"").trim();
+   if(!answer)throw new Error("Das Browsermodell hat keine Antwort geliefert.");
+   await recordSuccessfulQuestion();
+   $("kihealth").textContent="BROWSER-KI BEREIT · "+shortModelName(modelId);
+   log("Antwort mit lokaler Browser-KI erzeugt · "+shortModelName(modelId),"s");
+   return answer;
+  }
   $("kihealth").textContent="OLLAMA DENKT · "+modelId;
   const response=await fetch("http://127.0.0.1:11434/api/chat",{
    method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",
@@ -620,9 +652,9 @@ async function ask(msgs,sys,img){
   log("Antwort mit Ollama auf diesem PC erzeugt · "+modelId,"s");
   return answer;
  }catch(e){
-  $("kihealth").textContent="OLLAMA-ANFRAGE FEHLGESCHLAGEN";
+  $("kihealth").textContent=aiBackend==="webllm"?"BROWSER-KI-ANFRAGE FEHLGESCHLAGEN":"OLLAMA-ANFRAGE FEHLGESCHLAGEN";
   const message=emsg(e);
-  if(modelId&&/Failed to fetch|NetworkError|Load failed/i.test(message)){throw new Error("JARVIS erreicht Ollama auf diesem PC nicht. Prüfe, ob Ollama läuft und OLLAMA_ORIGINS für https://hoffmannerik1-eng.github.io gesetzt ist. Es wurde keine Anfrage an eine Cloud-KI gesendet.")}
+  if(aiBackend==="ollama"&&modelId&&/Failed to fetch|NetworkError|Load failed/i.test(message)){throw new Error("JARVIS erreicht Ollama auf diesem PC nicht. Erlaube die Website-Origin https://hoffmannerik1-eng.github.io in OLLAMA_ORIGINS (nicht hoffmann-erik1). Alternativ kann JARVIS die Browser-KI verwenden, wenn WebGPU verfügbar ist.")}
   throw e;
  }finally{activeRequests=Math.max(0,activeRequests-1)}
 }
@@ -641,23 +673,24 @@ function detectCodingRequest(message){
  return explicit||(followUp&&recentCode);
 }
 function chooseAutomaticModel(forCoding){
- const chatNames=["qwen3:4b","qwen3-vl:8b-instruct","qwen3-vl:8b","qwen3.8:27b","qwen3.8:27b-q4_K_M"];
- const codingNames=["qwen3.8:27b","qwen3.8:27b-q4_K_M","qwen3-vl:8b-instruct","qwen3-vl:8b"];
- const names=forCoding?codingNames:chatNames;
+ const ollamaChat=["qwen3:4b","qwen3-vl:8b-instruct","qwen3-vl:8b","qwen3.8:27b","qwen3.8:27b-q4_k_m"];
+ const ollamaCoding=["qwen3.8:27b","qwen3.8:27b-q4_k_m","qwen3-vl:8b-instruct","qwen3-vl:8b"];
+ const browserChat=["qwen3-0.6b-q4f16_1-mlc","qwen2.5-0.5b-instruct-q4f16_1-mlc","llama-3.2-1b-instruct-q4f16_1-mlc"];
+ const browserCoding=["qwen2.5-coder-0.5b-instruct-q4f16_1-mlc","qwen2.5-1.5b-instruct-q4f16_1-mlc","qwen2.5-3b-instruct-q4f16_1-mlc"];
+ const names=aiBackend==="webllm"?(forCoding?browserCoding:browserChat):(forCoding?ollamaCoding:ollamaChat);
  const chosen=modelCatalog.find(m=>names.includes(m.id.toLowerCase()));
  if(!chosen){
-  const wanted=forCoding?"Qwen3.8:27b":"Qwen3-VL:8B";
-  $("kihealth").textContent=(forCoding?"CODING-MODELL FEHLT":"CHAT-MODELL FEHLT")+" · "+wanted;
-  log("Automatische Modellwahl: "+wanted+" ist in Ollama nicht installiert. JARVIS verwendet vorübergehend "+selectedLocalModel+".","s");
-  return false;
+  log("Für diesen Modus wurde kein Spezialmodell gefunden. JARVIS verwendet das ausgewählte Modell: "+(selectedLocalModel||"keins")+".","s");
+  return !!selectedLocalModel;
  }
  if(selectedLocalModel!==chosen.id){
-  selectedLocalModel=chosen.id;engineModel=chosen.id;
+  selectedLocalModel=chosen.id;
+  if(aiBackend==="ollama")engineModel=chosen.id;else engineModel="";
   try{localStorage.setItem("jarvis_local_model",chosen.id)}catch(e){}
   renderProv();
   log("Automatischer Modellwechsel: "+(forCoding?"CODING · ":"CHAT · ")+chosen.id,"s");
  }
- $("kihealth").textContent=(forCoding?"CODING-MODELL":"CHAT-MODELL")+" AKTIV · "+chosen.id;
+ $("kihealth").textContent=(aiBackend==="webllm"?"BROWSER-KI":"OLLAMA")+" · "+(forCoding?"CODING":"CHAT")+" · "+shortModelName(chosen.id);
  return true;
 }
 let codingModeOverride=null;
@@ -1741,7 +1774,7 @@ $("start").addEventListener("click",()=>{
  startButton.textContent="SYSTEM STARTET …";
  startButton.style.display="inline-block";
  try{beep(300,.2,"square")}catch(e){}
- const L=["INITIALISIERE KERNREAKTOR ........ OK","LADE SPRACHMODUL ................. OK","VERBINDE KI-KETTE ................ OK","SENSOREN KALIBRIERT .............. OK","ALLE SYSTEME ONLINE"];
+ const L=["J.A.R.V.I.S.-OBERFLÄCHE INITIALISIERT .... OK","SPRACHMODUL WIRD VORBEREITET .............. OK","KI-VERBINDUNG WIRD GEPRÜFT ................. STATUS","GRAFIKSYSTEM INITIALISIERT ................. OK","STARTSEQUENZ ABGESCHLOSSEN"];
  let i=0;
  const iv=setInterval(()=>{
   try{
@@ -1758,7 +1791,7 @@ $("start").addEventListener("click",()=>{
      bootScreen.style.display="none";
      bootScreen.setAttribute("aria-hidden","true");
      startButton.style.display="none";
-     log("JARVIS ist bereit. Sag einfach: Jarvis, mach …","s");
+     log("JARVIS-Oberfläche gestartet. KI-Status: "+(aiBackend==="ollama"?"Ollama":aiBackend==="webllm"?"Browser-KI":"nicht verfügbar")+". Sag einfach: Jarvis, mach …","s");
      startWakeListener();try{speak("JARVIS ist bereit. Sag einfach: Jarvis, mach …")}catch(e){}
     },950);
    }
