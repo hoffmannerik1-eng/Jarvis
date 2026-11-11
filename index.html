@@ -1687,7 +1687,7 @@ async function startWakeListener(){
 }
 function handleWakePhrase(part){
  const q=String(part||"").trim();if(!q)return;
- const wake=/^(?:hey\\s+)?(?:jarvis|jarwis|charvis|dscharvis|jarvas)[,.:;!?\\s-]*/i;
+ const wake=/^(?:hey\s+)?(?:jarvis|jarwis|charvis|dscharvis|jarvas)[,.:;!?\s-]*/i;
  if(wakeAwaitingCommand){clearTimeout(wakeAwaitTimer);wakeAwaitingCommand=false;const command=q.replace(/^(?:bitte\\s*)/i,"").trim();if(command){showLog(18000);run(command)}return}
  const match=q.match(wake);if(!match)return;
  const command=q.slice(match[0].length).trim();if(command){showLog(18000);run(command);return}
@@ -1757,8 +1757,8 @@ $("start").addEventListener("click",()=>{
     setTimeout(()=>{
      bootScreen.style.display="none";
      bootScreen.setAttribute("aria-hidden","true");
-     log("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.","j");
-     try{speak("Guten Tag. Alle Systeme sind online. Aktiviere das Mikrofon über die Mikro-Taste.")}catch(e){}
+     log("JARVIS ist bereit. Sag einfach: Jarvis, mach …","s");
+     startWakeListener();try{speak("JARVIS ist bereit. Sag einfach: Jarvis, mach …")}catch(e){}
     },950);
    }
   }catch(err){
