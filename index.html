@@ -160,8 +160,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
  <h3 style="color:var(--c)">PLUGINS</h3>
  <p style="font-size:12px;color:var(--dim)">Neue Plugins sagst du JARVIS einfach per Sprache („füge ein Plugin hinzu, das …“). Er schreibt den Code, zeigt ihn dir und aktiviert ihn erst nach deinem Ja.</p>
  <div id="pluglist"></div>
- <input id="ghtoken" type="password" placeholder="GitHub-Token (nur bis zum Neuladen der Seite)" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:8px;margin:6px 0" autocomplete="off">
- <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="ghsave" type="button">GITHUB-TOKEN SPEICHERN</button><button id="gmailbtn" type="button">GMAIL VERBINDEN</button><button id="plugoff" type="button" style="border-color:#ff4d4d;color:#ff4d4d">ALLE PLUGINS AUS</button></div>
+ <p style="font-size:12px;color:var(--dim)">GitHub direkt verbinden. Der Zugriffstoken wird auf diesem Browsergerät gespeichert. Nutze diese Funktion nur auf deinem eigenen Gerät.</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="ghconnect" type="button">MIT GITHUB ANMELDEN</button><button id="ghdisconnect" type="button">GITHUB TRENNEN</button></div>
+ <input id="ghtoken" type="password" placeholder="Alternativ: persönlicher GitHub-Token" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:8px;margin:6px 0" autocomplete="off">
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="ghsave" type="button">TOKEN AUF DIESEM GERÄT SPEICHERN</button><button id="gmailbtn" type="button">GMAIL VERBINDEN</button><button id="plugoff" type="button" style="border-color:#ff4d4d;color:#ff4d4d">ALLE PLUGINS AUS</button></div>
  <div id="plugstatus" style="font-size:12px;color:var(--dim);margin:8px 0"></div>
  <h3 style="color:var(--c)">SPRACHAUSGABE</h3>
  <h3>MODUS</h3>
@@ -882,7 +884,7 @@ tools.youtube=async q=>{
 let autoMicDone=true;
 
 /* ---------- Plugin-System: eingebaute Plugins + selbst geschriebene Plugins ---------- */
-let pendingPlugin=null,gmailTok="",gmailExp=0,githubTokenMemory="";
+let pendingPlugin=null,gmailTok="",gmailExp=0,githubTokenMemory=(()=>{try{return localStorage.getItem("jarvis_github_token")||""}catch(e){return""}})();
 const PLUG=[],pluginDescs={};
 const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/[\s]/g,"").replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0)));
 const b64s=t=>{const b=new TextEncoder().encode(t);let x="";for(let i=0;i<b.length;i+=8192)x+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(x)};
@@ -1038,7 +1040,9 @@ tools.plugin_besser=async a=>{const i=a.indexOf("|"),nm=(i>0?a.slice(0,i):a).tri
  const code=await genPlugin(wish,r.code);stagePlugin(code,r.id,r.name);return"Verbesserter Entwurf liegt im Code-Fenster. Frage den Nutzer, ob du ihn aktivieren sollst."};
 tools.plugin_weg=async a=>{const r=PLUG.find(x=>x.name.toLowerCase()===String(a).trim().toLowerCase());if(!r)return"Plugin nicht gefunden.";deactivate(r);if(!r.builtin)PLUG.splice(PLUG.indexOf(r),1);await persistPlugins();renderPlugins();return r.builtin?r.name+" ausgeschaltet.":r.name+" entfernt."};
 tools.plugin_liste=()=>PLUG.map(r=>r.name+(r.enabled?" (an)":" (aus)")+": "+r.description).join("\n")||"Keine Plugins";
-$("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();githubTokenMemory=v;$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token nur bis zum Neuladen dieser Seite im Arbeitsspeicher gehalten.":"GitHub-Token aus dem Arbeitsspeicher entfernt.";};
+$("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();githubTokenMemory=v;try{if(v)localStorage.setItem("jarvis_github_token",v);else localStorage.removeItem("jarvis_github_token")}catch(e){}$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token auf diesem Gerät gespeichert.":"GitHub-Token entfernt.";};
+$("ghconnect").onclick=async()=>{try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const auth=firebase.auth();if(!auth.currentUser)await auth.signInAnonymously();const provider=new firebase.auth.GithubAuthProvider();provider.addScope("repo");provider.addScope("read:user");let result;try{result=await auth.currentUser.linkWithPopup(provider)}catch(e){if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked")result=await auth.signInWithPopup(provider);else throw e}const credential=firebase.auth.GithubAuthProvider.credentialFromResult(result);const token=credential&&credential.accessToken;if(!token)throw new Error("GitHub hat keinen Zugriffstoken geliefert.");githubTokenMemory=token;localStorage.setItem("jarvis_github_token",token);$("plugstatus").textContent="GitHub verbunden. Zugriff gespeichert.";log("GitHub-Konto erfolgreich verbunden.","s")}catch(e){$("plugstatus").textContent="Anmeldung fehlgeschlagen: "+emsg(e)+". GitHub-Anbieter muss in Firebase Authentication aktiviert sein."}};
+$("ghdisconnect").onclick=()=>{githubTokenMemory="";try{localStorage.removeItem("jarvis_github_token")}catch(e){}$("plugstatus").textContent="GitHub-Zugriff auf diesem Gerät entfernt.";log("GitHub-Verbindung getrennt.","s")};
 $("plugoff").onclick=async()=>{PLUG.forEach(deactivate);await persistPlugins();renderPlugins();$("plugstatus").textContent="Alle Plugins ausgeschaltet."};
 $("gmailbtn").onclick=async()=>{
  try{
@@ -1544,49 +1548,30 @@ async function requestMicPermissionOnce(){
  micPermissionGranted=true;
  return true;
 }
+let micSpeechBuffer="";
+function deliverMicSpeech(){
+ const phrase=micSpeechBuffer.trim();micSpeechBuffer="";
+ if(!phrase)return;
+ let q=phrase;
+ if($("wake").checked){const m=q.match(/(?:jarvis|jarwis|charvis|dscharvis|jarvas|dschar\\w*)[,.!]?\\s*(.*)/i);if(!m){log("Aktivierungswort nicht erkannt.","s");return}q=m[1]||"ja?"}
+ $("in").value=q;log("Sprachnachricht erkannt: "+q,"u");submitInput();
+}
 function startRec(){
- if(!SR){log("Dieser Browser stellt keine Spracherkennung bereit. Bitte JARVIS in Google Chrome oder Microsoft Edge öffnen und Mikrofon erlauben.","s");return}
+ if(!SR){log("Dieser Browser stellt keine Spracherkennung bereit. Bitte Edge oder Chrome verwenden.","s");return}
  if(!rec){
   rec=new SR();rec.lang="de-DE";rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
-  let speechBuffer="",speechTimer=0;
-  const submitSpeech=()=>{
-   clearTimeout(speechTimer);const t=speechBuffer.trim();speechBuffer="";
-   if(!t||!listening||speaking)return;
-   let phrase=t;
-   if($("wake").checked){const m=phrase.match(/(?:jarvis|jarwis|charvis|dscharvis|jarvas|dschar\w*)[,.!]?\s*(.*)/i);if(!m)return;phrase=m[1]||"ja?"}
-   {const lc=localCmd(phrase);if(lc){log(phrase,"u");lc();return}}if(busy)queuedVoice.push(phrase);else run(phrase);
-  };
-  rec.onstart=()=>{recStarting=false;restartDelay=700;setState("HÖRE ZU")};
-  rec.onresult=e=>{
-   let gotSpeech=false;
-   for(let i=e.resultIndex;i<e.results.length;i++){
-    const part=String(e.results[i][0]?.transcript||"").trim();
-    if(part){gotSpeech=true;if(e.results[i].isFinal)speechBuffer+=(speechBuffer?" ":"")+part;}
-   }
-   if(gotSpeech){clearTimeout(speechTimer);speechTimer=setTimeout(submitSpeech,1500)}
-  };
-  rec.onerror=e=>{
-   recStarting=false;
-   if(e.error==="not-allowed"||e.error==="service-not-allowed"){
-    useCloudMic("Die Browser-Spracherkennung wird blockiert (bei per Doppelklick geöffneten Dateien üblich).");return;
-   }
-   if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe in Chrome unter Einstellungen → Datenschutz und Sicherheit → Website-Einstellungen → Mikrofon das richtige Eingabegerät.","s");
-   else if(e.error==="network"){useCloudMic("Die Browser-Spracherkennung erreicht ihren Dienst nicht.");return}
-   else if(e.error!=="no-speech"&&e.error!=="aborted")log("Mikrofonstatus: "+e.error+". Ich versuche es erneut.","s");
-   scheduleRecognitionRestart();
-  };
-  rec.onend=()=>{recStarting=false;if(listening&&!recognitionPaused){setState("HÖRE ZU");scheduleRecognitionRestart()}};
+  rec.onstart=()=>{recStarting=false;setState("AUFNAHME LÄUFT")};
+  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const part=String(e.results[i][0]?.transcript||"").trim();if(part&&e.results[i].isFinal)micSpeechBuffer+=(micSpeechBuffer?" ":"")+part}};
+  rec.onerror=e=>{recStarting=false;if(e.error==="not-allowed"||e.error==="service-not-allowed"){listening=false;$("mic").classList.remove("on");log("Mikrofonzugriff verweigert. Bitte Website-Mikrofon erlauben.","s")}else if(e.error==="audio-capture")log("Kein Mikrofon gefunden. Prüfe die Mikrofon-Einstellungen.","s");else if(e.error!=="no-speech"&&e.error!=="aborted")log("Mikrofonfehler: "+e.error,"s")};
+  rec.onend=()=>{recStarting=false;if(listening&&!recognitionPaused){setState("AUFNAHME LÄUFT");scheduleRecognitionRestart()}else{setState("BEREIT");if(micSpeechBuffer.trim())deliverMicSpeech()}};
  }
- try{ensureRecognition()}catch(e){scheduleRecognitionRestart()}
+ try{ensureRecognition()}catch(e){log("Aufnahme konnte nicht gestartet werden: "+emsg(e),"s")}
 }
 const queuedVoice=[];
 $("mic").onclick=async()=>{
- if(listening){stopCloudMic();listening=false;recognitionPaused=false;clearTimeout(restartTimer);$("mic").classList.remove("on");try{rec&&rec.stop()}catch(e){}setState("BEREIT");log("Mikrofon ausgeschaltet.","s");return}
- try{
-  if(!SR){await useCloudMic("Dein Browser hat keine eingebaute Spracherkennung.");return}
-  await requestMicPermissionOnce();
-  listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("HÖRE ZU");log("Mikrofon aktiv. Ich warte, bis du fertig gesprochen hast (1,5 Sekunden Sprechpause).","s");
- }catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s");}
+ if(listening){listening=false;recognitionPaused=false;clearTimeout(restartTimer);$("mic").classList.remove("on");try{rec&&rec.stop()}catch(e){if(micSpeechBuffer.trim())deliverMicSpeech()}setState("BEREIT");log("Aufnahme beendet. JARVIS verarbeitet deine Nachricht.","s");return}
+ try{if(!SR){await useCloudMic("Dieser Browser unterstützt keine lokale Spracherkennung.");return}await requestMicPermissionOnce();micSpeechBuffer="";listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("AUFNAHME LÄUFT");log("Aufnahme gestartet. Sprich jetzt und drücke das Mikrofon erneut, wenn du fertig bist.","s")}
+ catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s")}
 };
 $("go").onclick=submitInput;
 $("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();submitInput()}};
