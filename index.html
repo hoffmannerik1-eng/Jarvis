@@ -1706,6 +1706,24 @@ $("start").addEventListener("click",()=>{
   }
  },420);
 });
+/* Nach OAuth-Weiterleitung oder Browser-Zurück zur laufenden JARVIS-Oberfläche zurückkehren. */
+window.addEventListener("pageshow",()=>{
+ let pending=false,mode="pc";
+ try{pending=localStorage.getItem("jarvis_oauth_pending")==="1"&&localStorage.getItem("jarvis_started")==="1";mode=localStorage.getItem("jarvis_device_mode")||"pc";if(pending)localStorage.removeItem("jarvis_oauth_pending")}catch(e){}
+ if(!pending)return;
+ deviceMode=mode;
+ bootStarting=true;
+ const boot=$("boot");if(boot){boot.style.display="none";boot.style.opacity="0";boot.setAttribute("aria-hidden","true")}
+ const start=$("start");if(start)start.style.display="none";
+ if(mode==="pc"){
+  $("device-choice").style.display="none";$("cloud-setup").style.display="none";
+  $("bl").textContent="PC-MODUS · VERBINDE MIT LOKALER OLLAMA-KI …";
+  updateStartButton();autoConnectAI();
+ }else if(mode==="cloud"){
+  $("device-choice").style.display="none";$("cloud-setup").style.display="block";
+  $("bl").textContent="";renderCloudKeys();updateStartButton();
+ }
+});
 $("dl").onclick=()=>{
  try{
   const blob=new Blob([SRC],{type:"text/html;charset=utf-8"}),url=URL.createObjectURL(blob);
