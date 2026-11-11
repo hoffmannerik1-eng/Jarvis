@@ -160,10 +160,9 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
  <h3 style="color:var(--c)">PLUGINS</h3>
  <p style="font-size:12px;color:var(--dim)">Neue Plugins sagst du JARVIS einfach per Sprache („füge ein Plugin hinzu, das …“). Er schreibt den Code, zeigt ihn dir und aktiviert ihn erst nach deinem Ja.</p>
  <div id="pluglist"></div>
- <p style="font-size:12px;color:var(--dim)">GitHub direkt verbinden. Der Zugriffstoken wird auf diesem Browsergerät gespeichert. Nutze diese Funktion nur auf deinem eigenen Gerät.</p>
+ <p style="font-size:12px;color:var(--dim)">GitHub per Konto-Anmeldung verbinden. Du musst keinen Token erstellen oder einfügen. Der Zugriff bleibt nur für diese Sitzung aktiv.</p>
  <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="ghconnect" type="button">MIT GITHUB ANMELDEN</button><button id="ghdisconnect" type="button">GITHUB TRENNEN</button></div>
- <input id="ghtoken" type="password" placeholder="Alternativ: persönlicher GitHub-Token" style="width:100%;background:var(--bg2);border:1px solid var(--bd);color:var(--t);padding:8px;margin:6px 0" autocomplete="off">
- <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="ghsave" type="button">TOKEN AUF DIESEM GERÄT SPEICHERN</button><button id="gmailbtn" type="button">GMAIL VERBINDEN</button><button id="plugoff" type="button" style="border-color:#ff4d4d;color:#ff4d4d">ALLE PLUGINS AUS</button></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="gmailbtn" type="button">GMAIL VERBINDEN</button><button id="plugoff" type="button" style="border-color:#ff4d4d;color:#ff4d4d">ALLE PLUGINS AUS</button></div>
  <div id="plugstatus" style="font-size:12px;color:var(--dim);margin:8px 0"></div>
  <h3 style="color:var(--c)">SPRACHAUSGABE</h3>
  <h3>MODUS</h3>
@@ -922,13 +921,13 @@ tools.youtube=async q=>{
 let autoMicDone=true;
 
 /* ---------- Plugin-System: eingebaute Plugins + selbst geschriebene Plugins ---------- */
-let pendingPlugin=null,gmailTok="",gmailExp=0,githubTokenMemory=(()=>{try{return localStorage.getItem("jarvis_github_token")||""}catch(e){return""}})();
+let pendingPlugin=null,gmailTok="",gmailExp=0,githubTokenMemory="";
 const PLUG=[],pluginDescs={};
 const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/[\s]/g,"").replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0)));
 const b64s=t=>{const b=new TextEncoder().encode(t);let x="";for(let i=0;i<b.length;i+=8192)x+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(x)};
 const b64u=t=>b64s(t).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const BUILTIN=[
-{id:"github",name:"GitHub",description:"Repos, Issues, Dateien lesen und schreiben (Token im Konto-Fenster)",fn:J=>{
+{id:"github",name:"GitHub",description:"Steuert das verbundene GitHub-Konto: Repositories auflisten, Dateien lesen und ändern, Issues verwalten. Anmeldung über GitHub OAuth.",fn:J=>{
  const gh=async(p,o={})=>{const t=J.secret("github");if(!t)throw new Error("Kein GitHub-Token. Trage ihn im Fenster MEIN KONTO ein.");
   const r=await J.fetch("https://api.github.com"+p,{...o,headers:{Authorization:"Bearer "+t,Accept:"application/vnd.github+json","Content-Type":"application/json"}});
   const tx=await r.text();if(!r.ok)throw new Error("GitHub "+r.status+" "+tx.slice(0,160));return tx?JSON.parse(tx):{}};
@@ -1078,26 +1077,23 @@ tools.plugin_besser=async a=>{const i=a.indexOf("|"),nm=(i>0?a.slice(0,i):a).tri
  const code=await genPlugin(wish,r.code);stagePlugin(code,r.id,r.name);return"Verbesserter Entwurf liegt im Code-Fenster. Frage den Nutzer, ob du ihn aktivieren sollst."};
 tools.plugin_weg=async a=>{const r=PLUG.find(x=>x.name.toLowerCase()===String(a).trim().toLowerCase());if(!r)return"Plugin nicht gefunden.";deactivate(r);if(!r.builtin)PLUG.splice(PLUG.indexOf(r),1);await persistPlugins();renderPlugins();return r.builtin?r.name+" ausgeschaltet.":r.name+" entfernt."};
 tools.plugin_liste=()=>PLUG.map(r=>r.name+(r.enabled?" (an)":" (aus)")+": "+r.description).join("\n")||"Keine Plugins";
-$("ghsave").onclick=()=>{const v=$("ghtoken").value.trim();githubTokenMemory=v;try{if(v)localStorage.setItem("jarvis_github_token",v);else localStorage.removeItem("jarvis_github_token")}catch(e){}$("ghtoken").value="";$("plugstatus").textContent=v?"GitHub-Token auf diesem Gerät gespeichert.":"GitHub-Token entfernt.";};
 $("ghconnect").onclick=async()=>{
  try{
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
   const auth=firebase.auth();
-  if(!auth.currentUser)throw new Error("JARVIS richtet die Anmeldung noch ein. Bitte warte kurz und drücke dann erneut.");
-  const provider=new firebase.auth.GithubAuthProvider();
-  provider.addScope("repo");provider.addScope("read:user");
-  $("plugstatus").textContent="Weiterleitung zu GitHub …";
-  try{await auth.currentUser.linkWithRedirect(provider)}
-  catch(e){
-   if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked")await auth.signInWithRedirect(provider);
-   else throw e;
-  }
- }catch(e){
-  $("plugstatus").textContent="Anmeldung fehlgeschlagen: "+emsg(e)+". Prüfe, ob GitHub in Firebase Authentication aktiviert ist.";
-  log("GitHub-Anmeldung fehlgeschlagen: "+emsg(e),"s");
- }
+  if(!auth.currentUser)throw new Error("JARVIS richtet die Anmeldung noch ein. Bitte warte kurz und versuche es erneut.");
+  const provider=new firebase.auth.GithubAuthProvider();provider.addScope("repo");provider.addScope("read:user");
+  $("plugstatus").textContent="GitHub-Anmeldung wird geöffnet …";let result;
+  try{result=await auth.currentUser.linkWithPopup(provider)}
+  catch(e){if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked")result=await auth.signInWithPopup(provider);else if(e.code==="auth/popup-blocked"){await auth.currentUser.linkWithRedirect(provider);return}else throw e}
+  const credential=firebase.auth.GithubAuthProvider.credentialFromResult(result);
+  if(!credential||!credential.accessToken)throw new Error("GitHub hat keinen API-Zugriff zurückgegeben. Prüfe die Anwendungsrechte.");
+  githubTokenMemory=credential.accessToken;
+  $("plugstatus").textContent="GitHub verbunden: "+(result.additionalUserInfo?.username||result.user?.displayName||"Konto erkannt")+". JARVIS kann jetzt auf deine Repositories zugreifen.";
+  log("GitHub erfolgreich verbunden. Der Zugriff bleibt nur im Arbeitsspeicher dieser Sitzung.","s");
+ }catch(e){$("plugstatus").textContent="GitHub-Anmeldung fehlgeschlagen: "+emsg(e)+". Bei auth/unauthorized-domain muss hoffmannerik1-eng.github.io in Firebase unter Authentication → Einstellungen → Autorisierte Domains stehen.";log("GitHub-Anmeldung fehlgeschlagen: "+emsg(e),"s")}
 };
-$("ghdisconnect").onclick=()=>{githubTokenMemory="";try{localStorage.removeItem("jarvis_github_token")}catch(e){}$("plugstatus").textContent="GitHub-Zugriff auf diesem Gerät entfernt.";log("GitHub-Verbindung getrennt.","s")};
+$("ghdisconnect").onclick=()=>{githubTokenMemory="";$("plugstatus").textContent="GitHub-Zugriff getrennt.";log("GitHub-Verbindung getrennt.","s")};
 $("plugoff").onclick=async()=>{PLUG.forEach(deactivate);await persistPlugins();renderPlugins();$("plugstatus").textContent="Alle Plugins ausgeschaltet."};
 $("gmailbtn").onclick=async()=>{
  try{
@@ -1385,7 +1381,7 @@ function submitInput(){
  const lc=v&&localCmd(v);
  if(lc){$("in").value="";log(v,"u");lc();return}
  if(!v&&!pendingVisionImage)return;
- $("in").value="";
+ $("in").value="";try{localStorage.removeItem("jarvis_message_draft")}catch(e){}
  if(busy||speaking||modelLoading||modelTestRunning){
   queuedMessages.push(v);
   log("Nachricht vorgemerkt. J.A.R.V.I.S. bearbeitet sie automatisch, sobald der aktuelle Vorgang beendet ist.","s");
@@ -1628,8 +1624,11 @@ $("mic").onclick=async()=>{
  try{if(!SR){await useCloudMic("Dieser Browser unterstützt keine lokale Spracherkennung.");return}await requestMicPermissionOnce();micSpeechBuffer="";listening=true;$("mic").classList.add("on");restartDelay=700;startRec();setState("AUFNAHME LÄUFT");log("Aufnahme gestartet. Sprich jetzt und drücke das Mikrofon erneut, wenn du fertig bist.","s")}
  catch(e){log("Mikrofon nicht freigegeben: "+(e.name==="NotAllowedError"?"Bitte im Browser einmal ‘Zulassen’ wählen.":e.message),"s")}
 };
+const DRAFT_KEY="jarvis_message_draft";
+try{$("in").value=localStorage.getItem(DRAFT_KEY)||""}catch(e){}
+$("in").addEventListener("input",()=>{try{localStorage.setItem(DRAFT_KEY,$("in").value)}catch(e){}});
 $("go").onclick=submitInput;
-$("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();submitInput()}};
+$("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();log("Nachricht gespeichert. Zum Absenden bitte auf SENDEN klicken.","s")}};
 
 /* ---------- Kern-Animation ---------- */
 const cv=$("cv"),x=cv.getContext("2d");const TH={orange:{c:"255,138,31",think:"255,225,110",work:"190,120,255",listen:"93,255,176",bg:"10,5,3",v:{"--bg":"#0a0503","--rgb":"255,138,31","--c":"#ff8a1f","--c2":"#a84f00","--w":"#ffd36b","--t":"#ffe9d2","--dim":"#b0825a","--bg2":"#1c0d03","--bd":"#6b3300","--pan":"12,5,1"}},
