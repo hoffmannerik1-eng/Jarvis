@@ -237,6 +237,13 @@ const firebaseConfig={
  appId:"1:310550760592:web:43be322f363cab47501c15"
 };
 let db=null,jarvisUid=null,cloudReady=false,cloudDoc=null,cloudData={};
+function ensureFirebaseApp(){
+ if(typeof firebase==="undefined"||typeof firebase.initializeApp!=="function")throw new Error("Firebase-SDK konnte nicht geladen werden. Prüfe die Internetverbindung oder lade die Seite neu.");
+ let app=null;
+ try{app=firebase.app()}catch(_){}
+ if(!app){app=firebase.initializeApp(firebaseConfig);log("Firebase-App wurde initialisiert.","s")}
+ return app;
+}
 let pendingGitHub=null;
 let questionStats={total:0,day:"",today:0};
 function localDayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
@@ -263,7 +270,7 @@ async function recordSuccessfulQuestion(){
 loadQuestionStats();
 async function initCloud(){
  try{
-  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+  ensureFirebaseApp();
   const auth=firebase.auth();
   /* GitHub-OAuth nach der Rückkehr vom Redirect abschließen. */
   try{
@@ -672,6 +679,7 @@ function detectCodingRequest(message){
  return explicit||(followUp&&recentCode);
 }
 function chooseAutomaticModel(forCoding){
+ if(deviceMode==="cloud")return true;
  const ollamaChat=["qwen3:4b","qwen3-vl:8b-instruct","qwen3-vl:8b","qwen3.8:27b","qwen3.8:27b-q4_k_m"];
  const ollamaCoding=["qwen3.8:27b","qwen3.8:27b-q4_k_m","qwen3-vl:8b-instruct","qwen3-vl:8b"];
  const browserChat=["qwen3-0.6b-q4f16_1-mlc","qwen2.5-0.5b-instruct-q4f16_1-mlc","llama-3.2-1b-instruct-q4f16_1-mlc"];
@@ -787,8 +795,14 @@ const tools={
  browser_agent:async a=>{
   let v;try{v=JSON.parse(a)}catch(e){throw new Error("Browser-Auftrag ist ungültig. Bitte steps als JSON übergeben.")}
   if(!Array.isArray(v.steps)||!v.steps.length)throw new Error("Es fehlen Browser-Schritte.");
-  const user=firebase.auth().currentUser;
-  if(!user)throw new Error("Firebase-Anmeldung ist noch nicht bereit. Bitte JARVIS neu laden.");
+  ensureFirebaseApp();
+  const auth=firebase.auth();
+  let user=auth.currentUser;
+  if(!user){
+   try{const credential=await auth.signInAnonymously();user=credential.user||auth.currentUser}
+   catch(e){throw new Error("Browserzugriff braucht eine Firebase-Anmeldung. Anmeldung fehlgeschlagen: "+emsg(e))}
+  }
+  if(!user)throw new Error("Firebase-Anmeldung konnte nicht hergestellt werden. Bitte JARVIS neu laden.");
   const token=await user.getIdToken();
   const r=await fetch("https://jarvisbrowser.hoffmann-erik1.workers.dev/task",{
    method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
@@ -1194,7 +1208,7 @@ tools.plugin_weg=async a=>{const r=PLUG.find(x=>x.name.toLowerCase()===String(a)
 tools.plugin_liste=()=>PLUG.map(r=>r.name+(r.enabled?" (an)":" (aus)")+": "+r.description).join("\n")||"Keine Plugins";
 $("ghconnect").onclick=async()=>{
  try{
-  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+  ensureFirebaseApp();
   const auth=firebase.auth();
   if(!auth.currentUser){
    $("plugstatus").textContent="Warte auf die Firebase-Anmeldung …";
