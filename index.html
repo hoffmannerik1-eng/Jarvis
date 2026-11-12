@@ -100,7 +100,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 .jwb.grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--c2);cursor:zoom-in;border-radius:6px}
 .jwb iframe{width:100%;height:100%;border:0;display:block;background:#000}
 .jwb .note{padding:14px;color:var(--t)}.jwb .note a{color:var(--c)}
-#hud,#side,#accountbtn,#account,#state{display:none!important}
+#hud,#side,#accountbtn,#account,#state{display:none!important}#side:not(.hide){display:block!important}
 #chat-toggle{position:fixed;right:22px;bottom:22px;z-index:70;border-radius:999px;padding:10px 17px;background:rgba(var(--pan),.82);backdrop-filter:blur(10px);box-shadow:0 0 18px rgba(var(--rgb),.25);font-size:12px;letter-spacing:.12em}
 #log,#bar{display:none}#log:not(.hide){display:flex}#bar:not(.hide){display:flex}
 #log{left:50%;right:auto;transform:translateX(-50%);bottom:90px;width:min(620px,calc(100% - 28px));height:min(42vh,440px);z-index:65}
@@ -1460,7 +1460,9 @@ function localCmd(q){
  const t=String(q||"").toLowerCase().replace(/[.,!?;:]/g," ").replace(/\bjarvis\b/g," ").replace(/\s+/g," ").trim();
  if(!t)return null;
  // Sprachbefehle für das vorhandene Modell-/Systemmenü
- if(/^(?:(?:bitte )?(?:öffne|oeffne|zeige|zeig|mach auf|blende ein) )?(?:das )?(?:ki[- ]?)?(?:modell|modelle|anbieter|system|status)? ?(?:menü|menu|fenster|übersicht|uebersicht)(?: mit den modellen)?$/.test(t) ||
+ if(/^(?:menü|menu|das menü|das menu|ki menü|ki-menü|systemmenü|system menü|modellmenü|modell menü)$/.test(t) ||
+    /\b(?:öffne|oeffne|zeige|zeig|mach auf|blende ein)\b.*\b(?:menü|menu|modellübersicht|modelluebersicht|anbieter|systemübersicht)\b/.test(t) ||
+    /^(?:(?:bitte )?(?:öffne|oeffne|zeige|zeig|mach auf|blende ein) )?(?:das )?(?:ki[- ]?)?(?:modell|modelle|anbieter|system|status)? ?(?:menü|menu|fenster|übersicht|uebersicht)(?: mit den modellen)?$/.test(t) ||
     /(?:öffne|oeffne|zeige|zeig|mach auf|blende ein).*(?:modellmenü|modell menü|ki menü|ki-menü|modellübersicht|modell übersicht|anbieter|modelle und alles|modelle anzeigen)/.test(t) ||
     /^(?:modellmenü|modell menü|ki menü|ki-menü|modellübersicht|modell übersicht|anbieter anzeigen|modelle anzeigen)$/.test(t)){
   return()=>{
@@ -1963,8 +1965,9 @@ frame();
 
 
 setUI(["hud","side","account","accountbtn"],false);setUI(CH,false);loadAccountFields();hideLog();
-document.addEventListener("keydown",e=>{const t=e.target.tagName;if(t==="INPUT"||t==="SELECT")return;
- if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
+document.addEventListener("keydown",e=>{const target=e.target,tag=target?.tagName;if(e.ctrlKey||e.altKey||e.metaKey||target?.isContentEditable||tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
+ if(e.key==="t"||e.key==="T"){e.preventDefault();if(!$("log").classList.contains("hide"))hideLog();else{showLog(0);$("in").focus()}}
+ else if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
 cv.addEventListener("dblclick",()=> $("in").focus());
 
