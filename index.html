@@ -101,18 +101,18 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 .jwb iframe{width:100%;height:100%;border:0;display:block;background:#000}
 .jwb .note{padding:14px;color:var(--t)}.jwb .note a{color:var(--c)}
 #hud,#side,#accountbtn,#account,#state{display:none!important}#side:not(.hide){display:block!important}
-#chat-toggle{position:fixed;right:22px;bottom:22px;z-index:70;border-radius:999px;padding:10px 17px;background:rgba(var(--pan),.82);backdrop-filter:blur(10px);box-shadow:0 0 18px rgba(var(--rgb),.25);font-size:12px;letter-spacing:.12em}
+
 #log,#bar{display:none}#log:not(.hide){display:flex}#bar:not(.hide){display:flex}
 #log{left:50%;right:auto;transform:translateX(-50%);bottom:90px;width:min(620px,calc(100% - 28px));height:min(42vh,440px);z-index:65}
 #bar{left:50%;right:auto;transform:translateX(-50%);bottom:22px;width:min(620px,calc(100% - 28px));z-index:66}
 #bar #mic,#bar #pick,#bar #coding,#bar #filepick{display:none!important}#bar input{min-width:0}#logclose{display:none}
-@media(max-width:650px){#log{height:38vh;bottom:78px}#bar{bottom:14px}#chat-toggle{right:14px;bottom:14px}}</style>
+@media(max-width:650px){#log{height:38vh;bottom:78px}#bar{bottom:14px}}</style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <div id="hud"><h1>J.A.R.V.I.S.</h1><div id="clock"></div><button id="dl" style="display:none;pointer-events:auto;margin-top:6px;font-size:12px;padding:4px 12px">⬇ VOLLVERSION MIT INTERNET UND FOTOS HERUNTERLADEN</button></div>
 <div id="boot"><h2>J.A.R.V.I.S.</h2><div id="device-choice" style="width:min(440px,90vw);text-align:center"><div style="color:var(--g);margin:8px 0 14px">AUF WELCHEM GERÄT VERWENDEST DU JARVIS?</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button id="choose-pc">🖥 PC · LOKALE KI</button><button id="choose-cloud">📱 iPad / HANDY / ANDERES GERÄT</button></div><div id="device-note" style="color:var(--dim);font-size:12px;margin-top:12px"></div></div><div id="cloud-setup" style="display:none;width:min(440px,90vw);text-align:left"><div style="color:var(--g);text-align:center;margin-bottom:8px">CLOUD-KI · OPENROUTER</div><div style="font-size:12px;color:var(--dim);margin-bottom:8px">Ein oder mehrere OpenRouter-API-Keys. Speicherung nur in diesem Browser.</div><div style="display:flex;gap:6px"><input id="cloud-key-input" type="password" autocomplete="off" placeholder="OpenRouter API-Key" style="flex:1;min-width:0;background:#160b05;border:1px solid var(--bd);color:var(--t);padding:9px"><button id="cloud-key-add">HINZUFÜGEN</button></div><div id="cloud-key-list" style="font-size:12px;color:var(--g);margin:9px 0;max-height:90px;overflow:auto"></div><div style="font-size:11px;color:var(--dim);margin:8px 0">Bei Limit oder ungültigem Key versucht JARVIS automatisch den nächsten. Keys werden nicht zwischen Geräten synchronisiert.</div><button id="cloud-back">ZURÜCK</button></div><div id="bl"></div><button id="start" type="button" disabled>BITTE GERÄT AUSWÄHLEN</button></div>
-<div id="state">BEREIT</div><button id="chat-toggle" type="button">CHAT ÖFFNEN</button>
+<div id="state">BEREIT</div>
 <div class="pan" id="log"><button id="logclose" type="button" aria-label="Chat ausblenden">✕</button><div class="m s">System online. JARVIS prüft die KI-Verbindung automatisch und wechselt bei Fehlern zum nächsten verfügbaren Modell.</div></div>
 <div class="pan" id="side">
   <button id="th" style="width:100%;margin-bottom:8px">Farbe: Orange / Cyan</button>
@@ -215,8 +215,8 @@ function setUI(ids,show){
  for(const id of list){const el=typeof id==="string"?$(id):id;if(el)el.classList.toggle("hide",!show)}
 }
 let logTimer=0,logHover=false;
-function hideLog(){clearTimeout(logTimer);const el=$("log");if(el)el.classList.add("hide");const b=$("bar");if(b)b.classList.add("hide");const t=$("chat-toggle");if(t)t.textContent="CHAT ÖFFNEN"}
-function showLog(ms){const el=$("log");if(!el)return;el.classList.remove("hide");const b=$("bar");if(b)b.classList.remove("hide");const t=$("chat-toggle");if(t)t.textContent="CHAT SCHLIESSEN";clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)}
+function hideLog(){clearTimeout(logTimer);const el=$("log");if(el)el.classList.add("hide");const b=$("bar");if(b)b.classList.add("hide")}
+function showLog(ms,fromHotkey=false){if(!fromHotkey)return;const el=$("log");if(!el)return;el.classList.remove("hide");const b=$("bar");if(b)b.classList.remove("hide");clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)},ms)}
 function log(message,type="s"){
  const root=$("log");if(!root)return;
  const node=document.createElement("div");node.className="m "+(type==="u"?"u":type==="j"?"j":"s");
@@ -740,7 +740,7 @@ function spokenEmail(value){
 let NET=true;
 fetch("https://de.wikipedia.org/w/api.php?action=query&meta=siteinfo&format=json&origin=*").then(r=>{if(!r.ok)NET=false}).catch(()=>{NET=false});
 const NOTE="\nWICHTIG: In dieser Umgebung gibt es KEIN Internet. Nutze web, image und file NICHT. Beantworte Fragen aus deinem Wissen und sage kurz ehrlich, dass echte Fotos und Live-Suche nur in der heruntergeladenen Version gehen, und verweise auf den Knopf oben „Vollversion herunterladen“. Das Werkzeug draw geht weiterhin: es zeichnet eine Grafik (arg: Beschreibung des Bildes).";
-const HN="\nComputersteuerung ist AN. Zusätzliche Werkzeuge: mouse (arg: 'pos' | 'move x y' | 'click x y' | 'double x y' | 'right x y' | 'scroll n'), type (arg: Text, der getippt wird), key (arg: Tastenkürzel wie 'win', 'ctrl+l', 'enter'). Du siehst den Bildschirm NICHT. Frage zuerst mit mouse 'pos' nach der Bildschirmgröße und bevorzuge Tastenkürzel statt Klicks ins Blaue. Mache nichts Zerstörerisches (Löschen, Bezahlen, Senden) ohne ausdrückliche Bestätigung des Nutzers. Immer nur ein Schritt pro Antwort.";
+const HN="\nComputersteuerung ist AN. Zusätzliche Werkzeuge: mouse (arg: 'pos' | 'move x y' | 'click x y' | 'double x y' | 'right x y' | 'scroll n'), type (arg: Text, der getippt wird), key (arg: Tastenkürzel wie 'win', 'ctrl+l', 'enter'). SICHERHEIT: Nutze Maus und Tastatur nur für den ausdrücklich genannten Auftrag. Du siehst den Bildschirm NICHT: frage zuerst mouse 'pos' ab; klicke niemals auf unbekannte Koordinaten. Öffne keine Terminal-/PowerShell-Befehle und führe keinen Code aus. Gib keine Passwörter, Codes oder persönlichen Daten ein. Sende keine Nachrichten/E-Mails, veröffentliche nichts, lösche/überschreibe keine Dateien, installiere nichts und kaufe/zahle nichts ohne vorherige konkrete Bestätigung. Bei unklarer Aktion zuerst nachfragen. Führe nur einen kleinen Schritt aus und prüfe das Ergebnis, bevor du weitermachst.";
 let ABORT=false,TK=false,SC=null;
 async function hand(cmd,args){
  if(!$("hc").checked)return"Computersteuerung ist aus (Schalter rechts).";
@@ -1827,7 +1827,7 @@ try{$("in").value=localStorage.getItem(DRAFT_KEY)||""}catch(e){}
 $("in").addEventListener("input",()=>{try{localStorage.setItem(DRAFT_KEY,$("in").value)}catch(e){}});
 $("go").onclick=submitInput;
 $("in").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();submitInput()}};
-$("chat-toggle").onclick=()=>{if(!$("log").classList.contains("hide"))hideLog();else{showLog(0);$("in").focus()}};
+
 
 /* ---------- Kern-Animation ---------- */
 const cv=$("cv"),x=cv.getContext("2d");const TH={orange:{c:"255,138,31",think:"255,225,110",work:"190,120,255",listen:"93,255,176",bg:"10,5,3",v:{"--bg":"#0a0503","--rgb":"255,138,31","--c":"#ff8a1f","--c2":"#a84f00","--w":"#ffd36b","--t":"#ffe9d2","--dim":"#b0825a","--bg2":"#1c0d03","--bd":"#6b3300","--pan":"12,5,1"}},
@@ -1966,7 +1966,7 @@ frame();
 
 setUI(["hud","side","account","accountbtn"],false);setUI(CH,false);loadAccountFields();hideLog();
 document.addEventListener("keydown",e=>{const target=e.target,tag=target?.tagName;if(e.ctrlKey||e.altKey||e.metaKey||target?.isContentEditable||tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
- if(e.key==="t"||e.key==="T"){e.preventDefault();if(!$("log").classList.contains("hide"))hideLog();else{showLog(0);$("in").focus()}}
+ if(e.key==="t"||e.key==="T"){e.preventDefault();if(!$("log").classList.contains("hide"))hideLog();else{showLog(0,true);$("in").focus()}}
  else if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
  else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
 cv.addEventListener("dblclick",()=> $("in").focus());
