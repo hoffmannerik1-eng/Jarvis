@@ -268,6 +268,12 @@ async function recordSuccessfulQuestion(){
  if(cloudReady)await saveCloud({questionStats:{...questionStats}});
 }
 loadQuestionStats();
+function withTimeout(promise,ms,label){
+ return new Promise((resolve,reject)=>{
+  const timer=setTimeout(()=>reject(new Error(label+" dauert zu lange (Zeitlimit "+Math.round(ms/1000)+" s).")),ms);
+  Promise.resolve(promise).then(value=>{clearTimeout(timer);resolve(value)},error=>{clearTimeout(timer);reject(error)});
+ });
+}
 let cloudServicesReady=false,cloudServicesPromise=null;
 async function initCloudServices(){
  if(cloudServicesReady)return true;
@@ -281,7 +287,7 @@ async function initCloud(){
   const auth=firebase.auth();
   /* GitHub-OAuth nach der Rückkehr vom Redirect abschließen. */
   try{
-   const redirectResult=await auth.getRedirectResult();
+   const redirectResult=await withTimeout(auth.getRedirectResult(),15000,"GitHub-Weiterleitung");
    if(redirectResult){
     const credential=firebase.auth.GithubAuthProvider.credentialFromResult(redirectResult);
     const token=credential&&credential.accessToken;
@@ -297,10 +303,10 @@ async function initCloud(){
    if(status)status.textContent="GitHub-Anmeldung fehlgeschlagen: "+emsg(redirectError);
    log("GitHub-Weiterleitung fehlgeschlagen: "+emsg(redirectError),"s");
   }
-  if(!auth.currentUser)await auth.signInAnonymously();
+  if(!auth.currentUser)await withTimeout(auth.signInAnonymously(),15000,"Firebase-Anmeldung");
   jarvisUid=auth.currentUser.uid;db=firebase.firestore();
   cloudDoc=db.collection("jarvis_users").doc(jarvisUid).collection("memory").doc("main");
-  const snap=await cloudDoc.get();
+  const snap=await withTimeout(cloudDoc.get(),15000,"Firebase-Datenspeicher");
   cloudData=snap.exists?snap.data():{};
   try{const localProfile=JSON.parse(localStorage.getItem("jarvis_profile")||"{}");cloudData.profile={...localProfile,...(cloudData.profile||{})}}catch(e){};
   if(cloudData.questionStats&&typeof cloudData.questionStats==="object"){
