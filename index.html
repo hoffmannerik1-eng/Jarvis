@@ -268,6 +268,13 @@ async function recordSuccessfulQuestion(){
  if(cloudReady)await saveCloud({questionStats:{...questionStats}});
 }
 loadQuestionStats();
+let cloudServicesReady=false,cloudServicesPromise=null;
+async function initCloudServices(){
+ if(cloudServicesReady)return true;
+ if(cloudServicesPromise)return cloudServicesPromise;
+ cloudServicesPromise=(async()=>{const ok=await initCloud();if(ok){loadPlugins();cloudServicesReady=true}return ok})();
+ try{return await cloudServicesPromise}finally{cloudServicesPromise=null}
+}
 async function initCloud(){
  try{
   ensureFirebaseApp();
@@ -508,7 +515,7 @@ async function loadLocalEngine(id){
 }
 async function autoConnectAI(){
  try{
-  try{await initCloud();loadPlugins()}catch(e){log("Cloud-Speicher ist nicht verfügbar; die lokale KI kann trotzdem arbeiten.","s")}
+  try{await initCloudServices()}catch(e){log("Cloud-Speicher ist nicht verfügbar; die lokale KI kann trotzdem arbeiten.","s")}
   $("kihealth").textContent="VERBINDE MIT OLLAMA AUF DIESEM PC …";
   const response=await fetch("http://127.0.0.1:11434/api/tags",{cache:"no-store"});
   if(!response.ok)throw new Error("Ollama meldet HTTP "+response.status);
@@ -560,7 +567,7 @@ function updateStartButton(){
 }
 function renderCloudKeys(){const list=$("cloud-key-list"),keys=readCloudKeys();if(!list)return;list.innerHTML="";if(!keys.length){list.textContent="Noch keine API-Keys gespeichert.";return}keys.forEach((key,i)=>{const row=document.createElement("div");row.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0";const label=document.createElement("span");label.textContent="Key "+(i+1)+" · "+key.slice(0,7)+"…"+key.slice(-4);const del=document.createElement("button");del.type="button";del.textContent="ENTFERNEN";del.onclick=()=>{const next=readCloudKeys();next.splice(i,1);writeCloudKeys(next);renderCloudKeys();updateStartButton()};row.append(label,del);list.appendChild(row)})}
 function selectPC(){deviceMode="pc";try{localStorage.setItem("jarvis_device_mode","pc")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="none";$("bl").textContent="PC-MODUS · VERBINDE MIT LOKALER OLLAMA-KI …";updateStartButton();autoConnectAI()}
-function selectCloud(){deviceMode="cloud";try{localStorage.setItem("jarvis_device_mode","cloud")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="block";$("bl").textContent="";renderCloudKeys();$("kihealth").textContent="CLOUD-MODUS · API-KEYS AUF DIESEM GERÄT";updateStartButton()}
+async function selectCloud(){deviceMode="cloud";try{localStorage.setItem("jarvis_device_mode","cloud")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="block";$("bl").textContent="";renderCloudKeys();$("kihealth").textContent="CLOUD-MODUS · VERBINDE SPEICHER UND PLUGINS …";updateStartButton();const ok=await initCloudServices();$("kihealth").textContent=ok?"CLOUD-MODUS · SPEICHER UND PLUGINS BEREIT":"CLOUD-MODUS · FIREBASE/PLUGINS NICHT VERFÜGBAR";if(!ok)log("Cloud-KI kann ohne Firebase weiterarbeiten; Gmail, GitHub und gespeicherte Plugins sind bis zur Verbindung nicht verfügbar.","s")}
 $("choose-pc").addEventListener("click",selectPC);
 $("choose-cloud").addEventListener("click",selectCloud);
 $("cloud-back").onclick=()=>{$("cloud-setup").style.display="none";$("device-choice").style.display="block";deviceMode="";updateStartButton()};
@@ -1629,10 +1636,20 @@ async function run(message){
    setState("DENKE …");const raw=await ask(hist,SYSF()+pluginPrompt()+(NET?"":" Live-Websuche ist derzeit möglicherweise nicht erreichbar; erfinde keine aktuellen Fakten."),pendingVisionImage);
    pendingVisionImage=null;
    const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:JSON.stringify({say:answer,tool:obj.tool||null})});await persistHistory();
-   if(obj.tool&&tools[obj.tool.name]){
-    setState("ARBEITE · "+String(obj.tool.name).toUpperCase());const result=await tools[obj.tool.name](String(obj.tool.arg||""));
-    hist.push({role:"user",content:"ERGEBNIS: "+result});await persistHistory();
-    if(obj.tool.name==="remember"&&/erfolgreich|gespeichert/i.test(result))awaitingEmail=false;
+   if(obj.tool){
+    const toolName=String(obj.tool.name||"");
+    if(typeof tools[toolName]!=="function"){
+     const unavailable="Das angeforderte Werkzeug „"+toolName+"“ ist in dieser Sitzung nicht verfügbar. Verwende nur tatsächlich verfügbare Werkzeuge oder beantworte die Frage ohne dieses Werkzeug.";
+     hist.push({role:"user",content:"WERKZEUGFEHLER: "+unavailable});await persistHistory();
+     answer=n===4?unavailable:"";
+     continue;
+    }
+    setState("ARBEITE · "+toolName.toUpperCase());
+    const result=await tools[toolName](String(obj.tool.arg||""));
+    hist.push({role:"user",content:"ERGEBNIS DES WERKZEUGS "+toolName+": "+result});await persistHistory();
+    if(toolName==="remember"&&/erfolgreich|gespeichert/i.test(result))awaitingEmail=false;
+    if(n===4){answer="Das Werkzeug wurde ausgeführt. Ergebnis: "+String(result).slice(0,3500);break}
+    answer="";
     continue;
    }
    break;
@@ -1859,11 +1876,15 @@ setInterval(()=>{const n=new Date();$("clock").textContent=n.toLocaleDateString(
  $("b2").style.width=(performance.memory?Math.round(performance.memory.usedJSHeapSize/performance.memory.jsHeapSizeLimit*100):40+Math.random()*10)+"%";
  $("b3").style.width=navigator.onLine?(85+Math.random()*14)+"%":"3%"},1000);
 let bootStarting=false;
-$("start").addEventListener("click",()=>{
+$("start").addEventListener("click",async()=>{
  if(bootStarting)return;
  if(!deviceMode){log("Bitte wähle zuerst PC oder Cloud aus.","s");return}
  if(deviceMode==="cloud"&&!readCloudKeys().length){log("Bitte füge zuerst mindestens einen OpenRouter-API-Key hinzu.","s");updateStartButton();return}
  bootStarting=true;
+ if(deviceMode==="cloud"){
+  $("kihealth").textContent="CLOUD-DIENSTE WERDEN GEPRÜFT …";
+  await initCloudServices();
+ }
  try{localStorage.setItem("jarvis_started","1");localStorage.setItem("jarvis_device_mode",deviceMode)}catch(e){}
  const startButton=$("start"),bootScreen=$("boot"),statusLines=$("bl");
  startButton.disabled=true;
@@ -1913,7 +1934,7 @@ window.addEventListener("pageshow",()=>{
   updateStartButton();autoConnectAI();
  }else if(mode==="cloud"){
   $("device-choice").style.display="none";$("cloud-setup").style.display="block";
-  $("bl").textContent="";renderCloudKeys();updateStartButton();
+  $("bl").textContent="";renderCloudKeys();updateStartButton();initCloudServices();
  }
 });
 $("dl").onclick=()=>{
