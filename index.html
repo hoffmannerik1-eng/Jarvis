@@ -1539,11 +1539,11 @@ let busy=false;
 const queuedMessages=[];
 function parseAssistant(raw){
  const source=String(raw??"");
- const internalText=value=>/\\b(?:the user|the user's message|let me (?:parse|check|think|analyze)|i should (?:respond|answer)|the correct response would be|so the response should|wait, the instructions say|possible response|let me make sure)\\b/i.test(String(value||""))||/\\b(?:ich soll jetzt|lass mich das (?:analysieren|prüfen)|die anweisungen sagen|mögliche antwort wäre|die richtige antwort wäre|der nutzer hat geschrieben)\\b/i.test(String(value||""));
+ const internalText=value=>/\b(?:the user|the user's message|let me (?:parse|check|think|analyze)|i should (?:respond|answer)|the correct response would be|so the response should|wait, the instructions say|possible response|let me make sure)\b/i.test(String(value||""))||/\b(?:ich soll jetzt|lass mich das (?:analysieren|prüfen)|die anweisungen sagen|mögliche antwort wäre|die richtige antwort wäre|der nutzer hat geschrieben)\b/i.test(String(value||""));
  const safeFallback="Entschuldigung, ich habe gerade keine normale Antwort erzeugt. Bitte versuche es noch einmal.";
- let cleaned=source.replace(/<think\\b[^>]*>[\\s\\S]*?<\\/think\\s*>/gi," ");
- cleaned=cleaned.replace(/<analysis\\b[^>]*>[\\s\\S]*?<\\/analysis\\s*>/gi," ");
- cleaned=cleaned.replace(/<\\/?(?:think|analysis|reasoning)\\b[^>]*>/gi," ").trim();
+ let cleaned=source.replace(/<think\b[^>]*>[\s\S]*?<\/think\s*>/gi," ");
+ cleaned=cleaned.replace(/<analysis\b[^>]*>[\s\S]*?<\/analysis\s*>/gi," ");
+ cleaned=cleaned.replace(/<\/?(?:think|analysis|reasoning)\b[^>]*>/gi," ").trim();
  const candidates=[];
  const scanJson=(input)=>{
   for(let start=0;start<input.length;start++){
@@ -1551,7 +1551,7 @@ function parseAssistant(raw){
    let depth=0,inString=false,escaped=false;
    for(let i=start;i<input.length;i++){
     const ch=input[i];
-    if(inString){if(escaped)escaped=false;else if(ch==="\\\\")escaped=true;else if(ch==='"')inString=false;continue}
+    if(inString){if(escaped)escaped=false;else if(ch==="\\")escaped=true;else if(ch==='"')inString=false;continue}
     if(ch==='"'){inString=true;continue}
     if(ch==="{")depth++;
     else if(ch==="}"&&--depth===0){
