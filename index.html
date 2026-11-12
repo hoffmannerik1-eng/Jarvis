@@ -215,8 +215,8 @@ function setUI(ids,show){
  for(const id of list){const el=typeof id==="string"?$(id):id;if(el)el.classList.toggle("hide",!show)}
 }
 let logTimer=0,logHover=false;
-function hideLog(){clearTimeout(logTimer);const el=$("log");if(el)el.classList.add("hide");const b=$("bar");if(b)b.classList.add("hide")}
-function showLog(ms,fromHotkey=false){if(!fromHotkey)return;const el=$("log");if(!el)return;el.classList.remove("hide");const bar=$("bar");if(bar)bar.classList.remove("hide");clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)}
+function hideLog(){clearTimeout(logTimer);const el=$("log");if(el)el.classList.add("hide");const b=$("bar");if(b)b.classList.add("hide");const input=$("in");if(input&&document.activeElement===input)input.blur()}
+function showLog(ms,fromHotkey=true){const el=$("log");if(!el)return;el.classList.remove("hide");const bar=$("bar");if(bar)bar.classList.remove("hide");clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)}
 function log(message,type="s"){
  const root=$("log");if(!root)return;
  const node=document.createElement("div");node.className="m "+(type==="u"?"u":type==="j"?"j":"s");
@@ -1971,10 +1971,15 @@ frame();
 
 
 setUI(["hud","side","account","accountbtn"],false);setUI(CH,false);loadAccountFields();hideLog();
-document.addEventListener("keydown",e=>{const target=e.target,tag=target?.tagName;if(e.ctrlKey||e.altKey||e.metaKey||target?.isContentEditable||tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
- if(e.key==="t"||e.key==="T"){e.preventDefault();if(!$("log").classList.contains("hide"))hideLog();else{showLog(0,true);$("in").focus()}}
- else if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
- else if(e.key==="Enter"){setUI(["bar"],true);$("in").focus()}});
+document.addEventListener("keydown",e=>{
+ const target=e.target,tag=target?.tagName,chatOpen=!$("log").classList.contains("hide"),typing=target?.isContentEditable||tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT";
+ if(e.ctrlKey||e.altKey||e.metaKey)return;
+ if(e.key==="Escape"&&chatOpen){e.preventDefault();hideLog();return}
+ if((e.key==="t"||e.key==="T")&&!typing){e.preventDefault();showLog(0,true);$("in").focus();return}
+ if(typing)return;
+ if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
+ else if(e.key==="Enter"){showLog(0,true);$("in").focus()}
+},true);
 cv.addEventListener("dblclick",()=> $("in").focus());
 
 </script>
