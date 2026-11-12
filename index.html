@@ -216,7 +216,7 @@ function setUI(ids,show){
 }
 let logTimer=0,logHover=false;
 function hideLog(){clearTimeout(logTimer);const el=$("log");if(el)el.classList.add("hide");const b=$("bar");if(b)b.classList.add("hide")}
-function showLog(ms,fromHotkey=false){if(!fromHotkey)return;const el=$("log");if(!el)return;el.classList.remove("hide");const b=$("bar");if(b)b.classList.remove("hide");clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)},ms)}
+function showLog(ms,fromHotkey=false){if(!fromHotkey)return;const el=$("log");if(!el)return;el.classList.remove("hide");const bar=$("bar");if(bar)bar.classList.remove("hide");clearTimeout(logTimer);if(ms)logTimer=setTimeout(()=>{if(!logHover)hideLog()},ms)}
 function log(message,type="s"){
  const root=$("log");if(!root)return;
  const node=document.createElement("div");node.className="m "+(type==="u"?"u":type==="j"?"j":"s");
