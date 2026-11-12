@@ -1539,10 +1539,11 @@ let busy=false;
 const queuedMessages=[];
 function parseAssistant(raw){
  const source=String(raw??"");
- // Reasoning-Tags von Modellen niemals an Chat oder Sprachausgabe weiterreichen.
- let cleaned=source.replace(/<think\b[^>]*>[\s\S]*?<\/think\s*>/gi," ");
- cleaned=cleaned.replace(/<analysis\b[^>]*>[\s\S]*?<\/analysis\s*>/gi," ");
- cleaned=cleaned.replace(/<\/?(?:think|analysis|reasoning)\b[^>]*>/gi," ").trim();
+ const internalText=value=>/\\b(?:the user|the user's message|let me (?:parse|check|think|analyze)|i should (?:respond|answer)|the correct response would be|so the response should|wait, the instructions say|possible response|let me make sure)\\b/i.test(String(value||""))||/\\b(?:ich soll jetzt|lass mich das (?:analysieren|prüfen)|die anweisungen sagen|mögliche antwort wäre|die richtige antwort wäre|der nutzer hat geschrieben)\\b/i.test(String(value||""));
+ const safeFallback="Entschuldigung, ich habe gerade keine normale Antwort erzeugt. Bitte versuche es noch einmal.";
+ let cleaned=source.replace(/<think\\b[^>]*>[\\s\\S]*?<\\/think\\s*>/gi," ");
+ cleaned=cleaned.replace(/<analysis\\b[^>]*>[\\s\\S]*?<\\/analysis\\s*>/gi," ");
+ cleaned=cleaned.replace(/<\\/?(?:think|analysis|reasoning)\\b[^>]*>/gi," ").trim();
  const candidates=[];
  const scanJson=(input)=>{
   for(let start=0;start<input.length;start++){
@@ -1550,7 +1551,7 @@ function parseAssistant(raw){
    let depth=0,inString=false,escaped=false;
    for(let i=start;i<input.length;i++){
     const ch=input[i];
-    if(inString){if(escaped)escaped=false;else if(ch==="\\")escaped=true;else if(ch==='"')inString=false;continue}
+    if(inString){if(escaped)escaped=false;else if(ch==="\\\\")escaped=true;else if(ch==='"')inString=false;continue}
     if(ch==='"'){inString=true;continue}
     if(ch==="{")depth++;
     else if(ch==="}"&&--depth===0){
@@ -1561,7 +1562,12 @@ function parseAssistant(raw){
   }
  };
  scanJson(cleaned);
- if(candidates.length)return candidates[candidates.length-1];
+ if(candidates.length){
+  const result=candidates[candidates.length-1];
+  if(internalText(result.say))return {say:safeFallback,tool:null};
+  return result;
+ }
+ if(internalText(cleaned))return {say:safeFallback,tool:null};
  return {say:cleaned.trim(),tool:null};
 }
 let pendingVisionImage=null;
@@ -1622,7 +1628,7 @@ async function run(message){
   for(let n=0;n<5;n++){
    setState("DENKE …");const raw=await ask(hist,SYSF()+pluginPrompt()+(NET?"":" Live-Websuche ist derzeit möglicherweise nicht erreichbar; erfinde keine aktuellen Fakten."),pendingVisionImage);
    pendingVisionImage=null;
-   const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:raw});await persistHistory();
+   const obj=parseAssistant(raw);answer=String(obj.say||"").trim();hist.push({role:"assistant",content:JSON.stringify({say:answer,tool:obj.tool||null})});await persistHistory();
    if(obj.tool&&tools[obj.tool.name]){
     setState("ARBEITE · "+String(obj.tool.name).toUpperCase());const result=await tools[obj.tool.name](String(obj.tool.arg||""));
     hist.push({role:"user",content:"ERGEBNIS: "+result});await persistHistory();
