@@ -1538,9 +1538,9 @@ const queuedMessages=[];
 function parseAssistant(raw){
  const source=String(raw??"");
  // Reasoning-Tags von Modellen niemals an Chat oder Sprachausgabe weiterreichen.
- let cleaned=source.replace(/<think\\b[^>]*>[\\s\\S]*?<\\/think\\s*>/gi," ");
- cleaned=cleaned.replace(/<analysis\\b[^>]*>[\\s\\S]*?<\\/analysis\\s*>/gi," ");
- cleaned=cleaned.replace(/<\\/?(?:think|analysis|reasoning)\\b[^>]*>/gi," ").trim();
+ let cleaned=source.replace(/<think\b[^>]*>[\s\S]*?<\/think\s*>/gi," ");
+ cleaned=cleaned.replace(/<analysis\b[^>]*>[\s\S]*?<\/analysis\s*>/gi," ");
+ cleaned=cleaned.replace(/<\/?(?:think|analysis|reasoning)\b[^>]*>/gi," ").trim();
  const candidates=[];
  const scanJson=(input)=>{
   for(let start=0;start<input.length;start++){
@@ -1548,7 +1548,7 @@ function parseAssistant(raw){
    let depth=0,inString=false,escaped=false;
    for(let i=start;i<input.length;i++){
     const ch=input[i];
-    if(inString){if(escaped)escaped=false;else if(ch==="\\\\")escaped=true;else if(ch==='"')inString=false;continue}
+    if(inString){if(escaped)escaped=false;else if(ch==="\\")escaped=true;else if(ch==='"')inString=false;continue}
     if(ch==='"'){inString=true;continue}
     if(ch==="{")depth++;
     else if(ch==="}"&&--depth===0){
@@ -1560,8 +1560,7 @@ function parseAssistant(raw){
  };
  scanJson(cleaned);
  if(candidates.length)return candidates[candidates.length-1];
- const plain=cleaned.replace(/^\`\`\`(?:json)?\\s*/i,"").replace(/\`\`\`$/,"").trim();
- return {say:plain,tool:null};
+ return {say:cleaned.trim(),tool:null};
 }
 let pendingVisionImage=null;
 $("pick").onclick=()=>$("filepick").click();
