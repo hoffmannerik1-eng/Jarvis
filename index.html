@@ -2004,7 +2004,7 @@ document.addEventListener("keydown",e=>{
  if(e.key==="Escape"&&chatOpen){e.preventDefault();hideLog();return}
  if((e.key==="t"||e.key==="T")&&!typing){e.preventDefault();showLog(0,true);$("in").focus();return}
  if(typing)return;
- if(e.key==="h"||e.key==="H"){setUI(ALL,$("side").classList.contains("hide"))}
+ if(e.key==="h"||e.key==="H"){e.preventDefault();setUI(["hud","side","account","accountbtn"],true);$("boot")?.classList.add("hide");$("account")?.scrollTo({top:0,behavior:"smooth"});return}
  else if(e.key==="Enter"){showLog(0,true);$("in").focus()}
 },true);
 cv.addEventListener("dblclick",()=> $("in").focus());
