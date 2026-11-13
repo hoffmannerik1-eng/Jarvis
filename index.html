@@ -111,7 +111,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 <body>
 <canvas id="cv"></canvas>
 <div id="hud"><h1>J.A.R.V.I.S.</h1><div id="clock"></div><button id="dl" style="display:none;pointer-events:auto;margin-top:6px;font-size:12px;padding:4px 12px">⬇ VOLLVERSION MIT INTERNET UND FOTOS HERUNTERLADEN</button></div>
-<div id="boot"><h2>J.A.R.V.I.S.</h2><div id="device-choice" style="width:min(440px,90vw);text-align:center"><div style="color:var(--g);margin:8px 0 14px">AUF WELCHEM GERÄT VERWENDEST DU JARVIS?</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button id="choose-pc">🖥 PC · LOKALE KI</button><button id="choose-cloud">📱 iPad / HANDY / ANDERES GERÄT</button></div><div id="device-note" style="color:var(--dim);font-size:12px;margin-top:12px"></div></div><div id="cloud-setup" style="display:none;width:min(440px,90vw);text-align:left"><div style="color:var(--g);text-align:center;margin-bottom:8px">CLOUD-KI · OPENROUTER</div><div style="font-size:12px;color:var(--dim);margin-bottom:8px">Ein oder mehrere OpenRouter-API-Keys. Speicherung nur in diesem Browser.</div><div style="display:flex;gap:6px"><input id="cloud-key-input" type="password" autocomplete="off" placeholder="OpenRouter API-Key" style="flex:1;min-width:0;background:#160b05;border:1px solid var(--bd);color:var(--t);padding:9px"><button id="cloud-key-add">HINZUFÜGEN</button></div><div id="cloud-key-list" style="font-size:12px;color:var(--g);margin:9px 0;max-height:90px;overflow:auto"></div><div style="font-size:11px;color:var(--dim);margin:8px 0">Bei Limit oder ungültigem Key versucht JARVIS automatisch den nächsten. Keys werden nicht zwischen Geräten synchronisiert.</div><button id="cloud-back">ZURÜCK</button></div><div id="bl"></div><button id="start" type="button" disabled>BITTE GERÄT AUSWÄHLEN</button></div>
+<div id="boot"><h2>J.A.R.V.I.S.</h2><div id="device-choice" style="width:min(440px,90vw);text-align:center"><div style="color:var(--g);margin:8px 0 10px">KONTO</div><button id="google-login" type="button" style="width:100%;max-width:320px;background:#fff;color:#222;border:1px solid #ddd;padding:11px 16px;border-radius:7px;font-weight:600">Mit Google anmelden</button><div id="google-status" style="font-size:12px;color:var(--dim);margin:8px 0 18px">Nicht angemeldet · Anmeldung speichert dein JARVIS-Konto geräteübergreifend</div><div style="color:var(--g);margin:8px 0 14px">AUF WELCHEM GERÄT VERWENDEST DU JARVIS?</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button id="choose-pc">🖥 PC · LOKALE KI</button><button id="choose-cloud">📱 iPad / HANDY / ANDERES GERÄT</button></div><div id="device-note" style="color:var(--dim);font-size:12px;margin-top:12px"></div></div><div id="cloud-setup" style="display:none;width:min(440px,90vw);text-align:left"><div style="color:var(--g);text-align:center;margin-bottom:8px">CLOUD-KI · OPENROUTER</div><div style="font-size:12px;color:var(--dim);margin-bottom:8px">Ein oder mehrere OpenRouter-API-Keys. Speicherung nur in diesem Browser.</div><div style="display:flex;gap:6px"><input id="cloud-key-input" type="password" autocomplete="off" placeholder="OpenRouter API-Key" style="flex:1;min-width:0;background:#160b05;border:1px solid var(--bd);color:var(--t);padding:9px"><button id="cloud-key-add">HINZUFÜGEN</button></div><div id="cloud-key-list" style="font-size:12px;color:var(--g);margin:9px 0;max-height:90px;overflow:auto"></div><div style="font-size:11px;color:var(--dim);margin:8px 0">Bei Limit oder ungültigem Key versucht JARVIS automatisch den nächsten. Keys werden nicht zwischen Geräten synchronisiert.</div><button id="cloud-back">ZURÜCK</button></div><div id="bl"></div><button id="start" type="button" disabled>BITTE GERÄT AUSWÄHLEN</button></div>
 <div id="state">BEREIT</div>
 <div class="pan" id="log"><button id="logclose" type="button" aria-label="Chat ausblenden">✕</button><div class="m s">System online. JARVIS prüft die KI-Verbindung automatisch und wechselt bei Fehlern zum nächsten verfügbaren Modell.</div></div>
 <div class="pan" id="side">
@@ -574,6 +574,49 @@ function updateStartButton(){
 function renderCloudKeys(){const list=$("cloud-key-list"),keys=readCloudKeys();if(!list)return;list.innerHTML="";if(!keys.length){list.textContent="Noch keine API-Keys gespeichert.";return}keys.forEach((key,i)=>{const row=document.createElement("div");row.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0";const label=document.createElement("span");label.textContent="Key "+(i+1)+" · "+key.slice(0,7)+"…"+key.slice(-4);const del=document.createElement("button");del.type="button";del.textContent="ENTFERNEN";del.onclick=()=>{const next=readCloudKeys();next.splice(i,1);writeCloudKeys(next);renderCloudKeys();updateStartButton()};row.append(label,del);list.appendChild(row)})}
 function selectPC(){deviceMode="pc";try{localStorage.setItem("jarvis_device_mode","pc")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="none";$("bl").textContent="PC-MODUS · VERBINDE MIT LOKALER OLLAMA-KI …";updateStartButton();autoConnectAI()}
 async function selectCloud(){deviceMode="cloud";try{localStorage.setItem("jarvis_device_mode","cloud")}catch(e){}$("device-choice").style.display="none";$("cloud-setup").style.display="block";$("bl").textContent="";renderCloudKeys();$("kihealth").textContent="CLOUD-MODUS · VERBINDE SPEICHER UND PLUGINS …";updateStartButton();const ok=await initCloudServices();$("kihealth").textContent=ok?"CLOUD-MODUS · SPEICHER UND PLUGINS BEREIT":"CLOUD-MODUS · FIREBASE/PLUGINS NICHT VERFÜGBAR";if(!ok)log("Cloud-KI kann ohne Firebase weiterarbeiten; Gmail, GitHub und gespeicherte Plugins sind bis zur Verbindung nicht verfügbar.","s")}
+async function signInGoogle(){
+ const status=$("google-status"),button=$("google-login");
+ if(button){button.disabled=true;button.textContent="GOOGLE-ANMELDUNG …"}
+ if(status)status.textContent="Google-Anmeldung wird geöffnet …";
+ try{
+  ensureFirebaseApp();
+  const auth=firebase.auth();
+  const provider=new firebase.auth.GoogleAuthProvider();
+  provider.addScope("email");
+  provider.addScope("profile");
+  provider.setCustomParameters({prompt:"select_account"});
+  let result;
+  if(auth.currentUser&&auth.currentUser.isAnonymous){
+   try{result=await auth.currentUser.linkWithPopup(provider)}
+   catch(e){
+    if(e.code==="auth/credential-already-in-use"||e.code==="auth/provider-already-linked")result=await auth.signInWithPopup(provider);
+    else throw e;
+   }
+  }else result=await auth.signInWithPopup(provider);
+  const user=result.user||auth.currentUser;
+  if(status)status.textContent="Angemeldet als "+(user.email||user.displayName||"Google-Konto");
+  if(button)button.textContent="✓ GOOGLE-KONTO VERBUNDEN";
+  log("Google-Konto erfolgreich angemeldet: "+(user.email||"Konto verbunden")+".","s");
+  const ok=await initCloudServices();
+  if(!ok&&status)status.textContent="Angemeldet, aber Firebase-Speicher nicht erreichbar: "+($("kihealth").textContent||"Verbindung prüfen");
+ }catch(e){
+  const msg=emsg(e);
+  if(status)status.textContent="Anmeldung fehlgeschlagen: "+msg;
+  if(button)button.textContent="Mit Google anmelden";
+  log("Google-Anmeldung fehlgeschlagen: "+msg+". Prüfe, ob Google als Anmeldeanbieter in Firebase Authentication aktiviert ist und die GitHub-Pages-Domain autorisiert wurde.","s");
+ }finally{if(button)button.disabled=false}
+}
+$("google-login").addEventListener("click",signInGoogle);
+try{
+ ensureFirebaseApp();
+ firebase.auth().onAuthStateChanged(user=>{
+  const status=$("google-status"),button=$("google-login");
+  if(user&&!user.isAnonymous){
+   if(status)status.textContent="Angemeldet als "+(user.email||user.displayName||"Google-Konto");
+   if(button)button.textContent="✓ GOOGLE-KONTO VERBUNDEN";
+  }
+ });
+}catch(e){}
 $("choose-pc").addEventListener("click",selectPC);
 $("choose-cloud").addEventListener("click",selectCloud);
 $("cloud-back").onclick=()=>{$("cloud-setup").style.display="none";$("device-choice").style.display="block";deviceMode="";updateStartButton()};
