@@ -60,6 +60,13 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}
 .historyitem{padding:12px;border:1px solid #ffffff12;border-radius:12px;margin:8px 0;display:flex;justify-content:space-between;gap:12px;align-items:center}.historyitem button{border:0;background:transparent;color:#bdb2e7}
 #toast{position:fixed;z-index:80;left:50%;bottom:110px;transform:translate(-50%,15px);opacity:0;pointer-events:none;padding:10px 15px;border:1px solid #ffffff18;border-radius:12px;background:#171827;color:#e5e2f4;transition:.25s;box-shadow:0 10px 35px #0009}#toast.show{opacity:1;transform:translate(-50%,0)}
 #file{display:none}
+
+#errorPanel{position:fixed;z-index:90;left:50%;top:82px;transform:translateX(-50%);width:min(760px,calc(100% - 24px));max-height:42vh;overflow:auto;display:none;border:1px solid #ff667788;border-radius:14px;background:#210d16f5;box-shadow:0 15px 50px #000b;padding:13px 15px;color:#ffe4e8}
+#errorPanel strong{display:block;color:#ff9ba8;margin-bottom:7px;font-size:13px}
+#errorDetails{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.55 ui-monospace,monospace;color:#ffd5dc}
+#errorActions{display:flex;gap:8px;margin-top:10px}
+#errorActions button{border:1px solid #ff9ba855;border-radius:8px;padding:6px 10px;background:#ffffff0b;color:#ffe4e8;font-size:11px}
+
 @media(max-width:650px){.top{padding:0 16px;height:62px}.brand{font-size:17px}.centerstage{inset:62px 0 145px}.orbwrap{width:min(300px,72vw)}.welcome h1{font-size:26px}.welcome p{font-size:12px}.composer{width:calc(100% - 22px);bottom:max(12px,env(safe-area-inset-bottom))}.composerbox{border-radius:19px;padding:8px 9px 8px 13px;gap:5px}.toolbtn{width:32px}.send{width:39px;height:39px}.composerfoot{padding-top:8px}.topright .pill{display:none}.modal{padding:17px}.bubble{font-size:14px}.orbstatus{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 
@@ -83,6 +90,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}
 <div id="settings"><div class="modal"><div class="modalhead"><h2>Einstellungen</h2><button class="close" data-close="settings">Schließen</button></div><div class="field"><label>Darstellung</label><select id="theme"><option value="violet">Violett / Blau</option><option value="blue">Eisblau</option><option value="pink">Pink / Violett</option></select></div><div class="field"><label>Sprache der Antworten</label><select id="language"><option value="Deutsch">Deutsch</option><option value="English">English</option><option value="Automatisch">Automatisch</option></select></div><button class="secondary" id="clearChat">Aktuellen Chat leeren</button><button class="danger" id="logout" style="float:right">Abmelden</button></div></div>
 <div id="history"><div class="modal"><div class="modalhead"><h2>Chat-Verlauf</h2><button class="close" data-close="history">Schließen</button></div><div id="historyList"></div><button class="secondary" id="newChat">Neuer Chat</button></div></div>
 <div id="toast"></div>
+<div id="errorPanel" role="alert"><strong id="errorTitle">CHATI-Fehler</strong><div id="errorDetails"></div><div id="errorActions"><button id="copyError">Fehler kopieren</button><button id="closeError">Schließen</button></div></div>
 <script>
 const $=id=>document.getElementById(id);
 const firebaseConfig={apiKey:"AIzaSyAc-zE5Or_VInwTL30dCa1P1MbfeOFeK6k",authDomain:"jarvis-79d65.firebaseapp.com",projectId:"jarvis-79d65",storageBucket:"jarvis-79d65.firebasestorage.app",messagingSenderId:"310550760592",appId:"1:310550760592:web:43be322f363cab47501c15"};
@@ -90,6 +98,32 @@ let auth=null,db=null,user=null,currentMessages=[],currentChatId=null,attachedFi
 const defaults={systemPrompt:"Du bist CHATI, ein hilfreicher, freundlicher KI-Assistent. Antworte auf Deutsch."};
 function toast(s){const t=$("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
 function setOrb(s){$("orbStatus").textContent=s}
+let lastErrorText="";
+function errorText(error){
+ if(error==null)return "Unbekannter Fehler";
+ const parts=[];
+ if(error.name)parts.push("Typ: "+error.name);
+ if(error.code)parts.push("Code: "+error.code);
+ if(error.message)parts.push("Meldung: "+error.message);
+ else parts.push("Meldung: "+String(error));
+ if(error.customData)parts.push("Details: "+JSON.stringify(error.customData));
+ if(error.stack)parts.push("Stack: "+error.stack);
+ return parts.join("\\n");
+}
+function showError(title,error,context=""){
+ const detail=(context?context+"\\n":"")+errorText(error);
+ lastErrorText=title+"\\n"+detail;
+ $("errorTitle").textContent=title;
+ $("errorDetails").textContent=detail;
+ $("errorPanel").style.display="block";
+ console.error("[CHATI]",title,context,error);
+}
+window.addEventListener("error",e=>showError("JavaScript-Fehler",e.error||new Error(e.message),e.filename?e.filename+":"+e.lineno+":"+e.colno:""));
+window.addEventListener("unhandledrejection",e=>showError("Nicht behandelter asynchroner Fehler",e.reason));
+$("closeError").onclick=()=>{$("errorPanel").style.display="none"};
+$("copyError").onclick=()=>{if(navigator.clipboard?.writeText)navigator.clipboard.writeText(lastErrorText).then(()=>toast("Fehlerdetails kopiert")).catch(()=>toast("Kopieren nicht möglich"));else toast("Kopieren wird nicht unterstützt")};
+window.addEventListener("chati-ai-error",e=>showError("CHATI-KI konnte nicht starten",e.detail||window.chatiAIError,"Firebase AI Logic Initialisierung"));
+window.addEventListener("chati-ai-ready",()=>{if(!window.chatiAIError)console.info("[CHATI] KI-Modell bereit")});
 function show(id){$(id).style.display="grid"}
 function hide(id){$(id).style.display="none"}
 function openChatMode(){ $("app").classList.add("chatmode"); $("messages").classList.add("hasmessages");}
@@ -99,20 +133,20 @@ function renderMessages(){const box=$("messages");box.innerHTML="";for(const m o
 async function saveChat(){if(!user||!db||!currentChatId)return;try{await db.collection("jarvis_users").doc(user.uid).collection("chats").doc(currentChatId).set({title:(currentMessages.find(x=>x.role==="user")?.content||"Neuer Chat").slice(0,65),messages:currentMessages.slice(-80).map(m=>({role:m.role,content:m.content})),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}catch(e){console.warn("Chat-Speicherung:",e)}}
 async function loadHistory(){if(!user||!db)return;try{const snap=await db.collection("jarvis_users").doc(user.uid).collection("chats").orderBy("updatedAt","desc").limit(30).get();const list=$("historyList");list.innerHTML="";snap.forEach(doc=>{const d=doc.data(),row=document.createElement("div");row.className="historyitem";const name=document.createElement("span");name.textContent=d.title||"Chat";const btn=document.createElement("button");btn.textContent="Öffnen";btn.onclick=()=>{currentChatId=doc.id;currentMessages=Array.isArray(d.messages)?d.messages:[];renderMessages();openChatMode();hide("history")};row.append(name,btn);list.append(row)})}catch(e){toast("Verlauf konnte nicht geladen werden.")}}
 function newChat(){currentChatId=crypto.randomUUID();currentMessages=[];$("messages").innerHTML="";closeChatMode();$("prompt").focus()}
-async function googleLogin(){try{const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});await auth.signInWithPopup(provider)}catch(e){if(e.code==="auth/popup-blocked"||e.code==="auth/popup-closed-by-user"){try{await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())}catch(x){toast(x.message)}}else toast(e.message||"Google-Anmeldung fehlgeschlagen")}}
-function initFirebase(){try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();auth.onAuthStateChanged(u=>{user=u;if(u){$("loginScreen").style.display="none";$("app").style.display="block";$("userlabel").textContent=u.displayName||u.email||"Angemeldet";currentChatId=crypto.randomUUID();loadHistory()}else{$("loginScreen").style.display="grid";$("app").style.display="none"}})}catch(e){toast("Firebase konnte nicht gestartet werden: "+e.message)}}
+async function googleLogin(){try{const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});await auth.signInWithPopup(provider)}catch(e){if(e.code==="auth/popup-blocked"||e.code==="auth/popup-closed-by-user"){try{await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())}catch(x){toast(x.message)}}else showError("Google-Anmeldung fehlgeschlagen",e,"Firebase Auth · signInWithPopup")}}
+function initFirebase(){try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();auth.onAuthStateChanged(u=>{user=u;if(u){$("loginScreen").style.display="none";$("app").style.display="block";$("userlabel").textContent=u.displayName||u.email||"Angemeldet";currentChatId=crypto.randomUUID();loadHistory()}else{$("loginScreen").style.display="grid";$("app").style.display="none"}})}catch(e){showError("Firebase konnte nicht gestartet werden",e,"Beim Initialisieren von Firebase Auth/Firestore")}}
 function fileToText(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;if(file.type.startsWith("text/")||/\.(txt|md|csv)$/i.test(file.name))r.readAsText(file);else if(file.type.startsWith("image/"))r.readAsDataURL(file);else reject(new Error("Bitte ein Bild oder eine Textdatei verwenden."))})}
 async function askAI(){
  if(busy)return;
  const text=$("prompt").value.trim();
  if(!text&&!attachedFile)return;
  if(!user){toast("Bitte zuerst mit Google anmelden.");return}
- if(!window.chatiGenerate){toast("CHATI AI wird gerade gestartet. Bitte kurz warten.");return}
+ if(!window.chatiGenerate){const err=window.chatiAIError||new Error("Die KI-Funktion window.chatiGenerate wurde nicht angelegt. Prüfe, ob firebase-ai.js geladen wird und Firebase AI Logic im Firebase-Projekt aktiviert ist.");showError("CHATI-KI ist nicht verfügbar",err,"Vor dem Senden geprüft · KI-Modell wurde nicht initialisiert");return}
  busy=true;$("send").disabled=true;
  let content=text;
  if(attachedFile){
   try{const data=await fileToText(attachedFile);if(attachedFile.type.startsWith("image/"))throw new Error("Die Bildanalyse wird später ergänzt.");content+="\\n\\nDatei "+attachedFile.name+":\\n"+data}
-  catch(e){toast(e.message);busy=false;$("send").disabled=false;return}
+  catch(e){showError("Datei konnte nicht verarbeitet werden",e,"Datei: "+(attachedFile?.name||"unbekannt"));busy=false;$("send").disabled=false;return}
  }
  currentMessages.push({role:"user",content});
  $("prompt").value="";$("prompt").style.height="auto";attachedFile=null;$("file").value="";
@@ -186,22 +220,28 @@ initFirebase();
 </script>
 
 <script type="module">
-import { getApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
-try {
- const app=getApp();
- const ai=getAI(app,{backend:new GoogleAIBackend()});
- const model=getGenerativeModel(ai,{model:"gemini-2.5-flash"});
- window.chatiGenerate=async function(messages,systemPrompt){
-  const transcript=messages.map(m=>(m.role==="assistant"?"CHATI":"NUTZER")+": "+String(m.content||"")).join("\\n\\n");
-  const result=await model.generateContent(systemPrompt+"\\n\\nBisheriger Chat:\\n"+transcript+"\\n\\nAntworte auf die letzte Nachricht des Nutzers.");
-  return result.response.text();
- };
- window.dispatchEvent(new Event("chati-ai-ready"));
-} catch(e) {
- console.error("CHATI Firebase AI Logic:",e);
- window.chatiAIError=e;
-}
+(async()=>{
+ try {
+  const [{getApp},{getAI,getGenerativeModel,GoogleAIBackend}]=await Promise.all([
+   import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
+   import("https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js")
+  ]);
+  const app=getApp();
+  const ai=getAI(app,{backend:new GoogleAIBackend()});
+  const model=getGenerativeModel(ai,{model:"gemini-2.5-flash"});
+  window.chatiGenerate=async function(messages,systemPrompt){
+   const transcript=messages.map(m=>(m.role==="assistant"?"CHATI":"NUTZER")+": "+String(m.content||"")).join("\n\n");
+   const result=await model.generateContent(systemPrompt+"\n\nBisheriger Chat:\n"+transcript+"\n\nAntworte auf die letzte Nachricht des Nutzers.");
+   return result.response.text();
+  };
+  window.dispatchEvent(new Event("chati-ai-ready"));
+  console.info("[CHATI] Firebase AI Logic initialisiert · gemini-2.5-flash");
+ } catch(e) {
+  window.chatiAIError=e;
+  window.dispatchEvent(new CustomEvent("chati-ai-error",{detail:e}));
+  console.error("CHATI Firebase AI Logic:",e);
+ }
+})();
 </script>
 </body>
 </html>
