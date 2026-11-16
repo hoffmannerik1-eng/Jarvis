@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#05050a">
 <title>CHATI — Dein KI-Assistent</title>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 :root{color-scheme:dark;--bg:#05050a;--panel:#0c0d16;--panel2:#111321;--line:rgba(255,255,255,.09);--text:#f5f6ff;--muted:#85899f;--violet:#9c78ff;--blue:#55c7ff;--glow:156,120,255}
@@ -62,23 +62,24 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}
 #file{display:none}
 @media(max-width:650px){.top{padding:0 16px;height:62px}.brand{font-size:17px}.centerstage{inset:62px 0 145px}.orbwrap{width:min(300px,72vw)}.welcome h1{font-size:26px}.welcome p{font-size:12px}.composer{width:calc(100% - 22px);bottom:max(12px,env(safe-area-inset-bottom))}.composerbox{border-radius:19px;padding:8px 9px 8px 13px;gap:5px}.toolbtn{width:32px}.send{width:39px;height:39px}.composerfoot{padding-top:8px}.topright .pill{display:none}.modal{padding:17px}.bubble{font-size:14px}.orbstatus{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+.top{justify-content:flex-start}.topright{display:none}
+#orb{display:block;width:100%;height:100%;overflow:visible}
+.orbwrap{width:min(440px,66vw);filter:drop-shadow(0 0 35px #9874ff66) drop-shadow(0 0 95px #6644c944)}
+.orbwrap:before{inset:-4%;background:radial-gradient(circle,rgba(122,82,255,.22),rgba(30,20,72,.04) 60%,transparent 75%);filter:blur(30px)}
+.composerfoot{justify-content:center}.composerfoot span:last-child{display:none}
+@media(max-width:650px){.orbwrap{width:min(350px,78vw)}}
 </style>
 </head>
 <body>
 <canvas id="stars"></canvas><div class="aurora"></div>
-<header class="top"><div class="brand">CH<span>A</span>TI</div><div class="topright"><span class="pill" id="userlabel">Nicht angemeldet</span><button class="iconbtn" id="historyBtn" title="Verlauf" aria-label="Verlauf">◷</button><button class="iconbtn" id="settingsBtn" title="Einstellungen" aria-label="Einstellungen">⚙</button><button class="iconbtn" id="accountBtn" title="Konto" aria-label="Konto">●</button></div></header>
+<header class="top"><div class="brand">CH<span>A</span>TI</div><span id="userlabel" hidden></span></header>
 <section id="loginScreen"><div class="loginbox"><div class="loginorb"></div><h1>Willkommen bei CHATI</h1><p>Dein persönlicher KI-Assistent.<br>Einmal mit Google anmelden und CHATI öffnen.</p><button class="google" id="googleLogin"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.9 6-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4.1 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6v-5.3H5.9a20 20 0 0 0 0 18.2z"/><path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.3c1.6-4.7 6-8.1 11.2-8.1z"/></svg>Mit Google anmelden</button><p class="help" style="margin-top:17px;margin-bottom:0">Dein Google-Konto wird nur für die Anmeldung bei CHATI verwendet.</p></div></section>
 <main id="app">
-<div class="centerstage"><div class="orbwrap"><svg id="orb" viewBox="0 0 400 400" aria-label="Animierter KI-Globus"><defs><radialGradient id="core" cx="35%" cy="28%"><stop offset="0" stop-color="#f1eaff"/><stop offset=".18" stop-color="#c4aaff"/><stop offset=".48" stop-color="#8156ed"/><stop offset=".78" stop-color="#30205f"/><stop offset="1" stop-color="#100e22"/></radialGradient><radialGradient id="halo"><stop offset="0" stop-color="#9c78ff" stop-opacity=".28"/><stop offset="1" stop-color="#9c78ff" stop-opacity="0"/></radialGradient><filter id="blur"><feGaussianBlur stdDeviation="8"/></filter></defs><circle cx="200" cy="200" r="190" fill="url(#halo)"/><circle cx="200" cy="200" r="124" fill="url(#core)" opacity=".92"/><g id="orbLines" fill="none" stroke="#d9caff" stroke-opacity=".46" stroke-width="1.2"><ellipse cx="200" cy="200" rx="123" ry="45"/><ellipse cx="200" cy="200" rx="123" ry="78"/><ellipse cx="200" cy="200" rx="123" ry="108"/><ellipse cx="200" cy="200" rx="45" ry="123"/><ellipse cx="200" cy="200" rx="78" ry="123"/><ellipse cx="200" cy="200" rx="108" ry="123"/></g><g fill="none" stroke="#bca6ff" stroke-opacity=".72"><circle cx="200" cy="200" r="137" stroke-dasharray="2 8"/><circle cx="200" cy="200" r="151" stroke-dasharray="1 13"/></g><circle cx="155" cy="148" r="26" fill="#fff" opacity=".12" filter="url(#blur)"/></svg></div><div class="orbstatus" id="orbStatus">CHATI IST BEREIT</div><div class="welcome"><h1>Was kann ich für dich tun?</h1><p>Schreib einfach los. Ich bin bereit.</p></div></div>
+<div class="centerstage"><div class="orbwrap"><canvas id="orb" aria-label="Animierter KI-Partikelkreis"></canvas></div><div class="orbstatus" id="orbStatus">CHATI IST BEREIT</div><div class="welcome"><h1>Was kann ich für dich tun?</h1><p>Schreib einfach los. Ich bin bereit.</p></div></div>
 <section id="messages"></section><div id="typing">CHATI denkt nach …</div>
-<div class="composer"><div class="composerbox"><button class="toolbtn" id="attach" title="Datei anhängen">＋</button><input id="file" type="file" accept="image/*,.txt,.pdf,.md,.csv"><textarea id="prompt" rows="1" placeholder="Frag CHATI alles …"></textarea><button class="toolbtn" id="mic" title="Spracheingabe">♩</button><button class="send" id="send" title="Senden">↑</button></div><div class="composerfoot"><select class="modelselect" id="model"><option value="gemini">Gemini · 2.5 Flash</option><option value="gpt">GPT · 4.1 mini</option><option value="grok">Grok · 3 mini</option></select><span>CHATI kann Fehler machen.</span></div></div>
+<div class="composer"><div class="composerbox"><button class="toolbtn" id="attach" title="Datei anhängen">＋</button><input id="file" type="file" accept="image/*,.txt,.pdf,.md,.csv"><textarea id="prompt" rows="1" placeholder="Frag CHATI alles …"></textarea><button class="toolbtn" id="mic" title="Spracheingabe">♩</button><button class="send" id="send" title="Senden">↑</button></div><div class="composerfoot"><span>✦ CHATI AI</span><span>CHATI kann Fehler machen.</span></div></div>
 </main>
-<div id="admin"><div class="modal"><div class="modalhead"><h2>CHATI · Admin-Zentrale</h2><button class="close" data-close="admin">Schließen</button></div><p class="help">Modelle und lokale Einstellungen verwalten. API-Schlüssel bleiben in diesem Browser und werden nicht in Firestore gespeichert.</p>
-<div class="provider"><div class="providerhead"><b>Google Gemini</b><span class="status" id="geminiStatus">Nicht eingerichtet</span></div><div class="field"><label>Gemini API-Key</label><input id="geminiKey" type="password" placeholder="AIza…"></div><div class="field"><label>Modell</label><input id="geminiModel" value="gemini-2.5-flash"></div></div>
-<div class="provider"><div class="providerhead"><b>OpenAI GPT</b><span class="status" id="gptStatus">Nicht eingerichtet</span></div><div class="field"><label>OpenAI API-Key</label><input id="gptKey" type="password" placeholder="sk-…"></div><div class="field"><label>Modell</label><input id="gptModel" value="gpt-4.1-mini"></div></div>
-<div class="provider"><div class="providerhead"><b>xAI Grok</b><span class="status" id="grokStatus">Nicht eingerichtet</span></div><div class="field"><label>xAI API-Key</label><input id="grokKey" type="password" placeholder="xai-…"></div><div class="field"><label>Modell</label><input id="grokModel" value="grok-3-mini"></div></div>
-<div class="field"><label>System-Prompt</label><textarea id="systemPrompt" rows="3" style="background:#080912;border:1px solid #ffffff18;color:white;border-radius:11px;padding:10px;resize:vertical">Du bist CHATI, ein hilfreicher, freundlicher KI-Assistent. Antworte standardmäßig auf Deutsch und passe deine Erklärungen an die Frage an.</textarea></div>
-<div style="display:flex;gap:9px;flex-wrap:wrap"><button class="primary" id="saveAdmin">Einstellungen speichern</button><button class="secondary" id="testModel">Verbindung testen</button><button class="danger" id="lockAdmin">Admin schließen</button></div><p class="help" style="margin-top:15px">Sicherheitshinweis: Der Code 67bro öffnet dieses Menü nur als lokale Bedienfunktion. Für echte Admin-Rechte und gemeinsam verwaltete Schlüssel braucht CHATI zusätzlich ein abgesichertes Backend.</p></div></div>
 <div id="settings"><div class="modal"><div class="modalhead"><h2>Einstellungen</h2><button class="close" data-close="settings">Schließen</button></div><div class="field"><label>Darstellung</label><select id="theme"><option value="violet">Violett / Blau</option><option value="blue">Eisblau</option><option value="pink">Pink / Violett</option></select></div><div class="field"><label>Sprache der Antworten</label><select id="language"><option value="Deutsch">Deutsch</option><option value="English">English</option><option value="Automatisch">Automatisch</option></select></div><button class="secondary" id="clearChat">Aktuellen Chat leeren</button><button class="danger" id="logout" style="float:right">Abmelden</button></div></div>
 <div id="history"><div class="modal"><div class="modalhead"><h2>Chat-Verlauf</h2><button class="close" data-close="history">Schließen</button></div><div id="historyList"></div><button class="secondary" id="newChat">Neuer Chat</button></div></div>
 <div id="toast"></div>
@@ -86,18 +87,13 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}
 const $=id=>document.getElementById(id);
 const firebaseConfig={apiKey:"AIzaSyAc-zE5Or_VInwTL30dCa1P1MbfeOFeK6k",authDomain:"jarvis-79d65.firebaseapp.com",projectId:"jarvis-79d65",storageBucket:"jarvis-79d65.firebasestorage.app",messagingSenderId:"310550760592",appId:"1:310550760592:web:43be322f363cab47501c15"};
 let auth=null,db=null,user=null,currentMessages=[],currentChatId=null,attachedFile=null,busy=false;
-const defaults={geminiModel:"gemini-2.5-flash",gptModel:"gpt-4.1-mini",grokModel:"grok-3-mini",systemPrompt:"Du bist CHATI, ein hilfreicher, freundlicher KI-Assistent. Antworte standardmäßig auf Deutsch und passe deine Erklärungen an die Frage an."};
+const defaults={systemPrompt:"Du bist CHATI, ein hilfreicher, freundlicher KI-Assistent. Antworte auf Deutsch."};
 function toast(s){const t=$("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
 function setOrb(s){$("orbStatus").textContent=s}
 function show(id){$(id).style.display="grid"}
 function hide(id){$(id).style.display="none"}
 function openChatMode(){ $("app").classList.add("chatmode"); $("messages").classList.add("hasmessages");}
 function closeChatMode(){ $("app").classList.remove("chatmode"); $("messages").classList.remove("hasmessages");}
-function config(){try{return {...defaults,...JSON.parse(localStorage.getItem("chati_config")||"{}")}}catch{return {...defaults}}}
-function saveConfig(c){localStorage.setItem("chati_config",JSON.stringify(c))}
-function setStatus(id,key){$(id).textContent=key?"Verbunden":"Nicht eingerichtet";$(id).className="status"+(key?" ok":"")}
-function refreshAdmin(){const c=config();for(const p of ["gemini","gpt","grok"]){$(p+"Key").value=localStorage.getItem("chati_"+p+"_key")||"";setStatus(p+"Status",!!localStorage.getItem("chati_"+p+"_key"))}for(const k of Object.keys(defaults))if($(k))$(k).value=c[k]||defaults[k]}
-function saveAdmin(){for(const p of ["gemini","gpt","grok"]){const v=$(p+"Key").value.trim();if(v)localStorage.setItem("chati_"+p+"_key",v);else localStorage.removeItem("chati_"+p+"_key");setStatus(p+"Status",!!v)}const c=config();for(const k of Object.keys(defaults))if($(k))c[k]=$(k).value.trim()||defaults[k];saveConfig(c);toast("Einstellungen gespeichert.");}
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function renderMessages(){const box=$("messages");box.innerHTML="";for(const m of currentMessages){const row=document.createElement("div");row.className="msg "+(m.role==="user"?"user":"assistant");const av=document.createElement("div");av.className="avatar";av.textContent=m.role==="user"?"DU":"C";const wrap=document.createElement("div");const bubble=document.createElement("div");bubble.className="bubble";bubble.textContent=m.content;wrap.appendChild(bubble);if(m.role==="assistant"){const actions=document.createElement("div");actions.className="msgactions";const copy=document.createElement("button");copy.textContent="Kopieren";copy.onclick=()=>navigator.clipboard?.writeText(m.content).then(()=>toast("Kopiert"));actions.appendChild(copy);wrap.appendChild(actions)}row.append(av,wrap);box.appendChild(row)}box.scrollTop=box.scrollHeight}
 async function saveChat(){if(!user||!db||!currentChatId)return;try{await db.collection("jarvis_users").doc(user.uid).collection("chats").doc(currentChatId).set({title:(currentMessages.find(x=>x.role==="user")?.content||"Neuer Chat").slice(0,65),messages:currentMessages.slice(-80).map(m=>({role:m.role,content:m.content})),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}catch(e){console.warn("Chat-Speicherung:",e)}}
@@ -108,19 +104,108 @@ function initFirebase(){try{if(!firebase.apps.length)firebase.initializeApp(fire
 function fileToText(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;if(file.type.startsWith("text/")||/\.(txt|md|csv)$/i.test(file.name))r.readAsText(file);else if(file.type.startsWith("image/"))r.readAsDataURL(file);else reject(new Error("Bitte ein Bild oder eine Textdatei verwenden."))})}
 async function callGemini(messages,apiKey,model,sys){const contents=[];for(const m of messages){const parts=[{text:m.content}];if(m.image)parts.push({inline_data:{mime_type:m.image.type,data:m.image.data}});contents.push({role:m.role==="assistant"?"model":"user",parts})}const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(apiKey),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents,generationConfig:{temperature:.7,maxOutputTokens:4096}})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||"Gemini HTTP "+r.status);return (j.candidates?.[0]?.content?.parts||[]).map(x=>x.text||"").join("\n").trim()}
 async function callOpenAI(messages,apiKey,model,sys,provider){const endpoint=provider==="grok"?"https://api.x.ai/v1/chat/completions":"https://api.openai.com/v1/chat/completions";const body={model,messages:[{role:"system",content:sys},...messages.map(m=>({role:m.role,content:m.content}))],temperature:.7};const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||provider.toUpperCase()+" HTTP "+r.status);return j.choices?.[0]?.message?.content||""}
-async function askAI(){if(busy)return;const text=$("prompt").value.trim();if(!text&&!attachedFile)return;if(!user){toast("Bitte zuerst mit Google anmelden.");return}const provider=$("model").value,key=localStorage.getItem("chati_"+provider+"_key");if(!key){toast("Für dieses Modell fehlt der API-Key. Öffne Einstellungen mit dem Admin-Code 67bro.");return}busy=true;$("send").disabled=true;let content=text;if(attachedFile){try{const data=await fileToText(attachedFile);if(attachedFile.type.startsWith("image/")){if(provider!=="gemini")throw new Error("Bildanalyse ist aktuell über Gemini verfügbar.");content=(text||"Bitte beschreibe dieses Bild.")+"\n[Bild angehängt]";currentMessages.push({role:"user",content,image:{type:attachedFile.type,data:data.split(",")[1]}})}else content+="\n\nDatei "+attachedFile.name+":\n"+data}catch(e){toast(e.message);busy=false;$("send").disabled=false;return}}if(!currentMessages.some(m=>m.role==="user"&&m.content===content))currentMessages.push({role:"user",content});$("prompt").value="";$("prompt").style.height="auto";attachedFile=null;$("file").value="";renderMessages();openChatMode();$("typing").style.display="block";setOrb("CHATI DENKT NACH");try{const c=config(),history=currentMessages.slice(-24);let answer;if(provider==="gemini")answer=await callGemini(history,key,c.geminiModel,c.systemPrompt);else answer=await callOpenAI(history,key,provider==="gpt"?c.gptModel:c.grokModel,c.systemPrompt,provider);if(!answer)throw new Error("Das Modell hat keine Antwort geliefert.");currentMessages.push({role:"assistant",content:answer});renderMessages();await saveChat();setOrb("CHATI IST BEREIT")}catch(e){toast("KI-Fehler: "+e.message);currentMessages.push({role:"assistant",content:"Die Anfrage ist fehlgeschlagen: "+e.message});renderMessages();setOrb("VERBINDUNG PRÜFEN")}finally{$("typing").style.display="none";busy=false;$("send").disabled=false;$("prompt").focus()}}
+async function askAI(){
+ if(busy)return;
+ const text=$("prompt").value.trim();
+ if(!text&&!attachedFile)return;
+ if(!user){toast("Bitte zuerst mit Google anmelden.");return}
+ if(!window.chatiGenerate){toast("CHATI AI wird gerade gestartet. Bitte kurz warten.");return}
+ busy=true;$("send").disabled=true;
+ let content=text;
+ if(attachedFile){
+  try{const data=await fileToText(attachedFile);if(attachedFile.type.startsWith("image/"))throw new Error("Die Bildanalyse wird später ergänzt.");content+="\\n\\nDatei "+attachedFile.name+":\\n"+data}
+  catch(e){toast(e.message);busy=false;$("send").disabled=false;return}
+ }
+ currentMessages.push({role:"user",content});
+ $("prompt").value="";$("prompt").style.height="auto";attachedFile=null;$("file").value="";
+ renderMessages();openChatMode();$("typing").style.display="block";setOrb("CHATI DENKT NACH");
+ try{
+  const answer=await window.chatiGenerate(currentMessages.slice(-24), "Du bist CHATI, ein hilfreicher, freundlicher KI-Assistent. Antworte standardmäßig auf Deutsch. Erkläre verständlich und direkt.");
+  if(!answer)throw new Error("Das Modell hat keine Antwort geliefert.");
+  currentMessages.push({role:"assistant",content:answer});
+  renderMessages();await saveChat();setOrb("CHATI IST BEREIT");
+ }catch(e){
+  toast("KI gerade nicht erreichbar: "+(e.message||"Bitte später erneut versuchen."));
+  currentMessages.push({role:"assistant",content:"CHATI konnte gerade keine Verbindung zur KI herstellen. Bitte versuche es gleich noch einmal."});
+  renderMessages();setOrb("VERBINDUNG PRÜFEN");
+ }finally{$("typing").style.display="none";busy=false;$("send").disabled=false;$("prompt").focus()}
+}
 $("googleLogin").onclick=googleLogin;$("send").onclick=askAI;$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askAI()}});
 $("prompt").addEventListener("input",()=>{const p=$("prompt");p.style.height="auto";p.style.height=Math.min(p.scrollHeight,160)+"px"});
 $("attach").onclick=()=>$("file").click();$("file").onchange=()=>{attachedFile=$("file").files[0]||null;if(attachedFile){$("prompt").placeholder="Angehängt: "+attachedFile.name+" · Nachricht schreiben …";toast("Datei angehängt.")}};
 $("mic").onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast("Spracheingabe wird in diesem Browser nicht unterstützt.");return}const r=new SR();r.lang="de-DE";r.interimResults=false;r.onresult=e=>{$("prompt").value+=($("prompt").value?" ":"")+e.results[0][0].transcript;$("prompt").dispatchEvent(new Event("input"))};r.onerror=()=>toast("Mikrofon konnte nicht gestartet werden.");r.start()};
-$("settingsBtn").onclick=()=>show("settings");$("historyBtn").onclick=async()=>{await loadHistory();show("history")};$("accountBtn").onclick=()=>{if(!user)return;toast(user.email||"Google-Konto angemeldet")};
-$("newChat").onclick=()=>{newChat();hide("history")};$("clearChat").onclick=()=>{newChat();hide("settings")};$("logout").onclick=()=>auth.signOut();document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>hide(b.dataset.close));
+
+
 $("theme").onchange=e=>{const v=e.target.value;const color=v==="blue"?"75,190,255":v==="pink"?"255,105,205":"156,120,255";document.documentElement.style.setProperty("--glow",color);document.documentElement.style.setProperty("--violet",v==="blue"?"#69c9ff":v==="pink"?"#ff78d2":"#9c78ff")};
-$("saveAdmin").onclick=saveAdmin;$("testModel").onclick=async()=>{saveAdmin();const p=$("model").value;const key=localStorage.getItem("chati_"+p+"_key");if(!key){toast("API-Key fehlt.");return}try{let answer=p==="gemini"?await callGemini([{role:"user",content:"Antworte nur mit: Verbindung erfolgreich."}],key,config().geminiModel,config().systemPrompt):await callOpenAI([{role:"user",content:"Antworte nur mit: Verbindung erfolgreich."}],key,p==="gpt"?config().gptModel:config().grokModel,config().systemPrompt,p);toast(answer||"Verbindung erfolgreich.")}catch(e){toast("Test fehlgeschlagen: "+e.message)}};
-$("lockAdmin").onclick=()=>hide("admin");$("model").onchange=()=>localStorage.setItem("chati_last_model",$("model").value);$("model").value=localStorage.getItem("chati_last_model")||"gemini";
-let adminBuffer="";document.addEventListener("keydown",e=>{if(e.target.matches("input,textarea,select")&&e.target.id!=="prompt")return;if(e.key.length===1){adminBuffer=(adminBuffer+e.key.toLowerCase()).slice(-5);if(adminBuffer==="67bro"){refreshAdmin();show("admin");toast("Admin-Menü geöffnet.");adminBuffer=""}}});
+
+
+function animateOrbParticles(){
+ const canvas=$("orb"),ctx=canvas.getContext("2d");let w=0,h=0,dpr=1,pts=[];
+ const count=2400;
+ function resize(){
+  const rect=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);
+  w=Math.max(1,rect.width);h=Math.max(1,rect.height);
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  pts=Array.from({length:count},(_,i)=>{
+   const u=Math.random()*2-1,a=Math.random()*Math.PI*2;
+   const rr=Math.sqrt(1-u*u);
+   return {x:rr*Math.cos(a),y:u,z:rr*Math.sin(a),phase:Math.random()*Math.PI*2,size:.35+Math.random()*1.25,band:Math.random()};
+  });
+ }
+ function draw(t){
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,R=Math.min(w,h)*.365,rot=t*.00016;
+  const c=Math.cos(rot),sn=Math.sin(rot);
+  const projected=[];
+  for(const p of pts){
+   const x=p.x*c-p.z*sn,z=p.x*sn+p.z*c;
+   const wave=Math.sin(t*.0014+p.phase)*2.2;
+   const px=cx+x*(R+wave),py=cy+p.y*(R+wave);
+   const depth=(z+1)/2;
+   projected.push({px,py,z,depth,size:p.size,band:p.band});
+  }
+  projected.sort((a,b)=>a.z-b.z);
+  for(const p of projected){
+   const alpha=.16+p.depth*.72;
+   const radius=p.size*(.55+p.depth*.8);
+   ctx.beginPath();ctx.fillStyle=p.band>.91?'rgba(111,211,255,'+alpha+')':'rgba(190,160,255,'+alpha+')';
+   ctx.shadowBlur=p.depth>0.65?8:2;ctx.shadowColor=p.band>.91?'#6bd8ff':'#a98aff';
+   ctx.arc(p.px,p.py,radius,0,Math.PI*2);ctx.fill();
+  }
+  ctx.shadowBlur=0;
+  const glow=ctx.createRadialGradient(cx-R*.18,cy-R*.22,2,cx,cy,R*1.1);
+  glow.addColorStop(0,'rgba(190,165,255,.16)');glow.addColorStop(.5,'rgba(95,62,180,.055)');glow.addColorStop(1,'rgba(5,5,12,0)');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,R*1.13,0,Math.PI*2);ctx.fill();
+  requestAnimationFrame(draw);
+ }
+ new ResizeObserver(resize).observe(canvas);resize();requestAnimationFrame(draw);
+}
+animateOrbParticles();
+
 function animateStars(){const c=$("stars"),ctx=c.getContext("2d");let w,h,d,stars=[];function resize(){d=Math.min(devicePixelRatio||1,2);w=c.width=innerWidth*d;h=c.height=innerHeight*d;c.style.width=innerWidth+"px";c.style.height=innerHeight+"px";stars=Array.from({length:Math.min(170,Math.floor(innerWidth*innerHeight/8500))},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.25+.2,a:Math.random()*.5+.15,s:Math.random()*.12+.025}))}function draw(){ctx.clearRect(0,0,w,h);for(const p of stars){p.a+=Math.sin(Date.now()*.0006+p.x)*.0009;p.y-=p.s;if(p.y<0)p.y=h;ctx.fillStyle="rgba(205,194,255,"+Math.max(.08,Math.min(.65,p.a))+")";ctx.beginPath();ctx.arc(p.x,p.y,p.r*d,0,Math.PI*2);ctx.fill()}requestAnimationFrame(draw)}addEventListener("resize",resize);resize();draw()}animateStars();
 initFirebase();
+</script>
+
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-ai.js";
+try {
+ const app=getApp();
+ const ai=getAI(app,{backend:new GoogleAIBackend()});
+ const model=getGenerativeModel(ai,{model:"gemini-2.5-flash"});
+ window.chatiGenerate=async function(messages,systemPrompt){
+  const history=messages.slice(0,-1).filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:String(m.content||"") }]}));
+  const last=messages[messages.length-1];
+  const chat=model.startChat({history,systemInstruction:systemPrompt});
+  const result=await chat.sendMessage(String(last?.content||""));
+  return result.response.text();
+ };
+ window.dispatchEvent(new Event("chati-ai-ready"));
+} catch(e) {
+ console.error("CHATI Firebase AI Logic:",e);
+ window.chatiAIError=e;
+}
 </script>
 </body>
 </html>
