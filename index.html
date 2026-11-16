@@ -134,7 +134,7 @@ async function saveChat(){if(!user||!db||!currentChatId)return;try{await db.coll
 async function loadHistory(){if(!user||!db)return;try{const snap=await db.collection("jarvis_users").doc(user.uid).collection("chats").orderBy("updatedAt","desc").limit(30).get();const list=$("historyList");list.innerHTML="";snap.forEach(doc=>{const d=doc.data(),row=document.createElement("div");row.className="historyitem";const name=document.createElement("span");name.textContent=d.title||"Chat";const btn=document.createElement("button");btn.textContent="Öffnen";btn.onclick=()=>{currentChatId=doc.id;currentMessages=Array.isArray(d.messages)?d.messages:[];renderMessages();openChatMode();hide("history")};row.append(name,btn);list.append(row)})}catch(e){toast("Verlauf konnte nicht geladen werden.")}}
 function newChat(){currentChatId=crypto.randomUUID();currentMessages=[];$("messages").innerHTML="";closeChatMode();$("prompt").focus()}
 async function googleLogin(){try{const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});await auth.signInWithPopup(provider)}catch(e){if(e.code==="auth/popup-blocked"||e.code==="auth/popup-closed-by-user"){try{await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())}catch(x){toast(x.message)}}else showError("Google-Anmeldung fehlgeschlagen",e,"Firebase Auth · signInWithPopup")}}
-function initFirebase(){try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();auth.onAuthStateChanged(u=>{user=u;if(u){$("loginScreen").style.display="none";$("app").style.display="block";$("userlabel").textContent=u.displayName||u.email||"Angemeldet";currentChatId=crypto.randomUUID();loadHistory()}else{$("loginScreen").style.display="grid";$("app").style.display="none"}})}catch(e){showError("Firebase konnte nicht gestartet werden",e,"Beim Initialisieren von Firebase Auth/Firestore")}}
+function initFirebase(){try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();window.chatiFirebaseApp=firebase.app()._delegate||firebase.app();window.dispatchEvent(new Event("chati-firebase-ready"));auth.onAuthStateChanged(u=>{user=u;if(u){$("loginScreen").style.display="none";$("app").style.display="block";$("userlabel").textContent=u.displayName||u.email||"Angemeldet";currentChatId=crypto.randomUUID();loadHistory()}else{$("loginScreen").style.display="grid";$("app").style.display="none"}})}catch(e){showError("Firebase konnte nicht gestartet werden",e,"Beim Initialisieren von Firebase Auth/Firestore");window.dispatchEvent(new CustomEvent("chati-firebase-init-error",{detail:e}))}}
 function fileToText(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;if(file.type.startsWith("text/")||/\.(txt|md|csv)$/i.test(file.name))r.readAsText(file);else if(file.type.startsWith("image/"))r.readAsDataURL(file);else reject(new Error("Bitte ein Bild oder eine Textdatei verwenden."))})}
 async function askAI(){
  if(busy)return;
@@ -222,11 +222,15 @@ initFirebase();
 <script type="module">
 (async()=>{
  try {
-  const [{getApp},{getAI,getGenerativeModel,GoogleAIBackend}]=await Promise.all([
-   import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
+  const [{getAI,getGenerativeModel,GoogleAIBackend}]=await Promise.all([
    import("https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js")
   ]);
-  const app=getApp();
+  const app=await new Promise((resolve,reject)=>{
+   if(window.chatiFirebaseApp){resolve(window.chatiFirebaseApp);return;}
+   const timeout=setTimeout(()=>reject(new Error("Firebase Auth/Firestore hat die App nicht rechtzeitig initialisiert.")),10000);
+   window.addEventListener("chati-firebase-ready",()=>{clearTimeout(timeout);resolve(window.chatiFirebaseApp);},{once:true});
+   window.addEventListener("chati-firebase-init-error",e=>{clearTimeout(timeout);reject(e.detail||new Error("Firebase-Initialisierung fehlgeschlagen."));},{once:true});
+  });
   const ai=getAI(app,{backend:new GoogleAIBackend()});
   const model=getGenerativeModel(ai,{model:"gemini-2.5-flash"});
   window.chatiGenerate=async function(messages,systemPrompt){
