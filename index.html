@@ -157,9 +157,9 @@ async function askAI(){
   currentMessages.push({role:"assistant",content:answer});
   renderMessages();await saveChat();setOrb("CHATI IST BEREIT");
  }catch(e){
-  toast("KI gerade nicht erreichbar: "+(e.message||"Bitte später erneut versuchen."));
-  currentMessages.push({role:"assistant",content:"CHATI konnte gerade keine Verbindung zur KI herstellen. Bitte versuche es gleich noch einmal."});
-  renderMessages();setOrb("VERBINDUNG PRÜFEN");
+  showError("KI-Anfrage fehlgeschlagen",e,"Beim Aufruf von Gemini 2.5 Flash · Prüfe Netzwerk, Firebase AI Logic und Projektkonfiguration.");
+  currentMessages.push({role:"assistant",content:"CHATI konnte keine Antwort erzeugen.\\n\\nGenaue Fehlermeldung:\\n"+errorText(e)});
+  renderMessages();await saveChat();setOrb("VERBINDUNG PRÜFEN");
  }finally{$("typing").style.display="none";busy=false;$("send").disabled=false;$("prompt").focus()}
 }
 $("googleLogin").onclick=googleLogin;$("send").onclick=askAI;$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askAI()}});
