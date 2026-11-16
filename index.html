@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#05050a">
 <title>CHATI — Dein KI-Assistent</title>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 :root{color-scheme:dark;--bg:#05050a;--panel:#0c0d16;--panel2:#111321;--line:rgba(255,255,255,.09);--text:#f5f6ff;--muted:#85899f;--violet:#9c78ff;--blue:#55c7ff;--glow:156,120,255}
@@ -188,17 +188,15 @@ initFirebase();
 </script>
 
 <script type="module">
-import { getApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-ai.js";
+import { getApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
 try {
  const app=getApp();
  const ai=getAI(app,{backend:new GoogleAIBackend()});
  const model=getGenerativeModel(ai,{model:"gemini-2.5-flash"});
  window.chatiGenerate=async function(messages,systemPrompt){
-  const history=messages.slice(0,-1).filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:String(m.content||"") }]}));
-  const last=messages[messages.length-1];
-  const chat=model.startChat({history,systemInstruction:systemPrompt});
-  const result=await chat.sendMessage(String(last?.content||""));
+  const transcript=messages.map(m=>(m.role==="assistant"?"CHATI":"NUTZER")+": "+String(m.content||"")).join("\\n\\n");
+  const result=await model.generateContent(systemPrompt+"\\n\\nBisheriger Chat:\\n"+transcript+"\\n\\nAntworte auf die letzte Nachricht des Nutzers.");
   return result.response.text();
  };
  window.dispatchEvent(new Event("chati-ai-ready"));
