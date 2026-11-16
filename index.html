@@ -94,6 +94,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}
 <script>
 const $=id=>document.getElementById(id);
 const firebaseConfig={apiKey:"AIzaSyAc-zE5Or_VInwTL30dCa1P1MbfeOFeK6k",authDomain:"jarvis-79d65.firebaseapp.com",projectId:"jarvis-79d65",storageBucket:"jarvis-79d65.firebasestorage.app",messagingSenderId:"310550760592",appId:"1:310550760592:web:43be322f363cab47501c15"};
+window.chatiFirebaseConfig=firebaseConfig;
 let auth=null,db=null,user=null,currentMessages=[],currentChatId=null,attachedFile=null,busy=false;
 const defaults={systemPrompt:"Du bist CHATI, ein hilfreicher, freundlicher KI-Assistent. Antworte auf Deutsch."};
 function toast(s){const t=$("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
@@ -222,15 +223,14 @@ initFirebase();
 <script type="module">
 (async()=>{
  try {
-  const [{getAI,getGenerativeModel,GoogleAIBackend}]=await Promise.all([
+  const [{initializeApp,getApps},{getAI,getGenerativeModel,GoogleAIBackend}]=await Promise.all([
+   import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
    import("https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js")
   ]);
-  const app=await new Promise((resolve,reject)=>{
-   if(window.chatiFirebaseApp){resolve(window.chatiFirebaseApp);return;}
-   const timeout=setTimeout(()=>reject(new Error("Firebase Auth/Firestore hat die App nicht rechtzeitig initialisiert.")),10000);
-   window.addEventListener("chati-firebase-ready",()=>{clearTimeout(timeout);resolve(window.chatiFirebaseApp);},{once:true});
-   window.addEventListener("chati-firebase-init-error",e=>{clearTimeout(timeout);reject(e.detail||new Error("Firebase-Initialisierung fehlgeschlagen."));},{once:true});
-  });
+  // Firebase AI Logic benötigt eine App aus derselben modularen SDK-Instanz.
+  // Auth und Firestore bleiben auf der vorhandenen Compat-App.
+  const appName="chati-ai";
+  const app=getApps().find(a=>a.name===appName)||initializeApp(window.chatiFirebaseConfig,appName);
   const ai=getAI(app,{backend:new GoogleAIBackend()});
   const model=getGenerativeModel(ai,{model:"gemini-2.5-flash"});
   window.chatiGenerate=async function(messages,systemPrompt){
