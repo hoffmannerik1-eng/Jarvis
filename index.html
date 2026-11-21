@@ -51,7 +51,55 @@ body{min-height:100dvh;overflow:hidden}.ambient{position:fixed;inset:0;pointer-e
 </main>
 <div class="panel" id="panel"><div class="dialog"><div class="dialog-head"><h2 id="panelTitle">Einstellungen</h2><button class="close" id="closePanel">Schließen ✕</button></div><div id="panelBody"></div></div></div>
 <div id="toast"></div>
-<script type="module" id="firebaseAuthModule">\nimport { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";\nimport { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";\nconst cfgKey="xtree_firebase_config";\nlet auth=null;\nfunction getConfig(){try{return JSON.parse(localStorage.getItem(cfgKey)||"null")}catch{return null}}\nfunction configure(){const cfg=getConfig();if(!cfg||!cfg.apiKey||!cfg.projectId||!cfg.authDomain){alert("Firebase-Konfiguration fehlt. Du brauchst apiKey, authDomain und projectId aus der Firebase-Projektkonfiguration.");return false}try{auth=getAuth(initializeApp(cfg));return true}catch(e){alert("Firebase konnte nicht eingerichtet werden: "+e.message);return false}}\nasync function login(){if(!getConfig()){const raw=prompt("Füge deine Firebase Web-Konfiguration als JSON ein (Firebase Console → Projekteinstellungen → Web-App).");if(!raw)return;try{const cfg=JSON.parse(raw);localStorage.setItem(cfgKey,JSON.stringify(cfg))}catch(e){alert("Das JSON ist ungültig.");return}}if(!configure())return;try{const result=await signInWithPopup(auth,new GoogleAuthProvider());document.getElementById("googleLoginBtn").textContent="Angemeldet: "+(result.user.displayName||result.user.email);alert("Google-Anmeldung erfolgreich. Diese Anmeldung ist Xtrees Identität; sie gewährt noch keinen automatischen API-Zugriff auf externe KI-Anbieter.")}catch(e){alert("Anmeldung fehlgeschlagen: "+e.message)}}\ndocument.getElementById("googleLoginBtn").addEventListener("click",login);\n</script>\n<script>\n(function(){
+<script type="module" id="firebaseAuthModule">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDZ3Ix0yaK6MdNfcY1oXN7aJS4kbMUumc",
+  authDomain: "xtree-c5ce2.firebaseapp.com",
+  projectId: "xtree-c5ce2",
+  storageBucket: "xtree-c5ce2.firebasestorage.app",
+  messagingSenderId: "25145125484",
+  appId: "1:25145125484:web:830081d8e000baf0504649"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const loginButton = document.getElementById("googleLoginBtn");
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginButton.textContent = "Angemeldet: " + (user.displayName || user.email);
+    loginButton.title = "Zum Abmelden klicken";
+  } else {
+    loginButton.textContent = "Google anmelden";
+    loginButton.title = "Mit Google anmelden";
+  }
+});
+
+loginButton.addEventListener("click", async () => {
+  if (auth.currentUser) {
+    // Abmelden wird über eine kurze Bestätigung abgesichert.
+    if (!confirm("Möchtest du dich von Xtree abmelden?")) return;
+    try {
+      const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      await signOut(auth);
+    } catch (error) {
+      alert("Abmelden fehlgeschlagen: " + error.message);
+    }
+    return;
+  }
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    const result = await signInWithPopup(auth, provider);
+    alert("Google-Anmeldung erfolgreich. Willkommen bei Xtree, " + (result.user.displayName || result.user.email) + "!");
+  } catch (error) {
+    alert("Google-Anmeldung fehlgeschlagen: " + error.message + "\n\nPrüfe in Firebase, ob Google als Anmeldemethode aktiviert ist und ob die GitHub-Pages-Domain als autorisierte Domain eingetragen ist.");
+  }
+});
+</script>\n<script>\n(function(){
 "use strict";
 const $=id=>document.getElementById(id);
 const STORE="xtree_v1";
