@@ -264,14 +264,20 @@ async function geocodeXtreePlace(query){
 }
 function initXtreeMap(el,query,threeD,messageAt,status,orbit,tilt,reset){
  if(!el||!el.isConnected)return;
- if(!window.maplibregl){status.textContent="Die Kartenbibliothek konnte nicht geladen werden. Bitte Seite neu laden.";return}
  const live=xtreeLiveMapCenters[messageAt];
  if(query==="mein aktueller Standort"&&!live){status.textContent="Standort aus Datenschutzgründen nicht gespeichert. Bitte Standort erneut abrufen.";return}
  const start=async()=>{
   try{
+   status.textContent="Karte wird vorbereitet …";
+   if(!window.maplibregl){
+    let tries=0;while(!window.maplibregl&&tries++<30)await new Promise(r=>setTimeout(r,200));
+    if(!window.maplibregl)throw new Error("Kartenbibliothek nicht erreichbar. Bitte Internetverbindung prüfen und neu laden.");
+   }
    const place=live||await geocodeXtreePlace(query);
    if(!el.isConnected)return;
    const map=new maplibregl.Map({container:el,style:"https://tiles.openfreemap.org/styles/liberty",center:[place.lng,place.lat],zoom:threeD?17:14,pitch:threeD?65:0,bearing:threeD?20:0,antialias:true,attributionControl:true});
+   requestAnimationFrame(()=>{if(el.isConnected)map.resize()});
+   setTimeout(()=>{if(el.isConnected)map.resize()},350);
    xtreeMaps[el.id]=map;
    map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"top-right");
    map.addControl({onAdd:function(m){
@@ -281,6 +287,8 @@ function initXtreeMap(el,query,threeD,messageAt,status,orbit,tilt,reset){
     wrap.appendChild(btn);return wrap;
    },onRemove:function(){}},"top-left");
    map.on("load",()=>{
+    if(!el.isConnected)return;
+    map.resize();
     try{
      map.addSource("xtree-satellite-source",{type:"raster",tiles:["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],tileSize:256,attribution:"Imagery © Esri, Maxar, Earthstar Geographics and contributors"});
      const firstSymbol=(map.getStyle().layers||[]).find(l=>l.type==="symbol");
