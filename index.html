@@ -144,7 +144,17 @@ const $=id=>document.getElementById(id);
 const STORE="xtree_v1";
 let state=load(),pendingFiles=[],busy=false,recognition=null,activeTab="providers";
 function load(){try{return JSON.parse(localStorage.getItem(STORE))||{keys:[],model:"openai/gpt-4o-mini",system:"Du bist Xtree, ein hilfreicher KI-Assistent. Antworte klar und auf Deutsch.",chats:[],current:[]}}catch(e){return {keys:[],model:"openai/gpt-4o-mini",system:"Du bist Xtree. Antworte auf Deutsch.",chats:[],current:[]}}}
-window.addEventListener("xtree-cloud-loaded",e=>{state=e.detail;localStorage.setItem(STORE,JSON.stringify(state));render();toast("Deine Daten wurden aus Firebase geladen.")});
+window.addEventListener("xtree-cloud-loaded",e=>{
+ const cloud=e.detail||{}, local=load();
+ // Preserve browser data too: combine chat histories, keep local provider keys/settings when present.
+ const merged={...cloud,...local};
+ merged.keys=(local.keys&&local.keys.length)?local.keys:(cloud.keys||[]);
+ merged.chats=[...(cloud.chats||[]),...(local.chats||[])].filter((x,i,a)=>a.findIndex(y=>JSON.stringify(y)===JSON.stringify(x))===i).slice(0,50);
+ merged.current=(local.current&&local.current.length)?local.current:(cloud.current||[]);
+ if(!local.system&&cloud.system)merged.system=cloud.system;
+ if(!local.model&&cloud.model)merged.model=cloud.model;
+ state=merged;localStorage.setItem(STORE,JSON.stringify(state));render();save();toast("Lokale und Cloud-Daten zusammengeführt.")
+});
 window.addEventListener("xtree-cloud-status",e=>{if(e.detail)toast(e.detail)});
 function save(){localStorage.setItem(STORE,JSON.stringify(state));window.dispatchEvent(new CustomEvent("xtree-state-change",{detail:state}))}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2800)}
