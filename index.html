@@ -228,7 +228,7 @@ function generatePrompt(){ $("prompt").value="Erstelle ein Bild von: ";$("prompt
 function filesToData(files){return Promise.all(Array.from(files).map(f=>new Promise(resolve=>{if(f.size>8*1024*1024){toast(f.name+" ist größer als 8 MB.");resolve(null);return}const reader=new FileReader();reader.onload=()=>resolve({name:f.name,type:f.type,data:f.type.startsWith("image/")?reader.result:null,text:f.type.startsWith("text/")?String(reader.result||"").slice(0,12000):null});reader.onerror=()=>resolve({name:f.name,type:f.type});if(f.type.startsWith("image/")||f.type.startsWith("text/")||f.type.startsWith("audio/"))reader.readAsDataURL(f);else resolve({name:f.name,type:f.type})})))}
 function mapIntent(text){
  const t=text.toLowerCase();
- const wantsMap=/(google maps|google map|maps|karte|3d|3-d|dreidimensional|earth|street ?view|virtuell|erkunde|erkunden|spazier|lauf|geh mal|zeig mir.*(ort|stadt|turm|gebäude|umgebung)|wo liegt|wo ist)/i.test(t);
+ const wantsMap=/(google maps|google map|maps|karte|3d|3-d|dreidimensional|earth|street ?view|virtuell|erkunde|erkunden|spazier|lauf|geh mal|wetter|temperatur|wie warm|regnet|wind|zeig mir.*(ort|stadt|turm|gebäude|umgebung)|wo liegt|wo ist)/i.test(t);
  if(!wantsMap)return null;
  let q=text.trim()
   .replace(/^(xtree[, ]*)?(bitte )?/i,"")
