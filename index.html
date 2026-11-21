@@ -238,10 +238,13 @@ function mapIntent(text){
  if(!wantsMap)return null;
  let q=text.trim()
   .replace(/^(xtree[, ]*)?(bitte )?/i,"")
-  .replace(/^(lauf|geh|spazier|flieg|fahr|bring mich|navigiere|erkunde|zeig mir|zeige mir|öffne|mach|schau|such|suche)( bitte)?( mal)?( mit der)?( google)?( maps?)?( 3d| 3-d| dreidimensionalen?)?( funktion)?( ans| zum| zur| in| auf| um| rund um| durch| über| nach)?/i,"")
-  .replace(/^(den|die|das|dem|der|einen|einem|ein|eine)\\s+/i,"")
-  .replace(/\\s+(in 3d|in google maps|auf google maps|mit google maps|in street ?view)$/i,"")
-  .replace(/\\s+(bitte|mal|3d|3-d|dreidimensional|funktion|ansicht)$/i,"")
+  .replace(/^(google maps?|karte von)\s*/i,"")
+  .replace(/^(lauf|geh|spazier|flieg|fahr|bring mich|navigiere|erkunde|zeig mir|zeige mir|öffne|mach|schau|such|suche|wo ist|wo liegt|finde)( bitte)?( mal)?( mit der)?( google)?( maps?)?(?:[ -]?(?:3d|3-d|dreidimensionalen?))?(?:[- ]?funktion)?/i,"")
+  .replace(/^-?funktion\s+/i,"")
+  .replace(/^(um|rund um|über|durch|in|nach|zum|zur|ans|an den|an die)\s+/i,"")
+  .replace(/^(den|die|das|dem|der|einen|einem|ein|eine)\s+/i,"")
+  .replace(/\s+(in 3d|in google maps|auf google maps|mit google maps|in street ?view)$/i,"")
+  .replace(/\s+(bitte|mal|3d|3-d|dreidimensional|funktion|ansicht)$/i,"")
   .trim();
  if(!q||/^(meinen standort|meine umgebung|hier|in meiner nähe|meine position)$/i.test(q))q="mein aktueller Standort";
  return {query:q,threeD,weather,nearby,walking:/(lauf|geh|spazier|zu fuß|zu fuss)/i.test(t)};
