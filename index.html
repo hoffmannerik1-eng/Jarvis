@@ -15,7 +15,7 @@ body{min-height:100dvh;overflow:hidden}.ambient{position:fixed;inset:0;pointer-e
 .main{position:relative;z-index:1;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px 16px max(26px,env(safe-area-inset-bottom))}
 .composer-wrap{width:min(820px,100%);margin:0 auto}.intro{text-align:center;margin:0 0 22px;transition:.25s}.intro h1{font-size:clamp(25px,5vw,38px);margin:0 0 8px;letter-spacing:-.04em;font-weight:750}.intro h1 em{font-style:normal;color:#65baff}.intro p{margin:0;color:#8398b5;font-size:13px}
 .chatbox{background:#080808;border:1px solid #258bff;border-radius:22px;padding:12px;box-shadow:0 0 0 1px #168cff22,0 18px 70px #0009,0 0 45px #087bff16;backdrop-filter:blur(18px)}
-#messages{display:none;max-height:min(48vh,520px);overflow:auto;padding:8px 8px 14px;scrollbar-width:thin;scrollbar-color:#27517b transparent}#messages.has{display:block}.message{display:flex;margin:10px 0;gap:10px;align-items:flex-start}.message.user{justify-content:flex-end}.bubble{max-width:min(82%,650px);padding:11px 14px;border-radius:15px;background:#101f33;border:1px solid #1b3654;color:#e8f2ff;font-size:14px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.codeblock{margin:10px 0;border:1px solid #25486d;border-radius:10px;overflow:hidden;background:#050b14;white-space:normal}.codehead{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0d1b2c;color:#8ebbe8;font-size:11px}.codecopy{border:1px solid #28619a;border-radius:7px;background:#102844;color:#d9efff;padding:5px 9px;font-size:11px;cursor:pointer}.codeblock pre{margin:0;padding:12px;overflow:auto;white-space:pre;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e2f1ff}.user .bubble{background:linear-gradient(140deg,#0d4c91,#123c70);border-color:#287fc9}.bubble img{max-width:100%;max-height:260px;border-radius:10px;display:block;margin-top:8px}.bubble a{color:#7dcaff}.meta{font-size:10px;color:#7d94af;margin-top:5px}
+#messages{display:none;max-height:min(48vh,520px);overflow:auto;padding:8px 8px 14px;scrollbar-width:thin;scrollbar-color:#27517b transparent}#messages.has{display:block}.message{display:flex;margin:10px 0;gap:10px;align-items:flex-start}.message.user{justify-content:flex-end}.bubble{max-width:min(82%,650px);padding:11px 14px;border-radius:15px;background:#101f33;border:1px solid #1b3654;color:#e8f2ff;font-size:14px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.codeblock{margin:10px 0;border:1px solid #25486d;border-radius:10px;overflow:hidden;background:#050b14;white-space:normal}.codehead{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0d1b2c;color:#8ebbe8;font-size:11px}.codecopy{border:1px solid #28619a;border-radius:7px;background:#102844;color:#d9efff;padding:5px 9px;font-size:11px;cursor:pointer}.codeblock pre{margin:0;padding:12px;overflow:auto;white-space:pre;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e2f1ff}.user .bubble{background:linear-gradient(140deg,#0d4c91,#123c70);border-color:#287fc9}.xtree-mapcard{margin-top:12px;width:min(720px,100%);min-width:0}.xtree-map3d{width:100%;height:390px;min-height:280px;border:1px solid #28547d;border-radius:12px;overflow:hidden;background:#081525}.xtree-maptools{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.xtree-maptools button{border:1px solid #2b6394;border-radius:8px;background:#102844;color:#cbe8ff;padding:8px 10px;font-size:12px;cursor:pointer}.xtree-mapstatus{font-size:12px;color:#9bb9d8;margin:7px 2px}.bubble img{max-width:100%;max-height:260px;border-radius:10px;display:block;margin-top:8px}.bubble a{color:#7dcaff}.meta{font-size:10px;color:#7d94af;margin-top:5px}
 .entry{display:flex;align-items:flex-end;gap:9px}.entry textarea{flex:1;min-height:48px;max-height:150px;resize:none;border:0;outline:0;background:transparent;color:#f1f7ff;padding:13px 8px;font:inherit;font-size:15px;line-height:1.45}.entry textarea::placeholder{color:#7187a3}.iconbtn,.send{width:42px;height:42px;flex:0 0 42px;border-radius:13px;border:1px solid #20476e;background:#0d1d30;color:#a9c8e8;display:grid;place-items:center;cursor:pointer;transition:.18s}.iconbtn:hover{border-color:#4ba9ff;color:white;background:#102b48}.send{background:linear-gradient(145deg,#168cff,#0860c5);border-color:#3caaff;color:white;box-shadow:0 5px 18px #087bff44}.send:hover{filter:brightness(1.15);transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed}
 .toolsrow{display:flex;align-items:center;gap:7px;padding:8px 4px 0;flex-wrap:wrap}.toolchip{border:1px solid #1b3654;background:#0a1728;color:#93b0d1;border-radius:9px;padding:6px 9px;font-size:11px;cursor:pointer}.toolchip:hover{color:#d9efff;border-color:#3989cb}.hint{margin-left:auto;color:#607792;font-size:10px}
 .panel{position:fixed;inset:0;z-index:20;background:#02050bd9;backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:18px}.panel.open{display:flex}.dialog{width:min(760px,100%);max-height:min(85dvh,850px);overflow:auto;background:#091321;border:1px solid #245887;border-radius:20px;box-shadow:0 25px 90px #000b;padding:20px}.dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.dialog h2{margin:0;font-size:19px}.close{border:1px solid #294765;background:#0c1b2e;color:#b8d2ef;border-radius:9px;padding:8px 11px;cursor:pointer}
@@ -27,6 +27,8 @@ body{min-height:100dvh;overflow:hidden}.ambient{position:fixed;inset:0;pointer-e
 #busy{display:none;color:#8ebde9;font-size:11px;padding:7px 8px}#busy.show{display:block}
 @media(max-width:600px){.top{padding:0 15px}.main{padding:12px 10px max(14px,env(safe-area-inset-bottom))}.composer-wrap{margin-bottom:1vh}.intro{margin-bottom:16px}.intro p{font-size:12px}.chatbox{border-radius:18px;padding:9px}.entry{gap:6px}.iconbtn,.send{width:38px;height:38px;flex-basis:38px;border-radius:11px}.entry textarea{font-size:14px;padding:10px 4px}.hint{display:none}.rowfields{grid-template-columns:1fr}.dialog{padding:15px}.toolgrid{grid-template-columns:1fr 1fr}}
 </style>
+<link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
 </head>
 <body>
 <div class="ambient"></div>
@@ -163,7 +165,8 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function device(){const ua=navigator.userAgent;return /iPad|Tablet/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?"iPad erkannt":/Mobi|Android|iPhone/i.test(ua)?"Mobilgerät erkannt":"PC erkannt"}
 $("deviceLabel").textContent=device();
 function renderMessageText(target,source){const re=new RegExp("```"+"([^\\n"+"```"+"]*)\\n([\\s\\S]*?)"+"```","g");let last=0,match;while((match=re.exec(source))){if(match.index>last)target.appendChild(document.createTextNode(source.slice(last,match.index)));const wrap=document.createElement("div");wrap.className="codeblock";const head=document.createElement("div");head.className="codehead";const lang=document.createElement("span");lang.textContent=match[1].trim()||"CODE";const copy=document.createElement("button");copy.className="codecopy";copy.textContent="Code kopieren";const pre=document.createElement("pre"),code=document.createElement("code");code.textContent=match[2].replace(/\n$/,"");pre.appendChild(code);copy.onclick=async()=>{try{await navigator.clipboard.writeText(code.textContent);copy.textContent="Kopiert ✓";setTimeout(()=>copy.textContent="Code kopieren",1400)}catch(e){copy.textContent="Kopieren nicht möglich"}};head.append(lang,copy);wrap.append(head,pre);target.appendChild(wrap);last=re.lastIndex}if(last<source.length)target.appendChild(document.createTextNode(source.slice(last)))}
-function render(){const box=$("messages");box.innerHTML="";state.current.forEach(m=>{const wrap=document.createElement("div");wrap.className="message "+(m.role==="user"?"user":"assistant");const bubble=document.createElement("div");bubble.className="bubble";renderMessageText(bubble,m.text||"");if(m.map){const card=document.createElement("div");card.style.cssText="margin-top:12px;min-width:min(560px,70vw);max-width:100%";const frame=document.createElement("iframe");frame.title="Google Maps";frame.loading="lazy";frame.referrerPolicy="no-referrer-when-downgrade";frame.style.cssText="width:100%;height:300px;border:1px solid #28547d;border-radius:10px;display:block";frame.src="https://maps.google.com/maps?q="+encodeURIComponent(m.map.query)+"&z=16&output=embed";card.appendChild(frame);const links=document.createElement("div");links.style.cssText="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px";[{label:"🌍 In 3D öffnen",url:"https://earth.google.com/web/search/"+encodeURIComponent(m.map.query)},{label:"🗺 Google Maps",url:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(m.map.query)},{label:"🚶 Zu Fuß erkunden",url:"https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(m.map.query)+"&travelmode=walking"},{label:"👁 Street View",url:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(m.map.query)}].forEach(x=>{const a=document.createElement("a");a.href=x.url;a.target="_blank";a.rel="noopener";a.textContent=x.label;a.style.cssText="display:inline-block;padding:7px 9px;border:1px solid #2b6394;border-radius:8px;color:#a9d8ff;text-decoration:none;font-size:12px";links.appendChild(a)});card.appendChild(links);bubble.appendChild(card)}(m.files||[]).forEach(f=>{if(f.type&&f.type.startsWith("image/")&&f.data){const img=document.createElement("img");img.src=f.data;img.alt=f.name||"Anhang";bubble.appendChild(img)}else if(f.type&&f.type.startsWith("audio/")&&f.data){const audio=document.createElement("audio");audio.controls=true;audio.src=f.data;audio.style.display="block";audio.style.maxWidth="100%";bubble.appendChild(audio)}else{const d=document.createElement("div");d.className="attachment";d.textContent="📎 "+f.name;bubble.appendChild(d)}});wrap.appendChild(bubble);box.appendChild(wrap)});box.classList.toggle("has",state.current.length>0);$("intro").style.display=state.current.length?"none":"block";box.scrollTop=box.scrollHeight}
+function render(){const box=$("messages");box.innerHTML="";state.current.forEach(m=>{const wrap=document.createElement("div");wrap.className="message "+(m.role==="user"?"user":"assistant");const bubble=document.createElement("div");bubble.className="bubble";renderMessageText(bubble,m.text||"");if(m.map){const card=document.createElement("div");card.className="xtree-mapcard";const mapEl=document.createElement("div");mapEl.className="xtree-map3d";mapEl.id="xtree-map-"+String(m.at||Date.now())+"-"+Math.random().toString(36).slice(2,7);const status=document.createElement("div");status.className="xtree-mapstatus";status.textContent=m.map.threeD?"Xtree lädt die interaktive 3D-Ansicht …":"Xtree lädt die Karte …";const tools=document.createElement("div");tools.className="xtree-maptools";const orbit=document.createElement("button");orbit.type="button";orbit.textContent="Kameraflug starten";const tilt=document.createElement("button");tilt.type="button";tilt.textContent="3D-Neigung";const reset=document.createElement("button");reset.type="button";reset.textContent="Ansicht zurücksetzen";tools.append(orbit,tilt,reset);card.append(mapEl,status,tools);bubble.appendChild(card);requestAnimationFrame(()=>initXtreeMap(mapEl,m.map.query,!!m.map.threeD,m.at,status,orbit,tilt,reset));}(m.files||[]).forEach(f=>{if(f.type&&f.type.startsWith("image/")&&f.data){const img=document.createElement("img");img.src=f.data;img.alt=f.name||"Anhang";bubble.appendChild(img)}else if(f.type&&f.type.startsWith("audio/")&&f.data){const audio=document.createElement("audio");audio.controls=true;audio.src=f.data;audio.style.display="block";audio.style.maxWidth="100%";bubble.appendChild(audio)}else{const d=document.createElement("div");d.className="attachment";d.textContent="📎 "+f.name;bubble.appendChild(d)}});wrap.appendChild(bubble);box.appendChild(wrap)});box.classList.toggle("has",state.current.length>0);$("intro").style.display=state.current.length?"none":"block";box.scrollTop=box.scrollHeight}
+
 function add(role,text,files){state.current.push({role,text,files:files||[],at:Date.now()});save();render()}
 function showPanel(title,html){const panel=$("panel"),body=$("panelBody"),heading=$("panelTitle");if(!panel||!body||!heading)throw new Error("Das Einstellungsfenster fehlt im HTML.");heading.textContent=title;body.innerHTML=html;panel.classList.add("open");panel.setAttribute("aria-hidden","false")}
 function closePanel(){$("panel").classList.remove("open")}
@@ -202,8 +205,8 @@ async function openMaps(){
   if(!coords)return;
   const q=coords.lat+","+coords.lng;
   frame.innerHTML='<iframe title="Google Maps Umgebung" width="100%" height="320" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q='+encodeURIComponent(q)+'&z=16&output=embed"></iframe>';
-  $("map3d").onclick=()=>window.open("https://earth.google.com/web/@"+coords.lat+","+coords.lng+",300a,1200d,35y,0h,0t,0r","_blank","noopener");
-  $("mapStreet").onclick=()=>window.open("https://www.google.com/maps/@?api=1&map_action=pano&viewpoint="+coords.lat+","+coords.lng,"_blank","noopener");
+  $("map3d").onclick=()=>showMap3DInPanel(coords.lat,coords.lng);
+  $("mapStreet").onclick=()=>showMap3DInPanel(coords.lat,coords.lng);
  }
  $("locateMe").onclick=()=>{
   if(!navigator.geolocation){status.textContent="Dieser Browser unterstützt keine Standortabfrage.";return}
@@ -218,7 +221,7 @@ async function openMaps(){
  $("mapSearchBtn").onclick=()=>{
   const q=$("mapSearch").value.trim();if(!q){toast("Bitte einen Ort oder ein Ziel eingeben.");return}
   const base=coords?"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q)+"&center="+coords.lat+","+coords.lng:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
-  window.open(base,"_blank","noopener");
+  frame.innerHTML='<iframe title="Suchergebnis" width="100%" height="320" style="border:0;display:block" src="https://maps.google.com/maps?q='+encodeURIComponent(q)+'&z=15&output=embed"></iframe>';
  };
  $("mapSearch").addEventListener("keydown",e=>{if(e.key==="Enter")$("mapSearchBtn").click()});
 }
@@ -228,26 +231,65 @@ function generatePrompt(){ $("prompt").value="Erstelle ein Bild von: ";$("prompt
 function filesToData(files){return Promise.all(Array.from(files).map(f=>new Promise(resolve=>{if(f.size>8*1024*1024){toast(f.name+" ist größer als 8 MB.");resolve(null);return}const reader=new FileReader();reader.onload=()=>resolve({name:f.name,type:f.type,data:f.type.startsWith("image/")?reader.result:null,text:f.type.startsWith("text/")?String(reader.result||"").slice(0,12000):null});reader.onerror=()=>resolve({name:f.name,type:f.type});if(f.type.startsWith("image/")||f.type.startsWith("text/")||f.type.startsWith("audio/"))reader.readAsDataURL(f);else resolve({name:f.name,type:f.type})})))}
 function mapIntent(text){
  const t=text.toLowerCase();
- const wantsMap=/(google maps|google map|maps|karte|3d|3-d|dreidimensional|earth|street ?view|virtuell|erkunde|erkunden|spazier|lauf|geh mal|wetter|temperatur|wie warm|regnet|wind|zeig mir.*(ort|stadt|turm|gebäude|umgebung)|wo liegt|wo ist)/i.test(t);
+ const weather=/(wetter|temperatur|wie warm|regnet|wind)/i.test(t);
+ const nearby=/(in meiner nähe|um mich|umgebung|hier in der nähe|nahe mir|standort|meine position)/i.test(t);
+ const threeD=/(3d|3-d|dreidimensional|earth|virtuell|erkunde|erkunden|lauf|geh|spazier|rundflug|kamera|um den|um das|um die)/i.test(t);
+ const wantsMap=/(google maps|google map|maps|karte|3d|3-d|dreidimensional|earth|street ?view|virtuell|erkunde|erkunden|spazier|lauf|geh mal|wetter|temperatur|wie warm|regnet|wind|zeig mir.*(ort|stadt|turm|gebäude|umgebung)|wo liegt|wo ist|standort)/i.test(t);
  if(!wantsMap)return null;
  let q=text.trim()
   .replace(/^(xtree[, ]*)?(bitte )?/i,"")
   .replace(/^(lauf|geh|spazier|flieg|fahr|bring mich|navigiere|erkunde|zeig mir|zeige mir|öffne|mach|schau|such|suche)( bitte)?( mal)?( mit der)?( google)?( maps?)?( 3d| 3-d| dreidimensionalen?)?( funktion)?( ans| zum| zur| in| auf| um| rund um| durch| über| nach)?/i,"")
-  .replace(/^(den|die|das|dem|der|einen|einem|ein|eine)\s+/i,"")
-  .replace(/\s+(in 3d|in google maps|auf google maps|mit google maps|in street ?view)$/i,"")
+  .replace(/^(den|die|das|dem|der|einen|einem|ein|eine)\\s+/i,"")
+  .replace(/\\s+(in 3d|in google maps|auf google maps|mit google maps|in street ?view)$/i,"")
+  .replace(/\\s+(bitte|mal|3d|3-d|dreidimensional|funktion|ansicht)$/i,"")
   .trim();
- if(!q||/^(meinen standort|meine umgebung|hier|in meiner nähe)$/i.test(q))q="mein aktueller Standort";
- return {query:q,threeD:/(3d|3-d|dreidimensional|earth|virtuell|lauf|geh|spazier|erkunde)/i.test(t),walking:/(lauf|geh|spazier|zu fuß|zu fuss)/i.test(t),weather:/(wetter|temperatur|wie warm|regnet|wind)/i.test(t),nearby:/(in meiner nähe|um mich|umgebung|hier in der nähe|nahe mir)/i.test(t)};
+ if(!q||/^(meinen standort|meine umgebung|hier|in meiner nähe|meine position)$/i.test(q))q="mein aktueller Standort";
+ return {query:q,threeD,weather,nearby,walking:/(lauf|geh|spazier|zu fuß|zu fuss)/i.test(t)};
 }
-function openMapSearch(query,threeD){
- const url=threeD?"https://earth.google.com/web/search/"+encodeURIComponent(query):"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(query);
- window.open(url,"_blank","noopener");
+const xtreeLiveMapCenters={};
+const xtreeMaps={};
+async function geocodeXtreePlace(query){
+ const url="https://photon.komoot.io/api/?q="+encodeURIComponent(query)+"&limit=1&lang=de";
+ const r=await fetch(url);if(!r.ok)throw new Error("Ortssuche fehlgeschlagen (HTTP "+r.status+")");
+ const j=await r.json(),feature=j.features&&j.features[0];if(!feature)throw new Error("Ich konnte diesen Ort nicht finden.");
+ const c=feature.geometry.coordinates,p=feature.properties||{};
+ return {lng:Number(c[0]),lat:Number(c[1]),name:[p.name,p.city,p.country].filter(Boolean).join(", ")||query};
+}
+function initXtreeMap(el,query,threeD,messageAt,status,orbit,tilt,reset){
+ if(!el||!el.isConnected)return;
+ if(!window.maplibregl){status.textContent="Die Kartenbibliothek konnte nicht geladen werden. Bitte Seite neu laden.";return}
+ const live=xtreeLiveMapCenters[messageAt];
+ const start=async()=>{
+  try{
+   const place=live||await geocodeXtreePlace(query);
+   if(!el.isConnected)return;
+   const map=new maplibregl.Map({container:el,style:"https://tiles.openfreemap.org/styles/liberty",center:[place.lng,place.lat],zoom:threeD?17:14,pitch:threeD?65:0,bearing:threeD?20:0,antialias:true,attributionControl:true});
+   xtreeMaps[el.id]=map;
+   map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"top-right");
+   map.on("load",()=>{
+    try{
+     const style=map.getStyle(),before=(style.layers||[]).find(l=>/label|poi|housenumber/.test(l.id));
+     if(map.getSource("openmaptiles")&&!map.getLayer("xtree-3d-buildings")){
+      map.addLayer({id:"xtree-3d-buildings",source:"openmaptiles","source-layer":"building",type:"fill-extrusion",minzoom:14,paint:{"fill-extrusion-color":["interpolate",["linear"],["coalesce",["get","render_height"],["get","height"],5],0,"#31577b",80,"#75a9d4"],"fill-extrusion-height":["coalesce",["get","render_height"],["get","height"],5],"fill-extrusion-base":["coalesce",["get","render_min_height"],["get","min_height"],0],"fill-extrusion-opacity":.86}},before&&before.id);
+     }
+    }catch(e){console.warn("Xtree 3D-Gebäude:",e)}
+    const marker=document.createElement("div");marker.style.cssText="width:14px;height:14px;border-radius:50%;background:#35b8ff;border:3px solid white;box-shadow:0 0 18px #168cff";
+    new maplibregl.Marker({element:marker}).setLngLat([place.lng,place.lat]).addTo(map);
+    status.textContent=(threeD?"Interaktive 3D-Karte bereit":"Interaktive Karte bereit")+" · "+place.name+" · Drehen: rechte Maustaste oder zwei Finger";
+    if(threeD){map.easeTo({pitch:68,zoom:17.5,bearing:map.getBearing()+360,duration:16000});}
+   });
+   map.on("error",e=>{if(e&&e.error)console.warn("Xtree MapLibre:",e.error)});
+   orbit.onclick=()=>{const b=map.getBearing();map.easeTo({bearing:b+360,pitch:Math.max(60,map.getPitch()),duration:18000});status.textContent="Xtree führt einen Kameraflug um "+place.name+" aus …"};
+   tilt.onclick=()=>map.easeTo({pitch:map.getPitch()>35?0:68,duration:900});
+   reset.onclick=()=>map.easeTo({center:[place.lng,place.lat],zoom:threeD?17.5:14,pitch:threeD?65:0,bearing:0,duration:1000});
+  }catch(e){status.textContent="Karte konnte nicht geladen werden: "+e.message}
+ };
+ start();
 }
 async function runMapIntent(intent){
  const q=intent.query;
- if(intent.threeD&&q!=="mein aktueller Standort")openMapSearch(q,true);
  if(intent.weather||intent.nearby||q==="mein aktueller Standort"){
-  if(!navigator.geolocation){add("assistant","Dein Browser unterstützt keine Standortabfrage. Ich kann aber Orte direkt in Google Maps öffnen.",[],);return true}
+  if(!navigator.geolocation){add("assistant","Dein Browser unterstützt keine Standortabfrage. Du kannst aber einen Ort direkt nennen, dann zeige ich ihn hier im Chat.");return true}
   $("busy").textContent="Xtree ermittelt deinen Standort …";$("busy").classList.add("show");
   try{
    const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:120000}));
@@ -256,21 +298,20 @@ async function runMapIntent(intent){
     const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+"&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=auto");
     if(!r.ok)throw new Error("Wetterdienst HTTP "+r.status);
     const c=(await r.json()).current,labels={0:"klar",1:"überwiegend klar",2:"teilweise bewölkt",3:"bewölkt",45:"neblig",48:"Nebel",51:"leichter Nieselregen",53:"Nieselregen",55:"starker Nieselregen",61:"leichter Regen",63:"Regen",65:"starker Regen",71:"leichter Schnee",73:"Schnee",75:"starker Schnee",80:"Regenschauer",81:"Regenschauer",82:"starke Regenschauer",95:"Gewitter"};
-    add("assistant","Hier ist das aktuelle Wetter an deinem Standort: "+(labels[c.weather_code]||"Wetter")+", "+c.temperature_2m+" °C (gefühlt "+c.apparent_temperature+" °C), Luftfeuchtigkeit "+c.relative_humidity_2m+" %, Wind "+c.wind_speed_10m+" km/h. Die Standortkoordinaten werden nicht im Chat gespeichert.");
-   }else{
-    const label=intent.nearby?"Deine Umgebung":"Dein Standort";
-    add("assistant",label+" gefunden. Hier ist die Karte. Für die 3D-Ansicht kannst du Google Earth öffnen. Die genauen Standortkoordinaten werden nicht im Chat gespeichert.",[{name:"Standortkarte",type:"application/x-xtree-map"}]);
-    const last=state.current[state.current.length-1];last.map={query:lat+","+lon};save();render();
-    if(intent.threeD)openMapSearch(lat+","+lon,true);
+    add("assistant","Aktuelles Wetter an deinem Standort: "+(labels[c.weather_code]||"Wetter")+", "+c.temperature_2m+" °C (gefühlt "+c.apparent_temperature+" °C), Luftfeuchtigkeit "+c.relative_humidity_2m+" %, Wind "+c.wind_speed_10m+" km/h. Die Koordinaten werden nicht im Chatverlauf gespeichert.");
+   }
+   if(intent.nearby||q==="mein aktueller Standort"){
+    const msg="Ich habe deinen Standort gefunden. Die interaktive "+(intent.threeD?"3D-Karte":"Karte")+" wird direkt hier im Chat angezeigt. Deine Koordinaten bleiben nur für diese Kartenansicht im Arbeitsspeicher und werden nicht im Chat gespeichert.";
+    add("assistant",msg);
+    const last=state.current[state.current.length-1];last.map={query:"mein aktueller Standort",threeD:intent.threeD};xtreeLiveMapCenters[last.at]={lat, lng:lon};render();
    }
   }catch(e){add("assistant",e.code===1?"Standortzugriff wurde abgelehnt. Erlaube Xtree den Standortzugriff im Browser, wenn du diese Funktion nutzen möchtest.":"Standort/Wetter konnte nicht geladen werden: "+e.message)}
   finally{$("busy").classList.remove("show");$("busy").textContent="Xtree denkt nach …"}
   return true;
  }
  if(q!=="mein aktueller Standort"){
-  add("assistant","Ich öffne "+q+" in Google "+(intent.threeD?"Earth mit 3D-Ansicht":"Maps")+". Du kannst die Karte hier direkt ansehen und darunter 3D, Street View oder die Fußweg-Suche öffnen.",[],);
-  const last=state.current[state.current.length-1];last.map={query:q};save();render();
-  if(!intent.threeD)openMapSearch(q,false);
+  add("assistant","Ich zeige "+q+" direkt hier im Chat"+(intent.threeD?" in einer interaktiven 3D-Karte. Xtree startet den Kameraflug automatisch.":" auf einer interaktiven Karte.")+" Du kannst die Ansicht drehen, neigen und zoomen.",[]);
+  const last=state.current[state.current.length-1];last.map={query:q,threeD:intent.threeD};save();render();
  }
  return true;
 }
