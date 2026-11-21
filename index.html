@@ -99,13 +99,54 @@ loginButton.addEventListener("click", async () => {
     alert("Google-Anmeldung fehlgeschlagen: " + error.message + "\n\nPrüfe in Firebase, ob Google als Anmeldemethode aktiviert ist und ob die GitHub-Pages-Domain als autorisierte Domain eingetragen ist.");
   }
 });
-</script>\n<script>\n(function(){
+</script>
+<script type="module" id="firebaseCloudModule">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const cfg={apiKey:"AIzaSyBDZ3Ix0yaK6MdNfcY1oXN7aJS4kbMUumc",authDomain:"xtree-c5ce2.firebaseapp.com",projectId:"xtree-c5ce2",storageBucket:"xtree-c5ce2.firebasestorage.app",messagingSenderId:"25145125484",appId:"1:25145125484:web:830081d8e000baf0504649"};
+const app=getApps().length?getApps()[0]:initializeApp(cfg), auth=getAuth(app), db=getFirestore(app);
+let currentUser=null, writeTimer=null, loadingCloud=false;
+async function writeState(state){
+ if(!currentUser||loadingCloud)return;
+ try{await setDoc(doc(db,"users",currentUser.uid),{state,updatedAt:serverTimestamp()},{merge:true});window.dispatchEvent(new CustomEvent("xtree-cloud-status",{detail:"Gespeichert in Firebase"}))}
+ catch(e){console.error("Xtree Firebase save:",e);window.dispatchEvent(new CustomEvent("xtree-cloud-status",{detail:"Firebase-Speichern fehlgeschlagen: "+e.message}))}
+}
+window.addEventListener("xtree-state-change",e=>{
+ if(!currentUser||loadingCloud)return;
+ clearTimeout(writeTimer);const snapshot=JSON.parse(JSON.stringify(e.detail));
+ writeTimer=setTimeout(()=>writeState(snapshot),500);
+});
+onAuthStateChanged(auth,async user=>{
+ currentUser=user;
+ if(!user)return;
+ try{
+  const ref=doc(db,"users",user.uid), snap=await getDoc(ref);
+  if(snap.exists()&&snap.data().state){
+   loadingCloud=true;
+   window.dispatchEvent(new CustomEvent("xtree-cloud-loaded",{detail:snap.data().state}));
+   loadingCloud=false;
+   window.dispatchEvent(new CustomEvent("xtree-cloud-status",{detail:"Daten aus Firebase geladen"}));
+  }else{
+   const raw=localStorage.getItem("xtree_v1");
+   if(raw)await writeState(JSON.parse(raw));
+   window.dispatchEvent(new CustomEvent("xtree-cloud-status",{detail:"Xtree-Speicher in Firebase angelegt"}));
+  }
+ }catch(e){
+  loadingCloud=false;console.error("Xtree Firebase load:",e);
+  window.dispatchEvent(new CustomEvent("xtree-cloud-status",{detail:"Firebase-Laden fehlgeschlagen: "+e.message}));
+ }
+});
+</script>
+\n<script>\n(function(){
 "use strict";
 const $=id=>document.getElementById(id);
 const STORE="xtree_v1";
 let state=load(),pendingFiles=[],busy=false,recognition=null,activeTab="providers";
 function load(){try{return JSON.parse(localStorage.getItem(STORE))||{keys:[],model:"openai/gpt-4o-mini",system:"Du bist Xtree, ein hilfreicher KI-Assistent. Antworte klar und auf Deutsch.",chats:[],current:[]}}catch(e){return {keys:[],model:"openai/gpt-4o-mini",system:"Du bist Xtree. Antworte auf Deutsch.",chats:[],current:[]}}}
-function save(){localStorage.setItem(STORE,JSON.stringify(state))}
+window.addEventListener("xtree-cloud-loaded",e=>{state=e.detail;localStorage.setItem(STORE,JSON.stringify(state));render();toast("Deine Daten wurden aus Firebase geladen.")});
+window.addEventListener("xtree-cloud-status",e=>{if(e.detail)toast(e.detail)});
+function save(){localStorage.setItem(STORE,JSON.stringify(state));window.dispatchEvent(new CustomEvent("xtree-state-change",{detail:state}))}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function device(){const ua=navigator.userAgent;return /iPad|Tablet/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?"iPad erkannt":/Mobi|Android|iPhone/i.test(ua)?"Mobilgerät erkannt":"PC erkannt"}
