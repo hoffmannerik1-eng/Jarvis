@@ -235,10 +235,33 @@ function extractWebcamPlace(text){
  .replace(/^(xtree[, ]*|bitte\s+)/i,"")
  .replace(/^(zeig(e)?\s+mir|zeige\s+mir|such(e)?|find(e)?|öffne|oeffne|lade|hol(e)?|mach(e)?|gib\s+mir)\s+/i,"")
  .replace(/\b(alle\s+)?(öffentlichen\s+)?(web\s?cams?|live\s?cams?|kameras?)\b/ig," ")
- .replace(/\b(auf|in|an|von|aus|bei|rund\s+um)\b/ig," ")
- .replace(/\b(der|die|das|dem|den|eine|einer|einem|bitte|mal|anzeigen|zeigen|karte|karten)\b/ig," ")
+ .replace(/\b(wetter|temperatur|regnet|wind|live|und|sowie)\b/ig," ")
+ .replace(/\b(auf|in|an|von|aus|bei|rund\s+um|für)\b/ig," ")
+ .replace(/\b(der|die|das|dem|den|eine|einer|einem|bitte|mal|anzeigen|zeigen|karte|karten|mir)\b/ig," ")
  .replace(/\s+/g," ").trim();
- return q||"Paris";
+ return q||"";
+}
+async function showWeatherAndWebcamsInChat(text){
+ const place=extractWebcamPlace(text);
+ add("assistant","Ich prüfe jetzt Wetter und öffentliche Livecams"+(place?" für "+place:" an deinem Standort")+".",[]);
+ const last=state.current[state.current.length-1];
+ last.publicWebcams=true;last.webcamQuery=place||"dein Standort";last.weatherAndWebcams=true;
+ save();render();
+ try{
+  let coords;
+  if(place){coords=await geocodeXtreePlace(place);}
+  else{
+   if(!navigator.geolocation)throw new Error("Standortzugriff wird von diesem Browser nicht unterstützt.");
+   const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:120000}));
+   coords={lat:pos.coords.latitude,lng:pos.coords.longitude,name:"dein Standort"};
+  }
+  const url="https://api.open-meteo.com/v1/forecast?latitude="+coords.lat+"&longitude="+coords.lng+"&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=auto";
+  const response=await fetch(url);if(!response.ok)throw new Error("Wetterdienst HTTP "+response.status);
+  const current=(await response.json()).current;
+  const labels={0:"klar",1:"überwiegend klar",2:"teilweise bewölkt",3:"bewölkt",45:"neblig",48:"Nebel",51:"leichter Nieselregen",53:"Nieselregen",55:"starker Nieselregen",61:"leichter Regen",63:"Regen",65:"starker Regen",71:"leichter Schnee",73:"Schnee",75:"starker Schnee",80:"Regenschauer",81:"Regenschauer",82:"starke Regenschauer",95:"Gewitter"};
+  last.text="Wetter für "+(coords.name||place||"deinen Standort")+": "+(labels[current.weather_code]||"Wetter")+", "+current.temperature_2m+" °C (gefühlt "+current.apparent_temperature+" °C), Luftfeuchtigkeit "+current.relative_humidity_2m+" %, Niederschlag "+current.precipitation+" mm, Wind "+current.wind_speed_10m+" km/h. Darunter suche ich öffentliche Livecams in derselben Region.";
+ }catch(error){last.text="Die Livecam-Suche läuft. Das Wetter konnte für "+(place||"deinen Standort")+" nicht geladen werden: "+error.message;}
+ save();render();
 }
 function showPublicWebcamsInChat(text){
  const place=extractWebcamPlace(text);
@@ -364,7 +387,7 @@ async function runMapIntent(intent){
  }
  return true;
 }
-async function send(){if(busy)return;const text=$("prompt").value.trim();if(!text&&!pendingFiles.length)return;$("prompt").value="";const files=pendingFiles;pendingFiles=[];const fdata=await filesToData(files);add("user",text,fdata.filter(Boolean));if(publicWebcamIntent(text)){showPublicWebcamsInChat(text);return}if(cameraIntent(text)){showCameraInChat();return}const mapAction=mapIntent(text);if(mapAction){await runMapIntent(mapAction);return}if(/^Google-Suche:/i.test(text)){window.open("https://www.google.com/search?q="+encodeURIComponent(text.replace(/^Google-Suche:/i,"").trim()),"_blank","noopener");return}if(/^Bildersuche:/i.test(text)){window.open("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(text.replace(/^Bildersuche:/i,"").trim()),"_blank","noopener");return}if(text.toLowerCase().startsWith("erstelle ein bild von:")||text.toLowerCase().startsWith("erstelle ein bild")||text.toLowerCase().startsWith("generiere ein bild")||text.toLowerCase().startsWith("zeichne ein bild")||text.toLowerCase().startsWith("male ein bild")){const prompt=text.replace(/^Erstelle ein Bild von:/i,"").trim()||text;await generateImage(prompt);return}if(/^(chatfenster|öffne chatfenster)$/i.test(text)){openHistory();return}if(/^(chatfenster schließen|schließe chatfenster)$/i.test(text)){closePanel();add("assistant","Das Chatfenster ist geschlossen.");return}if(/^(einstellungen|öffne einstellungen)$/i.test(text)){openSettings();return}if(/^(tools|öffne tools)$/i.test(text)){openTools();return}await askAI(text,fdata.filter(Boolean))}
+async function send(){if(busy)return;const text=$("prompt").value.trim();if(!text&&!pendingFiles.length)return;$("prompt").value="";const files=pendingFiles;pendingFiles=[];const fdata=await filesToData(files);add("user",text,fdata.filter(Boolean));if(publicWebcamIntent(text)&&/(wetter|temperatur|wie warm|regnet|wind)/i.test(text)){await showWeatherAndWebcamsInChat(text);return}if(publicWebcamIntent(text)){showPublicWebcamsInChat(text);return}if(cameraIntent(text)){showCameraInChat();return}const mapAction=mapIntent(text);if(mapAction){await runMapIntent(mapAction);return}if(/^Google-Suche:/i.test(text)){window.open("https://www.google.com/search?q="+encodeURIComponent(text.replace(/^Google-Suche:/i,"").trim()),"_blank","noopener");return}if(/^Bildersuche:/i.test(text)){window.open("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(text.replace(/^Bildersuche:/i,"").trim()),"_blank","noopener");return}if(text.toLowerCase().startsWith("erstelle ein bild von:")||text.toLowerCase().startsWith("erstelle ein bild")||text.toLowerCase().startsWith("generiere ein bild")||text.toLowerCase().startsWith("zeichne ein bild")||text.toLowerCase().startsWith("male ein bild")){const prompt=text.replace(/^Erstelle ein Bild von:/i,"").trim()||text;await generateImage(prompt);return}if(/^(chatfenster|öffne chatfenster)$/i.test(text)){openHistory();return}if(/^(chatfenster schließen|schließe chatfenster)$/i.test(text)){closePanel();add("assistant","Das Chatfenster ist geschlossen.");return}if(/^(einstellungen|öffne einstellungen)$/i.test(text)){openSettings();return}if(/^(tools|öffne tools)$/i.test(text)){openTools();return}await askAI(text,fdata.filter(Boolean))}
 function filePayload(files){return (files||[]).filter(f=>f.data&&f.type&&f.type.startsWith("image/")).map(f=>({type:"image_url",image_url:{url:f.data}}))}
 async function generateImage(prompt){const key=state.keys.find(k=>k.provider==="OpenRouter"&&k.key);if(!key){add("assistant","Für die Bildgenerierung brauchst du einen OpenRouter-API-Schlüssel. Öffne Einstellungen → KI-Anbieter und füge OpenRouter hinzu.");return}busy=true;$("busy").classList.add("show");$("busy").textContent="Xtree erstellt dein Bild …";$("sendBtn").disabled=true;try{const model=state.imageModel||"google/gemini-3.1-flash-image";const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+key.key,"Content-Type":"application/json","HTTP-Referer":location.origin,"X-Title":"Xtree"},body:JSON.stringify({model,modalities:["image","text"],messages:[{role:"user",content:"Create an image from this description: "+prompt}]})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||("HTTP "+r.status));const msg=j.choices?.[0]?.message||{};let imageUrl=null;const candidates=[];if(Array.isArray(msg.images))candidates.push(...msg.images);if(Array.isArray(msg.content))candidates.push(...msg.content);for(const p of candidates){const u=p?.image_url?.url||p?.url||p?.data;if(typeof u==="string"&&(u.startsWith("data:image/")||u.startsWith("https://")||u.startsWith("http://"))){imageUrl=u;break}if(typeof p?.image_url==="string"&&p.image_url.startsWith("data:image/")){imageUrl=p.image_url;break}}if(!imageUrl)throw new Error("Das Modell hat kein Bild zurückgegeben. Prüfe das Bildmodell in Einstellungen oder wähle ein anderes OpenRouter-Bildmodell.");const answer=typeof msg.content==="string"?msg.content:"Dein Bild ist fertig.";let mime="image/png";if(imageUrl.startsWith("data:")){const semi=imageUrl.indexOf(";");if(semi>5)mime=imageUrl.slice(5,semi)}add("assistant",answer,[{name:"Xtree-Bild",type:mime,data:imageUrl}]);}catch(e){add("assistant","Das Bild konnte nicht erstellt werden. "+e.message+"\n\nPrüfe deinen OpenRouter-Schlüssel, dein Guthaben und das Bildmodell in den Einstellungen.")}finally{busy=false;$("busy").classList.remove("show");$("busy").textContent="Xtree denkt nach …";$("sendBtn").disabled=false}}
 async function askAI(text,files){busy=true;$("busy").classList.add("show");$("sendBtn").disabled=true;try{const result=await callProviders(text,files);add("assistant",result)}catch(e){add("assistant","Ich konnte keine KI-Verbindung herstellen.\n\n"+e.message+"\n\nÖffne Einstellungen und richte mindestens einen Anbieter ein. Firebase AI Logic benötigt keinen separaten Schlüssel; Groq, Cerebras, Mistral, Hugging Face und OpenRouter benötigen jeweils ihren eigenen API-Schlüssel.")}finally{busy=false;$("busy").classList.remove("show");$("sendBtn").disabled=false}}
