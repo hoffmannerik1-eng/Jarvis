@@ -52,8 +52,8 @@ body{min-height:100dvh;overflow:hidden}.ambient{position:fixed;inset:0;pointer-e
 <div class="panel" id="panel"><div class="dialog"><div class="dialog-head"><h2 id="panelTitle">Einstellungen</h2><button class="close" id="closePanel">Schließen ✕</button></div><div id="panelBody"></div></div></div>
 <div id="toast"></div>
 <script type="module" id="firebaseAuthModule">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBDZ3Ix0yaK6MdNfcY1oXN7aJS4kbMUumc",
@@ -83,7 +83,7 @@ loginButton.addEventListener("click", async () => {
     // Abmelden wird über eine kurze Bestätigung abgesichert.
     if (!confirm("Möchtest du dich von Xtree abmelden?")) return;
     try {
-      const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      const { signOut } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js");
       await signOut(auth);
     } catch (error) {
       alert("Abmelden fehlgeschlagen: " + error.message);
@@ -101,9 +101,9 @@ loginButton.addEventListener("click", async () => {
 });
 </script>
 <script type="module" id="firebaseCloudModule">
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyBDZ3Ix0yaK6MdNfcY1oXN7aJS4kbMUumc",authDomain:"xtree-c5ce2.firebaseapp.com",projectId:"xtree-c5ce2",storageBucket:"xtree-c5ce2.firebasestorage.app",messagingSenderId:"25145125484",appId:"1:25145125484:web:830081d8e000baf0504649"};
 const app=getApps().length?getApps()[0]:initializeApp(cfg), auth=getAuth(app), db=getFirestore(app);
 let currentUser=null, writeTimer=null, loadingCloud=false;
@@ -188,7 +188,7 @@ async function generateImage(prompt){const key=state.keys.find(k=>k.provider==="
 async function askAI(text,files){busy=true;$("busy").classList.add("show");$("sendBtn").disabled=true;try{const result=await callProviders(text,files);add("assistant",result)}catch(e){add("assistant","Ich konnte keine KI-Verbindung herstellen.\n\n"+e.message+"\n\nÖffne Einstellungen und richte mindestens einen Anbieter ein. Firebase AI Logic benötigt keinen separaten Schlüssel; Groq, Cerebras, Mistral, Hugging Face und OpenRouter benötigen jeweils ihren eigenen API-Schlüssel.")}finally{busy=false;$("busy").classList.remove("show");$("sendBtn").disabled=false}}
 async function callProviders(text,files){const attempts=state.keys.filter(k=>k.provider==="Firebase AI Logic"||k.provider==="Ollama"||k.key);if(!attempts.length)throw new Error("Noch kein KI-Anbieter eingerichtet. Füge einen Anbieter samt API-Schlüssel hinzu oder aktiviere Firebase AI Logic.");let errors=[];for(const k of attempts){try{if(k.provider==="OpenRouter")return await openRouter(k,text,files);if(k.provider==="Gemini")return await gemini(k,text,files);if(k.provider==="Firebase AI Logic")return await firebaseAILogic(k,text);if(k.provider==="Ollama")return await ollamaCall(k,text);if(["Groq","Cerebras","Mistral","Hugging Face"].includes(k.provider))return await compatibleProvider(k,text,files)}catch(e){errors.push(k.provider+": "+e.message)}}throw new Error(errors.join(" | ")||"Alle Anbieter sind fehlgeschlagen.")}
 async function openRouter(k,text,files){const content=[{type:"text",text:text}].concat(filePayload(files));const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+k.key,"Content-Type":"application/json","HTTP-Referer":location.origin,"X-Title":"Xtree"},body:JSON.stringify({model:k.model||state.model,messages:[{role:"system",content:state.system},{role:"user",content:content}],temperature:.7})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||("HTTP "+r.status));return j.choices?.[0]?.message?.content||"Keine Antwort erhalten."}
-async function firebaseAILogic(k,text){const {getAI,getGenerativeModel,GoogleAIBackend}=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-ai.js");const {getApps}=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const app=getApps()[0];if(!app)throw new Error("Firebase wurde noch nicht initialisiert.");const ai=getAI(app,{backend:new GoogleAIBackend()});const model=getGenerativeModel(ai,{model:k.model||"gemini-2.5-flash",systemInstruction:state.system});const result=await model.generateContent(text);return result.response.text()||"Keine Antwort erhalten."}
+async function firebaseAILogic(k,text){const {getAI,getGenerativeModel,GoogleAIBackend}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-ai.js");const {getApps}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js");const app=getApps()[0];if(!app)throw new Error("Firebase wurde noch nicht initialisiert.");const ai=getAI(app,{backend:new GoogleAIBackend()});const model=getGenerativeModel(ai,{model:k.model||"gemini-2.5-flash",systemInstruction:state.system});const result=await model.generateContent(text);return result.response.text()||"Keine Antwort erhalten."}
 async function compatibleProvider(k,text,files){const cfg={Groq:{url:"https://api.groq.com/openai/v1/chat/completions",model:"llama-3.3-70b-versatile"},Cerebras:{url:"https://api.cerebras.ai/v1/chat/completions",model:"llama3.1-8b"},Mistral:{url:"https://api.mistral.ai/v1/chat/completions",model:"mistral-small-latest"},"Hugging Face":{url:"https://router.huggingface.co/v1/chat/completions",model:"meta-llama/Llama-3.1-8B-Instruct"}}[k.provider];const content=[{type:"text",text:text}].concat(filePayload(files));const r=await fetch(cfg.url,{method:"POST",headers:{"Authorization":"Bearer "+k.key,"Content-Type":"application/json"},body:JSON.stringify({model:k.model||cfg.model,messages:[{role:"system",content:state.system},{role:"user",content:content}],temperature:.7})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||"HTTP "+r.status);return j.choices?.[0]?.message?.content||"Keine Antwort erhalten."}
 async function gemini(k,text,files){const parts=[{text:state.system+"\n\n"+text}];(files||[]).filter(f=>f.data&&f.type.startsWith("image/")).forEach(f=>{const p=f.data.split(",");parts.push({inline_data:{mime_type:f.type,data:p[1]}})});const model=k.model||"gemini-2.5-flash";const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(k.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:.7}})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||("HTTP "+r.status));return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("\n")||"Keine Antwort erhalten."}
 async function ollamaCall(k,text){const model=k.model||"llama3.2";const r=await fetch("http://localhost:11434/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:state.system},{role:"user",content:text}],stream:false})});const j=await r.json();if(!r.ok)throw new Error(j.error||("HTTP "+r.status));return j.message?.content||"Keine Antwort erhalten."}
