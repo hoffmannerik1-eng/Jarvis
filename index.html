@@ -189,7 +189,7 @@ if($("clearAll"))$("clearAll").onclick=()=>{if(confirm("Alle lokalen Xtree-Daten
 function openHistory(){const chats=state.chats.map((c,i)=>'<div class="historyitem"><div><b>'+esc(c.title||"Chat "+(i+1))+'</b><br><small>'+new Date(c.at).toLocaleString("de-DE")+'</small></div><button class="secondary" data-openchat="'+i+'">Öffnen</button></div>').join("");showPanel("Chatfenster",'<div class="notice">Deine gespeicherten Unterhaltungen werden nur in diesem Browser aufbewahrt.</div><button class="primary" id="newChat">＋ Neuer Chat</button><div style="margin-top:12px">'+(chats||'<p style="color:#8299b4;font-size:12px">Noch keine gespeicherten Chats.</p>')+'</div>');$("newChat").onclick=()=>{archiveCurrent();state.current=[];save();render();closePanel()};$("panelBody").querySelectorAll("[data-openchat]").forEach(b=>b.onclick=()=>{const c=state.chats[Number(b.dataset.openchat)];if(c){archiveCurrent();state.current=c.messages||[];save();render();closePanel()}})}
 function archiveCurrent(){if(state.current.length){state.chats.unshift({title:(state.current.find(m=>m.role==="user")||{}).text?.slice(0,42)||"Xtree Chat",at:Date.now(),messages:state.current});state.chats=state.chats.slice(0,30);state.current=[];save()}}
 async function openMaps(){
- showPanel("Xtree Maps & Umgebung",'<div class="notice">Standort wird erst nach deinem Klick und deiner Browser-Erlaubnis abgerufen. Karten und 3D-Ansichten erscheinen direkt hier im Xtree-Fenster.</div><div class="rowfields"><button class="primary" id="locateMe">◎ Meinen Standort finden</button><button class="secondary" id="weatherHere">☀ Wetter aktualisieren</button></div><div id="mapStatus" class="notice">Noch kein Standort geladen.</div><div class="field"><label>Ort oder Ziel suchen</label><input id="mapSearch" placeholder="z. B. Restaurants, Bahnhof oder eine Adresse"><button class="primary" id="mapSearchBtn">In Google Maps suchen</button></div><div id="mapWeather" class="notice">Wetter erscheint nach dem Abruf deines Standorts.</div><div class="rowfields"><button class="secondary" id="map3d">🌍 3D mit Google Earth</button><button class="secondary" id="mapStreet">🚶 Street View öffnen</button></div><div id="mapFrame" style="margin-top:12px;border:1px solid #245887;border-radius:12px;overflow:hidden;min-height:240px;background:#050c16;display:grid;place-items:center;color:#8ea5c0;padding:12px">Die Karte wird hier angezeigt, sobald dein Standort bekannt ist.</div>');
+ showPanel("Xtree Maps & Umgebung",'<div class="notice">Standort wird erst nach deinem Klick und deiner Browser-Erlaubnis abgerufen. Karten und 3D-Ansichten erscheinen direkt hier im Xtree-Fenster.</div><div class="rowfields"><button class="primary" id="locateMe">◎ Meinen Standort finden</button><button class="secondary" id="weatherHere">☀ Wetter aktualisieren</button></div><div id="mapStatus" class="notice">Noch kein Standort geladen.</div><div class="field"><label>Ort oder Ziel suchen</label><input id="mapSearch" placeholder="z. B. Restaurants, Bahnhof oder eine Adresse"><button class="primary" id="mapSearchBtn">Karte hier anzeigen</button></div><div id="mapWeather" class="notice">Wetter erscheint nach dem Abruf deines Standorts.</div><div class="rowfields"><button class="secondary" id="map3d">🌍 Interaktive 3D-Karte</button><button class="secondary" id="mapStreet">↕ 3D-Neigung</button></div><div id="mapFrame" style="margin-top:12px;border:1px solid #245887;border-radius:12px;overflow:hidden;min-height:240px;background:#050c16;display:grid;place-items:center;color:#8ea5c0;padding:12px">Die Karte wird hier angezeigt, sobald dein Standort bekannt ist.</div>');
  let coords=null;
  const status=$("mapStatus"),weather=$("mapWeather"),frame=$("mapFrame");
  async function updateWeather(){
@@ -221,7 +221,7 @@ async function openMaps(){
   const q=$("mapSearch").value.trim();if(!q){toast("Bitte einen Ort oder ein Ziel eingeben.");return}
   frame.innerHTML='<div id="xtree-panel-map" class="xtree-map3d"></div><div id="xtree-panel-map-status" class="xtree-mapstatus">Ort wird gesucht …</div>';
   const el=$("xtree-panel-map"),st=$("xtree-panel-map-status"),id="panel-search-"+Date.now();
-  initXtreeMap(el,q,true,id,st,$("map3d"),$("mapStreet"),$("mapSearchBtn"));
+  initXtreeMap(el,q,true,id,st,$("map3d"),$("mapStreet"),document.createElement("button"));
  };
  $("mapSearch").addEventListener("keydown",e=>{if(e.key==="Enter")$("mapSearchBtn").click()});
 }
@@ -291,7 +291,7 @@ function showMap3DInPanel(lat,lng,threeD=true){
  frame.innerHTML='<div id="xtree-panel-map" class="xtree-map3d"></div><div id="xtree-panel-map-status" class="xtree-mapstatus">3D-Karte wird geladen …</div>';
  const el=$("xtree-panel-map"),status=$("xtree-panel-map-status"),id="panel-live-"+Date.now();
  xtreeLiveMapCenters[id]={lat:Number(lat),lng:Number(lng)};
- initXtreeMap(el,"dein Standort",threeD,id,status,$("map3d"),$("mapStreet"),$("mapSearchBtn"));
+ initXtreeMap(el,"dein Standort",threeD,id,status,$("map3d"),$("mapStreet"),document.createElement("button"));
 }
 async function runMapIntent(intent){
  const q=intent.query;
@@ -310,7 +310,7 @@ async function runMapIntent(intent){
    if(intent.nearby||q==="mein aktueller Standort"){
     const msg="Ich habe deinen Standort gefunden. Die interaktive "+(intent.threeD?"3D-Karte":"Karte")+" wird direkt hier im Chat angezeigt. Deine Koordinaten bleiben nur für diese Kartenansicht im Arbeitsspeicher und werden nicht im Chat gespeichert.";
     add("assistant",msg);
-    const last=state.current[state.current.length-1];last.map={query:"mein aktueller Standort",threeD:intent.threeD};xtreeLiveMapCenters[last.at]={lat, lng:lon};render();
+    const last=state.current[state.current.length-1];last.map={query:"mein aktueller Standort",threeD:intent.threeD};xtreeLiveMapCenters[last.at]={lat, lng:lon};save();render();
    }
   }catch(e){add("assistant",e.code===1?"Standortzugriff wurde abgelehnt. Erlaube Xtree den Standortzugriff im Browser, wenn du diese Funktion nutzen möchtest.":"Standort/Wetter konnte nicht geladen werden: "+e.message)}
   finally{$("busy").classList.remove("show");$("busy").textContent="Xtree denkt nach …"}
