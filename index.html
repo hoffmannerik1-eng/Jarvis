@@ -270,7 +270,18 @@ function initXtreeMap(el,query,threeD,messageAt,status,orbit,tilt,reset){
    const map=new maplibregl.Map({container:el,style:"https://tiles.openfreemap.org/styles/liberty",center:[place.lng,place.lat],zoom:threeD?17:14,pitch:threeD?65:0,bearing:threeD?20:0,antialias:true,attributionControl:true});
    xtreeMaps[el.id]=map;
    map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"top-right");
+   map.addControl({onAdd:function(m){
+    const wrap=document.createElement("div");wrap.className="maplibregl-ctrl maplibregl-ctrl-group";
+    const btn=document.createElement("button");btn.type="button";btn.title="Satellitenbild ein-/ausschalten";btn.setAttribute("aria-label","Satellitenbild ein-/ausschalten");btn.textContent="🛰";btn.style.cssText="width:42px;font-size:18px";
+    btn.onclick=()=>{const layer=m.getLayer("xtree-satellite-layer");if(!layer)return;const visible=m.getLayoutProperty("xtree-satellite-layer","visibility")!=="none";m.setLayoutProperty("xtree-satellite-layer","visibility",visible?"none":"visible");btn.title=visible?"Satellitenbild einschalten":"Kartenansicht einschalten";status.textContent=visible?"Normale Kartenansicht":"Satellitenaufnahme aktiviert";};
+    wrap.appendChild(btn);return wrap;
+   },onRemove:function(){}},"top-left");
    map.on("load",()=>{
+    try{
+     map.addSource("xtree-satellite-source",{type:"raster",tiles:["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],tileSize:256,attribution:"Imagery © Esri, Maxar, Earthstar Geographics and contributors"});
+     const firstSymbol=(map.getStyle().layers||[]).find(l=>l.type==="symbol");
+     map.addLayer({id:"xtree-satellite-layer",type:"raster",source:"xtree-satellite-source",layout:{visibility:"visible"},paint:{"raster-opacity":1}},firstSymbol&&firstSymbol.id);
+    }catch(e){console.warn("Xtree Satellitenbild:",e)}
     try{
      const style=map.getStyle(),before=(style.layers||[]).find(l=>/label|poi|housenumber/.test(l.id));
      if(map.getSource("openmaptiles")&&!map.getLayer("xtree-3d-buildings")){
